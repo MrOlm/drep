@@ -32,6 +32,8 @@ def cluster_genomes(Bdb,output_folder,MASH_ANI=90,ANIn=99,dry=False):
     # Run MASH clustering
     Mdb, Bdb = perform_mash_clustering(Bdb,MASH_folder,MASH_ANI=90,dry=False)
     
+    # Run ANIn clustering
+    
     print(Mdb)
     
 
@@ -44,6 +46,8 @@ def perform_mash_clustering(Bdb, MASH_folder, MASH_ANI=90, dry=False):
     
     # Run MASH
     Mdb = all_vs_all_MASH(Bdb, MASH_folder, MASH_ANI=90, dry=False)
+    
+    # Cluster MASH
     
     return Mdb, Bdb
     
