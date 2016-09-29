@@ -155,7 +155,7 @@ def cluster_anin_database(Cdb, Ndb, ANIn=.99, cov_thresh=0.5):
 
 def run_anin_on_clusters(Bdb, Cdb, data_folder, dry=False):
     """
-    For each cluster in Bdb, run pairwise ANIn
+    For each cluster in Cdb, run pairwise ANIn
     """
     
     # Set up folders
@@ -165,24 +165,43 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, dry=False):
     # Add cluster information to Cdb
     Bdb = pd.merge(Bdb,Cdb)
     
-    Ndb = pd.DataFrame()
-    org_lengths = {y:dm.fasta_length(x) for x,y in zip(Bdb['location'].tolist(),Bdb['genome'].tolist())}
+    # Step 1. Make the directories and generate the list of commands to be run    
     
+    cmds = []
     for cluster in Bdb['MASH_cluster'].unique():
         d = Bdb[Bdb['MASH_cluster'] == cluster]
-    
         genomes = d['location'].tolist()
         outf = "{0}{1}/".format(ANIn_folder,cluster)
         dm.make_dir(outf,dry)
+        cmds += gen_nucmer_commands(genomes,outf,maxgap=1,noextend=True)
         
-        print("Running nucmer on cluster {0}: {1} genomes".format(cluster,len(genomes),outf))
-        data = run_nucmer(genomes,outf,org_lengths,maxgap=1,noextend=True,dry=dry)
+    # Step 2. Run the nucmer commands  
+    
+    if not dry:
+        thread_nucmer_cmds(cmds)
+        
+    # Step 3. Parse the nucmer output
+    
+    Ndb = pd.DataFrame()
+    org_lengths = {y:dm.fasta_length(x) for x,y in zip(Bdb['location'].tolist(),Bdb['genome'].tolist())}
+    for cluster in Bdb['MASH_cluster'].unique():
+        outf = "{0}{1}/".format(ANIn_folder,cluster)
+        data = process_deltadir(outf, org_lengths)
         data['MASH_cluster'] = cluster
         Ndb = pd.concat([Ndb,data],ignore_index=True)
         
     return Ndb
         
-def run_nucmer(genomes,outf,b2s,c=65,maxgap=90,noextend=False,method='mum',dry=False):
+def gen_nucmer_commands(genomes,outf,c=65,maxgap=90,noextend=False,method='mum'):
+    cmds = []
+    for g1 in genomes:
+        for g2 in genomes:
+            out = "{0}{1}_vs_{2}".format(outf,get_genome_name_from_fasta(g1),get_genome_name_from_fasta(g2))
+            cmds.append(gen_nucmer_cmd(out,g1,g2,c=c,noextend=noextend,maxgap=maxgap,method=method))
+    
+    return cmds
+
+def run_nucmer_genomeList(genomes,outf,b2s,c=65,maxgap=90,noextend=False,method='mum',dry=False):
     """
     genomes is a list of locations of genomes in .fasta file. This will do pair-wise
     comparisons of those genomes using the nucmer settings given
