@@ -6,6 +6,7 @@ import glob
 import shutil
 import networkx as nx
 import multiprocessing
+import logging
 from subprocess import call
 
 # !!! This is just for testing purposes, obviously
@@ -15,108 +16,160 @@ import drep_modules as dm
 
 """
 Bdb = pandas DataFrame with the columns genome and location
-Mdb = pandas containing MASH information
-Cdb = pandas containing MASH clustering information
+Mdb = pandas containing raw MASH information
+Cdb = pandas containing clustering information (both MASH and ANIn)
 """
 
-def cluster_genomes(Bdb,output_folder,MASH_ANI=.90,ANIn=.99,dry=False):
+""" Program architecture:
+
+*   The main method is cluster_genomes(). This method will take all necessary arguments
+    for a normal clustering pipeline, and return all normal outputs
+
+*   The method called by the main program is d_cluster_wrapper(). This method will take
+    the raw arguments and workDirectory, parse and extract the needed info, and then call
+    cluster_genomes(). It will then take the output information and save it to the
+    WorkDirectory object.
+"""
+
+def cluster_genomes(Bdb,data_folder,MASH_ANI=.90,ANIn=.99,dry=False,
+                    skipMash=False, skipANIn=False):
     """
     Takes a number of command line arguments and returns a couple pandas dataframes
 
-    Bdb = The passed in DataFrame with cluster information added
-    Mdb = MASH comparison specifics
-    Ndb = ANIn comparison specifics
+    Required Input:
+    * Bdb           - pandas dataframe with the columns "genome" and "location"
+    * data_folder   - location where MASH and ANIn data will be stored
+    
+    Optional Input:
+    
+    ***** Clustering Arguments *****
+    * MASH_ANI      - ANI threshold for clustering MASH
+    * skipMash      - If true, skip MASH altogether
+    
+    * ANIn          - ANI threshold for clustering ANIn
+    * ANIn_cov      - Coverage threshold for clustering ANIn
+    * skipANIn      - If true, skip ANIn clustering altogether
+    
+    ***** Algorithm Arguments *****
+    * MASH_kmers    - kmers to form during MASH comparisons
+    
+    ***** Other Arguments *****
+    * dry           - don't actually do anything, just print commands
+    * threads       - number of threads to use for analysis
+    * overwrite     - overwrite existing data
+    
+    Returned Output:
+    * Mdb = MASH comparison specifics
+    * Ndb = ANIn comparison specifics
+    * Cdb = Clustering information
     """
     
-    # Make a folder for MASH output
-    MASH_folder = output_folder + 'MASH_files/'
-    dm.make_dir(MASH_folder,dry)
+    logging.info(
+    "Step 1. Parse Arguments")
     
-    # Run MASH clustering
-    Mdb, Cdb = perform_mash_clustering(Bdb,MASH_folder,MASH_ANI=MASH_ANI,dry=dry)
-    
-    # Add preliminary cluster information to Bdb
-    Bdb = pd.merge(Bdb,Cdb)
-    
-    # Make a folder for ANIn output
-    ANIn_folder = output_folder + 'ANIn_files/'
-    dm.make_dir(ANIn_folder,dry)
-    
-    # Run ANIn clustering
-    Ndb, Gdb = perform_anin_clustering(Bdb,ANIn_folder,ANIn=ANIn, dry=dry)
-    
-    # Add ANIn cluster information to Bdb
-    Bdb = Bdb.rename(columns={'cluster':'MASH_cluster'})
-    Gdb = Gdb.rename(columns={'cluster':'ANIn_cluster'})
-    Bdb = pd.merge(Bdb,Gdb)
-    
-    return Bdb,Mdb,Ndb
-    
+    logging.info(
+    "Step 2. Perform MASH clustering")
+    if not skipMash:
 
-def perform_mash_clustering(Bdb, MASH_folder, MASH_ANI=.90, dry=False):
-    """
-    Run MASH pairwise within all samples
+        logging.info(
+        "2a. Run pair-wise MASH clustering")
+        Mdb = all_vs_all_MASH(Bdb, data_folder, dry=dry)
+        
+        logging.info(
+        "2b. Cluster pair-wise MASH clustering")
+        Cdb = cluster_database(Mdb,MASH_ANI)
+        
+    else:
+        Cdb = gen_nomash_cdb(Bdb)
+        
+    logging.info(
+    "Step 3. Perform ANIn clustering")
+    if not skipANIn:
     
-    Cluster genomes within each infant using MASH
-    """
+        logging.info(
+        "3a. Run pair-wise ANIn within Cdb clusters")
+        Ndb = run_anin_on_clusters(Bdb, Cdb, data_folder, dry=dry)
+        
+        logging.info(
+        "3b. Cluster pair-wise ANIn within Cdb clusters")
+        Cdb = cluster_anin_database(Cdb, Ndb, ANIn=.99, cov_thresh=0.5)
+
+    logging.info(
+    "Step 4. Return output")
     
-    # Run MASH
-    Mdb = all_vs_all_MASH(Bdb, MASH_folder, dry=False)
+    return Cdb,Mdb,Ndb
+
+def d_cluster_wrapper(args,workDirectory):
     
-    # Cluster MASH
-    Cdb = cluster_database(Mdb,MASH_ANI)
+    # Load the WorkDirectory.
+    logging.info("Loading work directory")
+    workDirectory = drep_modules.WorkDirectory.WorkDirectory(args.work_directory)
+    logging.info(str(workDirectory))
     
-    return Mdb, Cdb
+    # Get all the arguments to call cluster_genomes().
+    Bdb = parse_arguments(args,workDirectory)
     
-def perform_anin_clustering(Bdb, ANIn_folder, ANIn=.99, dry=False):
-    """
-    Run ANIn pairwise within each cluster in the Bdb dataframe
+def parse_arguments(args,workDirectory):
     
-    Cluster clusters using ANIn threshold
-    """
+    # If genomes are provided, load them
+    if args.genomes != None:
+        assert workDirectory.hasDb("Bdb") == False, \
+        "Must either provide a genome list, or run the 'filter' operation with the same work directory"
+        Bdb = load_genomes(args.genomes)
+        
+    # If genomes are not provided, don't load them
+    if args.genomes == None:
+        assert workDirectory.hasDb("Bdb") != False, \
+        "Must either provide a genome list, or run the 'filter' operation with the same work directory"
+        
+    return Bdb
     
-    # Run ANIn
-    Ndb = run_anin_on_clusters(Bdb, ANIn_folder,dry=dry)
+def cluster_anin_database(Cdb, Ndb, ANIn=.99, cov_thresh=0.5):
     
-    # Cluster ANIn
-    Gdb = cluster_anin_database(Bdb, Ndb, ANIn=.99, cov_thresh=0.5)
-    
-    return Ndb, Gdb
-    
-def cluster_anin_database(Bdb, Ndb, ANIn=.99, cov_thresh=0.5):
-    
-    Table = {'genome':[],'cluster':[]}
+    Table = {'genome':[],'ANIn_cluster':[]}
 
     # For every MASH cluster-
-    for cluster in Bdb['cluster'].unique():
-        d = Ndb[Ndb['reference'].isin(Bdb['genome'][Bdb['cluster'] == cluster].tolist())]
+    for cluster in Cdb['MASH_cluster'].unique():
+        # Filter the database to this cluster
+        d = Ndb[Ndb['reference'].isin(Cdb['genome'][Cdb['MASH_cluster'] == cluster].tolist())]
+        
+        # Make a graph of the genomes in this cluster based on Ndb 
         g = make_graph_anin(d,cov_thresh=cov_thresh,anin_thresh=ANIn)
         df = cluster_graph(g)
-        #df['cluster'] = str(cluster) + df['cluster'].astype(str)
     
-        # For every ANIn cluster-
+        # For every ANIn cluster in this graph -
         for clust in df['cluster'].unique():
+            # Filter the database to this cluster
+            d = df[df['cluster'] == clust]
             
             # For every genome in this cluster-            
-            d = df[df['cluster'] == clust]
             for genome in d['genome'].tolist():
                                 
+                # Save the cluster information
                 Table['genome'].append(genome)
-                Table['cluster'].append("{0}_{1}".format(cluster,clust))
+                Table['ANIn_cluster'].append("{0}_{1}".format(cluster,clust))
     
     Gdb = pd.DataFrame(Table)
     
-    return Gdb
+    return pd.merge(Gdb,Cdb)
 
-def run_anin_on_clusters(Bdb, ANIn_folder, dry=False):
+def run_anin_on_clusters(Bdb, Cdb, data_folder, dry=False):
     """
     For each cluster in Bdb, run pairwise ANIn
     """
+    
+    # Set up folders
+    ANIn_folder = data_folder + 'ANIn_files/'
+    dm.make_dir(ANIn_folder,dry)
+    
+    # Add cluster information to Cdb
+    Bdb = pd.merge(Bdb,Cdb)
+    
     Ndb = pd.DataFrame()
     org_lengths = {y:dm.fasta_length(x) for x,y in zip(Bdb['location'].tolist(),Bdb['genome'].tolist())}
     
-    for cluster in Bdb['cluster'].unique():
-        d = Bdb[Bdb['cluster'] == cluster]
+    for cluster in Bdb['MASH_cluster'].unique():
+        d = Bdb[Bdb['MASH_cluster'] == cluster]
     
         genomes = d['location'].tolist()
         outf = "{0}{1}/".format(ANIn_folder,cluster)
@@ -124,7 +177,7 @@ def run_anin_on_clusters(Bdb, ANIn_folder, dry=False):
         
         print("Running nucmer on cluster {0}: {1} genomes".format(cluster,len(genomes),outf))
         data = run_nucmer(genomes,outf,org_lengths,maxgap=1,noextend=True,dry=dry)
-        data['cluster'] = cluster
+        data['MASH_cluster'] = cluster
         Ndb = pd.concat([Ndb,data],ignore_index=True)
         
     return Ndb
@@ -153,12 +206,15 @@ def run_nucmer(genomes,outf,b2s,c=65,maxgap=90,noextend=False,method='mum',dry=F
     return data
     
     
-def all_vs_all_MASH(Bdb, MASH_folder, dry=False):
+def all_vs_all_MASH(Bdb, data_folder, dry=False):
     """
     Run MASH pairwise within all samples in Bdb
     """
     
     # Set up folders
+    MASH_folder = data_folder + 'MASH_files/'
+    dm.make_dir(MASH_folder,dry)
+    
     sketch_folder = MASH_folder + 'sketches/'
     if not dry:
         if os.path.exists(sketch_folder):
@@ -204,18 +260,10 @@ def cluster_database(db, threshold):
     """ 
     g = make_graph(db, threshold)
     Cdb = cluster_graph(g)
+    Cdb = Cdb.rename(columns={'cluster':'MASH_cluster'})
     
     return Cdb
     
-
-def load_genomes(genome_list):
-    Table = {'genome':[],'location':[]}
-    
-    for genome in genome_list: 
-        Table['genome'].append('.'.join(os.path.basename(genome).split('.')[:-1]))
-        Table['location'].append(genome)
-        
-    return pd.DataFrame(Table)
 
 def make_graph_anin(df,cov_thresh=0.5,anin_thresh = 0.99):
     G = nx.Graph()
@@ -343,7 +391,19 @@ def run_nucmer_cmd(cmd,dry=False,shell=False):
         else: print(' '.join(cmd))
     return
     
+def load_genomes(genome_list):
+    Table = {'genome':[],'location':[]}
+
+    for genome in genome_list: 
+        assert os.path.isfile(genome)
+        Table['genome'].append('.'.join(os.path.basename(genome).split('.')[:-1]))
+        Table['location'].append(genome)
+    
+    Bdb = pd.DataFrame(Table)
+    return Bdb
+    
 def test_clustering():
+
     # Get test genomes
 	test_genomes = glob.glob(str(os.getcwd()) + '/../test/genomes/*')
 	names = [os.path.basename(g) for g in test_genomes]
@@ -357,11 +417,13 @@ def test_clustering():
 	os.makedirs(test_directory)
 	
 	# Perform functional test
-	Bdb,Mdb,Ndb = cluster_genomes(Bdb,test_directory)
+	Cdb,Mdb,Ndb = cluster_genomes(Bdb,test_directory)
 	
 	# Confirm it's right by showing there is one group of 3 and two groups of one
-	group_lengths = [len(Bdb['genome'][Bdb['ANIn_cluster'] == x].tolist()) for x in Bdb['ANIn_cluster'].unique()]
-	assert group_lengths == [3, 1, 1]
+	group_lengths = sorted([len(Cdb['genome'][Cdb['ANIn_cluster'] == x].tolist()) \
+	            for x in Cdb['ANIn_cluster'].unique()])
+	print(group_lengths)
+	assert group_lengths == [1, 1, 3]
 	
 	print("Functional test success!")
 
