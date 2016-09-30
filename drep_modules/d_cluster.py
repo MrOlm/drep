@@ -8,15 +8,28 @@ import networkx as nx
 import multiprocessing
 import logging
 from subprocess import call
+import sys
 
 # !!! This is just for testing purposes, obviously
 import sys
 sys.path.append('/home/mattolm/Programs/drep/')
 import drep_modules as dm
+import drep_modules
+
+"""
+##################################################################
+                              To Do
+
+*   Write d_cluster_wrapper (including the output part)
+
+##################################################################
+"""
+
 
 """
 Bdb = pandas DataFrame with the columns genome and location
 Mdb = pandas containing raw MASH information
+Ndb = pandas containing raw ANIn information
 Cdb = pandas containing clustering information (both MASH and ANIn)
 """
 
@@ -31,8 +44,10 @@ Cdb = pandas containing clustering information (both MASH and ANIn)
     WorkDirectory object.
 """
 
-def cluster_genomes(Bdb,data_folder,MASH_ANI=.90,ANIn=.99,dry=False,
-                    skipMash=False, skipANIn=False):
+def cluster_genomes(Bdb, data_folder, MASH_ANI=.90, skipMash=False, ANIn=.99, 
+                    ANIn_cov=0.5, skipANIn=False, MASH_s=1000, n_c=65,
+                    n_maxgap=90, n_noextend=False, n_method='mum', n_preset=None,
+                    dry=False, threads=6, overwrite=False):
     """
     Takes a number of command line arguments and returns a couple pandas dataframes
 
@@ -51,11 +66,18 @@ def cluster_genomes(Bdb,data_folder,MASH_ANI=.90,ANIn=.99,dry=False,
     * skipANIn      - If true, skip ANIn clustering altogether
     
     ***** Algorithm Arguments *****
-    * MASH_kmers    - kmers to form during MASH comparisons
+    * MASH_s        - MASH sketch size
+    
+    * n_c           - nucmer argument c
+    * n_maxgap      - nucmer argument maxgap
+    * n_noextend    - nucmer argument noextend
+    * n_method      - nucmer argument method
+    
+    * n_preset      - preset nucmer arrangements: {tight,normal} 
     
     ***** Other Arguments *****
     * dry           - don't actually do anything, just print commands
-    * threads       - number of threads to use for analysis
+    * threads       - number of threads to use for multithreading steps
     * overwrite     - overwrite existing data
     
     Returned Output:
@@ -67,17 +89,22 @@ def cluster_genomes(Bdb,data_folder,MASH_ANI=.90,ANIn=.99,dry=False,
     logging.info(
     "Step 1. Parse Arguments")
     
+    # Deal with nucmer presets
+    if n_preset != None:
+        n_c, n_maxgap, n_noextend, n_method = nucmer_preset(n_preset)
+    
     logging.info(
     "Step 2. Perform MASH clustering")
     if not skipMash:
 
         logging.info(
         "2a. Run pair-wise MASH clustering")
-        Mdb = all_vs_all_MASH(Bdb, data_folder, dry=dry)
+        Mdb = all_vs_all_MASH(Bdb, data_folder, MASH_s = MASH_s, dry=dry,
+                            overwrite= overwrite)
         
         logging.info(
         "2b. Cluster pair-wise MASH clustering")
-        Cdb = cluster_database(Mdb,MASH_ANI)
+        Cdb = cluster_database(Mdb, MASH_ANI, dry=dry)
         
     else:
         Cdb = gen_nomash_cdb(Bdb)
@@ -85,29 +112,52 @@ def cluster_genomes(Bdb,data_folder,MASH_ANI=.90,ANIn=.99,dry=False,
     logging.info(
     "Step 3. Perform ANIn clustering")
     if not skipANIn:
-    
+        
         logging.info(
         "3a. Run pair-wise ANIn within Cdb clusters")
-        Ndb = run_anin_on_clusters(Bdb, Cdb, data_folder, dry=dry)
+        Ndb = run_anin_on_clusters(Bdb, Cdb, data_folder, n_c=n_c, n_maxgap=n_maxgap,
+                                    n_noextend=n_noextend, p= threads, n_method=n_method, 
+                                    dry=dry, overwrite= overwrite)
         
         logging.info(
         "3b. Cluster pair-wise ANIn within Cdb clusters")
-        Cdb = cluster_anin_database(Cdb, Ndb, ANIn=.99, cov_thresh=0.5)
+        Cdb = cluster_anin_database(Cdb, Ndb, ANIn=ANIn, cov_thresh=ANIn_cov)
 
     logging.info(
     "Step 4. Return output")
     
-    return Cdb,Mdb,Ndb
+    return Cdb, Mdb, Ndb
 
-def d_cluster_wrapper(args,workDirectory):
+def d_cluster_wrapper(args):
     
     # Load the WorkDirectory.
     logging.info("Loading work directory")
     workDirectory = drep_modules.WorkDirectory.WorkDirectory(args.work_directory)
     logging.info(str(workDirectory))
     
-    # Get all the arguments to call cluster_genomes().
-    Bdb = parse_arguments(args,workDirectory)
+    # Parse arguments
+    Bdb, data_folder = parse_arguments(args,workDirectory)
+    a = vars(args)
+    
+    # Run the main program
+    Cdb, Mdb, Ndb = cluster_genomes(Bdb, data_folder, MASH_ANI= a['MASH_ani'],\
+                    skipMash= a['SkipMash'], ANIn= a['ANIn_ANI'], ANIn_cov= a['ANIn_cov'],\
+                    skipANIn= a['SkipANIn'], MASH_s= a['MASH_sketch'], n_c= a['n_c'],\
+                    n_maxgap= a['n_maxgap'], n_noextend= a['n_noextend'],\
+                    n_method= a['n_method'], n_preset= a['n_PRESET'], dry = a['dry'],\
+                    threads= a['processors'], overwrite= a['overwrite'])
+                    
+    # Save the output
+    data_dir = workDirectory.location + '/data_tables/'
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+        
+    logging.info("Main program run complete- saving output to {0}".format(data_dir))
+    
+    Cdb.to_csv(os.path.join(data_dir,'Cdb.csv'),index=False)
+    Mdb.to_csv(os.path.join(data_dir,'Mdb.csv'),index=False)
+    Ndb.to_csv(os.path.join(data_dir,'Ndb.csv'),index=False)
+    Bdb.to_csv(os.path.join(data_dir,'Bdb.csv'),index=False)
     
 def parse_arguments(args,workDirectory):
     
@@ -115,14 +165,27 @@ def parse_arguments(args,workDirectory):
     if args.genomes != None:
         assert workDirectory.hasDb("Bdb") == False, \
         "Must either provide a genome list, or run the 'filter' operation with the same work directory"
-        Bdb = load_genomes(args.genomes)
-        
+        Bdb = load_genomes(args.genomes)    
     # If genomes are not provided, don't load them
     if args.genomes == None:
         assert workDirectory.hasDb("Bdb") != False, \
         "Must either provide a genome list, or run the 'filter' operation with the same work directory"
+        Bdb = workDirectory.data_tables['Bdb']
+    
+    # Make sure this isn't going to overwrite old data
+    data_dir = os.path.join(workDirectory.location, '/data_tables/')
+    if os.path.exists(data_dir):
+        for file in ['Cdb.csv','Mdb.csv','Ndb.csv']:
+            if os.path.exists(os.path.join(data_dir,file)):
+                assert args.overwrite, "THIS WILL OVERWRITE {0}".format(\
+                                        os.path.join(data_dir,file))
+                logging.info("THIS WILL OVERWRITE {0}".format(os.path.join(data_dir,file)))
         
-    return Bdb
+    
+    # Make data_folder
+    data_folder = os.path.join(workDirectory.location, 'data/')
+    
+    return Bdb, data_folder
     
 def cluster_anin_database(Cdb, Ndb, ANIn=.99, cov_thresh=0.5):
     
@@ -153,17 +216,23 @@ def cluster_anin_database(Cdb, Ndb, ANIn=.99, cov_thresh=0.5):
     
     return pd.merge(Gdb,Cdb)
 
-def run_anin_on_clusters(Bdb, Cdb, data_folder, dry=False):
+def run_anin_on_clusters(Bdb, Cdb, data_folder, n_c= 65, n_maxgap= 90, n_noextend= False,
+                        n_method= 'mum', p = 6, dry= False, overwrite= False):
+
     """
     For each cluster in Cdb, run pairwise ANIn
+    
     """
     
     # Set up folders
     ANIn_folder = data_folder + 'ANIn_files/'
-    dm.make_dir(ANIn_folder,dry)
+    #dm.make_dir(ANIn_folder,dry,overwrite)
     
     # Add cluster information to Cdb
     Bdb = pd.merge(Bdb,Cdb)
+    logging.info("{0} MASH clusters were made".format(len(Bdb['MASH_cluster']\
+                .unique().tolist())))
+
     
     # Step 1. Make the directories and generate the list of commands to be run    
     
@@ -178,7 +247,8 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, dry=False):
     # Step 2. Run the nucmer commands  
     
     if not dry:
-        thread_nucmer_cmds(cmds)
+        thread_nucmer_cmds(cmds,p)
+        pass
         
     # Step 3. Parse the nucmer output
     
@@ -213,7 +283,7 @@ def run_nucmer_genomeList(genomes,outf,b2s,c=65,maxgap=90,noextend=False,method=
             out = "{0}{1}_vs_{2}".format(outf,get_genome_name_from_fasta(g1),get_genome_name_from_fasta(g2))
             cmds.append(gen_nucmer_cmd(out,g1,g2,c=c,noextend=noextend,maxgap=maxgap,method=method))
     if not dry:
-        thread_nucmer_cmds(cmds)
+        thread_nucmer_cmds(cmds, t=p)
         
     # Parse resulting folder
     data = process_deltadir(outf, b2s)
@@ -223,38 +293,37 @@ def run_nucmer_genomeList(genomes,outf,b2s,c=65,maxgap=90,noextend=False,method=
     data['method'] = method
     
     return data
-    
-    
-def all_vs_all_MASH(Bdb, data_folder, dry=False):
+     
+def all_vs_all_MASH(Bdb, data_folder, MASH_s=1000, dry=False, overwrite=False):
     """
     Run MASH pairwise within all samples in Bdb
     """
     
     # Set up folders
     MASH_folder = data_folder + 'MASH_files/'
-    dm.make_dir(MASH_folder,dry)
+    dm.make_dir(MASH_folder, dry, overwrite)
     
     sketch_folder = MASH_folder + 'sketches/'
-    if not dry:
-        if os.path.exists(sketch_folder):
-	        shutil.rmtree(sketch_folder)
-        os.makedirs(sketch_folder)
+    assert os.path.exists(sketch_folder) == False
+    dm.make_dir(sketch_folder,dry)
     
     # Make the MASH sketches
     for fasta in Bdb['location'].unique():
         genome = Bdb['genome'][Bdb['location'] == fasta].tolist()[0]
-        cmd = ['/opt/bin/bio/mash','sketch',fasta,'-o',sketch_folder + genome]
+        cmd = ['/opt/bin/bio/mash', 'sketch', fasta, '-s', str(MASH_s), '-o',
+                sketch_folder + genome]
         cmd = ' '.join(cmd)
         dm.run_cmd(cmd,dry,True)
         
     # Combine MASH sketches
-    cmd = ['/opt/bin/bio/mash','paste',MASH_folder + 'ALL.msh',sketch_folder + '*']
+    cmd = ['/opt/bin/bio/mash', 'paste', MASH_folder + 'ALL.msh', sketch_folder+ '*']
     cmd = ' '.join(cmd)
     dm.run_cmd(cmd,dry,True)
     
     # Calculate distances
     all_file = MASH_folder + 'ALL.msh'
-    cmd = ['/opt/bin/bio/mash','dist',all_file,all_file,'>',MASH_folder + 'MASH_table.tsv']
+    cmd = ['/opt/bin/bio/mash', 'dist', all_file, all_file, '>', MASH_folder
+            + 'MASH_table.tsv']
     cmd = ' '.join(cmd)
     dm.run_cmd(cmd,dry,True)
     
@@ -271,7 +340,7 @@ def all_vs_all_MASH(Bdb, data_folder, dry=False):
     
     return Mdb
     
-def cluster_database(db, threshold):
+def cluster_database(db, threshold, dry=False):
     """
     Cluster a database which has the columns "genome1", "genome2", "similarity"
     
@@ -283,7 +352,6 @@ def cluster_database(db, threshold):
     
     return Cdb
     
-
 def make_graph_anin(df,cov_thresh=0.5,anin_thresh = 0.99):
     G = nx.Graph()
     for genome in df['reference'].unique().tolist():
@@ -316,7 +384,7 @@ def cluster_graph(G):
     return df
     
 def get_genome_name_from_fasta(fasta):
-    return str(os.path.basename(fasta).split('.')[0])
+    return str(os.path.basename(fasta))
     
 # Parse NUCmer delta file to get total alignment length and total sim_errors
 def parse_delta(filename):
@@ -401,6 +469,11 @@ def thread_nucmer_cmds(cmds,t=10):
     pool.join()
     return
     
+def gen_nomash_cdb(Bdb):
+    Cdb = Bdb.copy()
+    Cdb['MASH_cluster'] = 0
+    return Cdb
+    
 def run_nucmer_cmd(cmd,dry=False,shell=False):
     if shell:
         if not dry: call(cmd,shell=True)
@@ -415,33 +488,45 @@ def load_genomes(genome_list):
 
     for genome in genome_list: 
         assert os.path.isfile(genome)
-        Table['genome'].append('.'.join(os.path.basename(genome).split('.')[:-1]))
+        Table['genome'].append(os.path.basename(genome))
         Table['location'].append(genome)
     
     Bdb = pd.DataFrame(Table)
     return Bdb
+    
+def nucmer_preset(preset):
+   #nucmer argument c, n_maxgap, n_noextend, n_method
+    
+    assert preset in ['tight','normal']
+    
+    if preset == 'tight':
+        return 65, 1, True, 'mum'
+        
+    elif preset == 'normal':
+        return 65, 90, False, 'mum'
     
 def test_clustering():
 
     # Get test genomes
 	test_genomes = glob.glob(str(os.getcwd()) + '/../test/genomes/*')
 	names = [os.path.basename(g) for g in test_genomes]
-	assert names == ['Enterococcus_faecalis_T2.fna', 'Escherichia_coli_Sakai.fna', 'Enterococcus_casseliflavus_EC20.fasta', 'Enterococcus_faecalis_TX0104.fa', 'Enterococcus_faecalis_YI6-1.fna']
+	assert names == ['Enterococcus_faecalis_T2.fna', 
+	                 'Escherichia_coli_Sakai.fna',
+	                 'Enterococcus_casseliflavus_EC20.fasta', 
+	                 'Enterococcus_faecalis_TX0104.fa',
+	                 'Enterococcus_faecalis_YI6-1.fna']
 	Bdb = load_genomes(test_genomes)
 	
 	# Set test directory
 	test_directory = str(os.getcwd()) + '/../test/test_backend/'
-	if os.path.exists(test_directory):
-	    shutil.rmtree(test_directory)
-	os.makedirs(test_directory)
+	dm.make_dir(test_directory,overwrite=True)
 	
 	# Perform functional test
 	Cdb,Mdb,Ndb = cluster_genomes(Bdb,test_directory)
 	
 	# Confirm it's right by showing there is one group of 3 and two groups of one
-	group_lengths = sorted([len(Cdb['genome'][Cdb['ANIn_cluster'] == x].tolist()) \
-	            for x in Cdb['ANIn_cluster'].unique()])
-	print(group_lengths)
+	group_lengths = sorted([len(Cdb['genome'][Cdb['ANIn_cluster'] == x].tolist())
+	                        for x in Cdb['ANIn_cluster'].unique()])
 	assert group_lengths == [1, 1, 3]
 	
 	print("Functional test success!")
