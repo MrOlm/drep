@@ -20,8 +20,6 @@ import drep_modules
 ##################################################################
                               To Do
 
-*   Write d_cluster_wrapper (including the output part)
-
 ##################################################################
 """
 
@@ -138,6 +136,9 @@ def d_cluster_wrapper(args):
     # Parse arguments
     Bdb, data_folder = parse_arguments(args,workDirectory)
     a = vars(args)
+    if a['n_PRESET'] != None:
+        a['n_c'], a['n_maxgap'], a['n_noextend'], a['n_method'] = nucmer_preset(\
+                                                                            a['n_PRESET'])
     
     # Run the main program
     Cdb, Mdb, Ndb = cluster_genomes(Bdb, data_folder, MASH_ANI= a['MASH_ani'],\
@@ -158,6 +159,12 @@ def d_cluster_wrapper(args):
     Mdb.to_csv(os.path.join(data_dir,'Mdb.csv'),index=False)
     Ndb.to_csv(os.path.join(data_dir,'Ndb.csv'),index=False)
     Bdb.to_csv(os.path.join(data_dir,'Bdb.csv'),index=False)
+    
+    # Log arguments
+    cluster_log = workDirectory.location + '/log/cluster_arguments.txt'
+    logfile = open(cluster_log, 'w')
+    logfile.write(str(a) + '\n')
+    logfile.close()
     
 def parse_arguments(args,workDirectory):
     

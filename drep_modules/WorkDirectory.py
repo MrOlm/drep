@@ -21,7 +21,7 @@ workDirectory
 ...../Cdb.csv # Genomes and cluster designations
 ./log
 ...../logger.log
-...../cluster_parameters.txt
+...../cluster_arguments.txt
 
 
 The data tables
