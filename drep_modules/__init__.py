@@ -3,6 +3,7 @@
 from subprocess import call
 import os
 from Bio import SeqIO
+import shutil
 
 def run_cmd(cmd,dry=False,shell=True):
     if shell:
@@ -13,12 +14,18 @@ def run_cmd(cmd,dry=False,shell=True):
         else: print(' '.join(cmd))
     return
     
-def make_dir(outdirname,dry=False):
+def make_dir(outdirname,dry=False,overwrite=False):
     if dry:
         return
     if os.path.exists(outdirname):
-        return
-    os.makedirs(outdirname)
+        if overwrite:
+            shutil.rmtree(outdirname)
+            os.makedirs(outdirname)
+        else:
+            assert False, "{0} already exsists! Will not overwrite with current settings".\
+                            format(outdirname)
+    else:
+        os.makedirs(outdirname)
     
 def thread_cmds(cmds,t=10):
     pool = multiprocessing.Pool(processes=t)

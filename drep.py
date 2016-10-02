@@ -76,8 +76,8 @@ if __name__ == '__main__':
 	Nflags = cluster_parser.add_argument_group('ANIn PARAMETERS')
 	Nflags.add_argument("-na", "--ANIn_ANI", help="ANI threshold to form ANIn clusters",
 	                    default=0.99)
-	Nflags.add_argument("-nc", "--ANIn_cov", help="Coverage of genome required to form\
-	                    ANIn clusters", default=0.5)
+	Nflags.add_argument("-nc", "--ANIn_cov", help="Fraction of genomes compared\
+	                     required to form ANIn clusters", default=0.5)
 	Nflags.add_argument("--SkipANIn", help="Skip ANIn calculations, just perform MASH\
 	                    clustering", action='store_true')
 	                    
