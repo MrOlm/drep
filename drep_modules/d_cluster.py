@@ -9,6 +9,7 @@ import multiprocessing
 import logging
 from subprocess import call
 import sys
+import json
 
 # !!! This is just for testing purposes, obviously
 import sys
@@ -20,6 +21,9 @@ import drep_modules
 ##################################################################
                               To Do
 
+* Sparate cluster and compare
+    *But then how do you deal with different Cdbs?
+    *You don't, you can overwrite them. It's not like it takes long to cluster
 ##################################################################
 """
 
@@ -248,8 +252,9 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, n_c= 65, n_maxgap= 90, n_noexten
         d = Bdb[Bdb['MASH_cluster'] == cluster]
         genomes = d['location'].tolist()
         outf = "{0}{1}/".format(ANIn_folder,cluster)
-        dm.make_dir(outf,dry)
-        cmds += gen_nucmer_commands(genomes,outf,maxgap=1,noextend=True)
+        dm.make_dir(outf,dry,overwrite)
+        cmds += gen_nucmer_commands(genomes, outf, maxgap=n_maxgap, noextend=n_noextend,\
+                                    c= n_c, method= 'mum')
         
     # Step 2. Run the nucmer commands  
     
@@ -427,7 +432,9 @@ def process_deltadir(delta_dir, org_lengths, logger=None):
     # Process directory to identify input files
     deltafiles = glob.glob(delta_dir + '*.delta')
 
-    Table = {'querry':[],'reference':[],'alignment_length':[],'similarity_errors':[],'ref_coverage':[],'querry_coverage':[],'ani':[]}
+    Table = {'querry':[],'reference':[],'alignment_length':[],'similarity_errors':[],
+            'ref_coverage':[],'querry_coverage':[],'ani':[], 'reference_length':[],
+            'querry_length':[],'alignment_coverage':[]}
         
     # Process .delta files assuming that the filename format holds:
     # org1_vs_org2.delta
@@ -453,12 +460,16 @@ def process_deltadir(delta_dir, org_lengths, logger=None):
             zero_error = True
         
         Table['querry'].append(qname)
+        Table['querry_length'].append(org_lengths[qname])
         Table['reference'].append(sname)
+        Table['reference_length'].append(org_lengths[sname])
         Table['alignment_length'].append(tot_length)
         Table['similarity_errors'].append(tot_sim_error)
         Table['ani'].append(perc_id)
         Table['ref_coverage'].append(sbjct_cover)
         Table['querry_coverage'].append(query_cover)
+        Table['alignment_coverage'].append((tot_length * 2)/(org_lengths[qname]\
+                                                             + org_lengths[sname]))
     
     df = pd.DataFrame(Table)
     return df

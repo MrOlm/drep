@@ -37,6 +37,7 @@ class WorkDirectory:
         self.location = os.path.abspath(location)
         self.data_tables = {}
         self.overwrite = False
+        self.name = None
         
         # Import data_tables
         loc = self.location + '/data_tables/'
