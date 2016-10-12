@@ -10,6 +10,9 @@ import logging
 from subprocess import call
 import sys
 import json
+import scipy.cluster.hierarchy
+import numpy as np
+import pickle
 
 # !!! This is just for testing purposes, obviously
 import sys
@@ -49,6 +52,8 @@ Cdb = pandas containing clustering information (both MASH and ANIn)
 def cluster_genomes(Bdb, data_folder, MASH_ANI=.90, skipMash=False, ANIn=.99, 
                     ANIn_cov=0.5, skipANIn=False, MASH_s=1000, n_c=65,
                     n_maxgap=90, n_noextend=False, n_method='mum', n_preset=None,
+                    M_clusterAlg='hierarchical', M_Lmethod='single', M_Lcutoff=0.1,
+                    N_clusterAlg='hierarchical', N_Lmethod='single', N_Lcutoff=0.01,
                     dry=False, threads=6, overwrite=False):
     """
     Takes a number of command line arguments and returns a couple pandas dataframes
@@ -60,14 +65,23 @@ def cluster_genomes(Bdb, data_folder, MASH_ANI=.90, skipMash=False, ANIn=.99,
     Optional Input:
     
     ***** Clustering Arguments *****
-    * MASH_ANI      - ANI threshold for clustering MASH
-    * skipMash      - If true, skip MASH altogether
+    * skipMash      - If true, skip MASH altogether (all_vs_all for ANIn)
+    * M_clusterAlg  - {simple, hierarchical}
+    * M_Lmethod      - MASH method of determining linkage  
+                    (to be passed to scipy.cluster.hierarchy.linkage)
+    * M_Lcutoff      - MASH linkage cutoff
+    * MASH_ANI      - ANI threshold for simple MASH clustering
     
-    * ANIn          - ANI threshold for clustering ANIn
-    * ANIn_cov      - Coverage threshold for clustering ANIn
     * skipANIn      - If true, skip ANIn clustering altogether
+    * N_clusterAlg  - {simple, hierarchical}
+    * ANIn          - ANI threshold for simple ANIn clustering
+    * ANIn_cov      - Coverage threshold for simple ANIn clustering
+    * N_Lmethod     - ANIn method of determining linkage  
+                    (to be passed to scipy.cluster.hierarchy.linkage)
+    * M_Lcutoff     - ANIn linkage cutoff 
     
-    ***** Algorithm Arguments *****
+    
+    ***** Comparison Algorithm Arguments *****
     * MASH_s        - MASH sketch size
     
     * n_c           - nucmer argument c
@@ -106,7 +120,8 @@ def cluster_genomes(Bdb, data_folder, MASH_ANI=.90, skipMash=False, ANIn=.99,
         
         logging.info(
         "2b. Cluster pair-wise MASH clustering")
-        Cdb = cluster_database(Mdb, MASH_ANI, dry=dry)
+        Cdb = cluster_mash_database(Mdb, M_clusterAlg, data_folder= data_folder, MASH_ANI= MASH_ANI, dry=dry,
+                                    M_Lmethod= M_Lmethod, M_Lcutoff= M_Lcutoff, overwrite= overwrite)
         
     else:
         Cdb = gen_nomash_cdb(Bdb)
@@ -123,7 +138,10 @@ def cluster_genomes(Bdb, data_folder, MASH_ANI=.90, skipMash=False, ANIn=.99,
         
         logging.info(
         "3b. Cluster pair-wise ANIn within Cdb clusters")
-        Cdb = cluster_anin_database(Cdb, Ndb, ANIn=ANIn, cov_thresh=ANIn_cov)
+        Cdb = cluster_anin_database(Cdb, Ndb, data_folder= data_folder, ANIn=ANIn, cov_thresh=ANIn_cov)
+        
+    else:
+        Cdb = gen_nomani_cdb(Bdb, Mdb)
 
     logging.info(
     "Step 4. Return output")
@@ -165,10 +183,10 @@ def d_cluster_wrapper(args):
     Bdb.to_csv(os.path.join(data_dir,'Bdb.csv'),index=False)
     
     # Log arguments
-    cluster_log = workDirectory.location + '/log/cluster_arguments.txt'
-    logfile = open(cluster_log, 'w')
-    logfile.write(str(a) + '\n')
-    logfile.close()
+    cluster_log = workDirectory.location + '/log/cluster_arguments.json'
+    with open(cluster_log, 'w') as fp:
+        json.dump(a, fp)
+    fp.close()
     
 def parse_arguments(args,workDirectory):
     
@@ -198,8 +216,99 @@ def parse_arguments(args,workDirectory):
     
     return Bdb, data_folder
     
-def cluster_anin_database(Cdb, Ndb, ANIn=.99, cov_thresh=0.5):
+def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
     
+    # Save names
+    names = list(db.columns)
+    
+    # Generate linkage dataframe
+    arr =  np.asarray(db)
+    linkage = scipy.cluster.hierarchy.linkage(arr, method= linkage_method)
+    
+    # Form clusters
+    fclust = scipy.cluster.hierarchy.fcluster(linkage,linkage_cutoff, \
+                                                                    criterion='distance')
+                                                                    
+    # Make Cdb
+    Cdb = gen_cdb_from_fclust(fclust,names)
+    
+    return Cdb, linkage
+    
+def gen_cdb_from_fclust(fclust,names):
+    
+    Table={'cluster':[],'genome':[]}
+    for i, c in enumerate(fclust):
+        Table['cluster'].append(c)
+        Table['genome'].append(names[i])
+
+    return pd.DataFrame(Table)    
+    
+
+def cluster_anin_database(Cdb, Ndb, method= 'hierarchical', data_folder = False, ANIn=.99, 
+                            cov_thresh=0.5, N_Lmethod= 'single', N_Lcutoff= 0.01, 
+                            overwrite= False):
+    
+    logging.info('Clustering ANIn database')
+    
+    if (data_folder != False) & (method == 'hierarchical'):
+        data_folder = data_folder + 'Clustering_files/'
+        if not os.path.exists(data_folder):
+            os.makedirs(data_folder)
+    
+    if method == 'simple':
+        Cdb = cluster_anin_simple(Cdb, Ndb, ANIn= ANIn, cov_thresh= 0.5)
+    
+    elif method == 'hierarchical':
+        
+        Table = {'genome':[],'ANIn_cluster':[]}
+        
+        # For every MASH cluster-
+        for cluster in Cdb['MASH_cluster'].unique():
+            # Filter the database to this cluster
+            d = Ndb[Ndb['reference'].isin(Cdb['genome'][Cdb['MASH_cluster'] == cluster].tolist())]
+            
+            # Remove values without enough coverage
+            d.loc[d['alignment_coverage'] <= cov_thresh, 'ani'] = 0
+            
+            # Handle case where cluster has one member
+            if len(d['reference'].unique()) == 1:
+                Table['genome'].append(d['reference'].unique().tolist()[0])
+                Table['ANIn_cluster'].append("{0}_0".format(cluster))
+                continue
+            
+            # Make a linkagedb
+            db = d.pivot("reference", "querry", "ani")
+            Gdb, linkage = cluster_hierarchical(db, linkage_method= N_Lmethod, \
+                                        linkage_cutoff= N_Lcutoff)
+            
+            # For every ANIn cluster
+            for clust in Gdb['cluster'].unique():
+                
+                # Filter the database to this cluster
+                d = Gdb[Gdb['cluster'] == clust]
+                
+                # For every genome in this cluster
+                for genome in d['genome'].tolist():
+                
+                    # Save cluster information
+                    Table['genome'].append(genome)
+                    Table['ANIn_cluster'].append("{0}_{1}".format(cluster,clust))
+                    
+            # Save the linkage
+            if (data_folder != False) & (method == 'hierarchical'):
+                pickle_name = "ANIn_linkage_cluster_{0}.pickle".format(cluster)
+                logging.info('Saving ANIn_linkage pickle {1} to {0}'.format(data_folder,\
+                                                                    pickle_name))
+                with open(data_folder + pickle_name, 'wb') as handle:
+                    pickle.dump(linkage, handle)
+    
+    Gdb = pd.DataFrame(Table)
+    return pd.merge(Gdb, Cdb)
+    
+    
+                            
+def cluster_anin_simple(Cdb, Ndb, ANIn=.99, cov_thresh=0.5):
+
     Table = {'genome':[],'ANIn_cluster':[]}
 
     # For every MASH cluster-
@@ -352,6 +461,33 @@ def all_vs_all_MASH(Bdb, data_folder, MASH_s=1000, dry=False, overwrite=False):
     
     return Mdb
     
+def cluster_mash_database(db, method=('simple','hierarchical'), data_folder= False,
+                            MASH_ANI= 90, dry=False, 
+                            M_Lmethod= 'single', M_Lcutoff= 0.10, overwrite= False):
+    
+    logging.info('Clustering MASH database')
+    
+    if (data_folder != False) & (method == 'hierarchical'):
+        data_folder = data_folder + 'Clustering_files/'
+        dm.make_dir(data_folder, dry, overwrite)
+    
+    if method == 'simple':
+        Cdb = cluster_database(db, MASH_ANI, dry= dry)
+        Cdb = Cdb.rename(columns={'cluster':'MASH_cluster'})
+    
+    elif method == 'hierarchical':
+        linkage_db = db.pivot("genome1","genome2","similarity")
+        Cdb, linkage = cluster_hierarchical(linkage_db, linkage_method= M_Lmethod, \
+                                    linkage_cutoff= M_Lcutoff)
+        Cdb = Cdb.rename(columns={'cluster':'MASH_cluster'})
+        
+    if (data_folder != False) & (method == 'hierarchical'):
+        logging.info('Saving MASH_linkage pickle to {0}'.format(data_folder))
+        with open(data_folder + 'MASH_linkage.pickle', 'wb') as handle:
+            pickle.dump(linkage, handle)
+    
+    return Cdb
+
 def cluster_database(db, threshold, dry=False):
     """
     Cluster a database which has the columns "genome1", "genome2", "similarity"
@@ -360,7 +496,6 @@ def cluster_database(db, threshold, dry=False):
     """ 
     g = make_graph(db, threshold)
     Cdb = cluster_graph(g)
-    Cdb = Cdb.rename(columns={'cluster':'MASH_cluster'})
     
     return Cdb
     
@@ -522,6 +657,9 @@ def nucmer_preset(preset):
         
     elif preset == 'normal':
         return 65, 90, False, 'mum'
+        
+def gen_nomani_cdb(Bdb, Mdb):
+    assert False, "Sorry, I haven't written this part of the program yet"
     
 def test_clustering():
 
