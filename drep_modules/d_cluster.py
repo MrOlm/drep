@@ -14,12 +14,15 @@ import scipy.cluster.hierarchy
 import scipy.spatial.distance as ssd
 import numpy as np
 import pickle
+import time
 
 # !!! This is just for testing purposes, obviously
 import sys
 sys.path.append('/home/mattolm/Programs/drep/')
 import drep_modules as dm
 import drep_modules
+
+pd.options.mode.chained_assignment = None
 
 """
 ##################################################################
@@ -110,6 +113,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     
     logging.info(
     "Step 2. Perform MASH clustering")
+    print("Running MASH clustering...")
     if not kwargs.pop('skipMash', False):
 
         logging.info(
@@ -125,6 +129,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
         
     logging.info(
     "Step 3. Perform ANIn clustering")
+    print("Running ANIn clustering...")
     if not kwargs.pop('skipANIn', False):
         
         logging.info(
@@ -140,6 +145,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
 
     logging.info(
     "Step 4. Return output")
+    print("Clustering finished!")
     
     return Cdb, Mdb, Ndb
 
@@ -381,7 +387,7 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, **kwargs):
     # Step 2. Run the nucmer commands  
     
     if not dry:
-        thread_nucmer_cmds(cmds,p)
+        thread_nucmer_cmds_status(cmds,p)
         pass
         
     # Step 3. Parse the nucmer output
@@ -417,7 +423,7 @@ def run_nucmer_genomeList(genomes,outf,b2s,c=65,maxgap=90,noextend=False,method=
             out = "{0}{1}_vs_{2}".format(outf,get_genome_name_from_fasta(g1),get_genome_name_from_fasta(g2))
             cmds.append(gen_nucmer_cmd(out,g1,g2,c=c,noextend=noextend,maxgap=maxgap,method=method))
     if not dry:
-        thread_nucmer_cmds(cmds, t=p)
+        thread_nucmer_cmds_status(cmds, t=p)
         
     # Parse resulting folder
     data = process_deltadir(outf, b2s)
@@ -646,17 +652,38 @@ def thread_nucmer_cmds(cmds,t=10):
     pool.join()
     return
     
+def thread_nucmer_cmds_status(cmds,t=10):
+    total = len(cmds)
+    print("Running {0} mummer comparisons...".format(total))
+    pool = multiprocessing.Pool(processes=t)
+    rs = pool.map_async(run_nucmer_cmd,cmds)
+    pool.close()
+    
+    while(True):
+        remaining = total - rs._number_left
+        sys.stdout.write('\r')
+        sys.stdout.write("[{0:20}] {1:3}%".format('='*int(((remaining/total) * 100)/5), int(((remaining/total) * 100))))
+        sys.stdout.flush()
+        if (rs.ready()): 
+            sys.stdout.write('\n')
+            break
+        time.sleep(0.5)
+        
+    pool.join()
+    return
+    
 def gen_nomash_cdb(Bdb):
     Cdb = Bdb.copy()
     Cdb['MASH_cluster'] = 0
     return Cdb
     
 def run_nucmer_cmd(cmd,dry=False,shell=False):
+    devnull = open(os.devnull, 'w')
     if shell:
-        if not dry: call(cmd,shell=True)
+        if not dry: call(cmd,shell=True, stderr=devnull,stdout=devnull)
         else: print(cmd)
     else: 
-        if not dry: call(cmd)
+        if not dry: call(cmd, stderr=devnull,stdout=devnull)
         else: print(' '.join(cmd))
     return
     

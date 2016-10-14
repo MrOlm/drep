@@ -10,18 +10,25 @@ sys.path.append('/home/mattolm/Programs/drep/')
 import drep_modules as dm
 import drep_modules.WorkDirectory
 import drep_modules.d_cluster
+import drep_modules.d_analyze
 
 def drep_wrapper(args):
     """
     This is the meat of the program
     """
-    
+    # Call the intended operation
+    if args.operation == "cluster":
+        cluster_operation(**vars(args))
+    if args.operation == "analyze":
+        analyze_operation(**vars(args)) 
+
+def cluster_operation(**kwargs):
     # Make the WorkDirectory if it doesn't yet exist, and make a logger in it.
-    args.work_directory = str(os.path.abspath(args.work_directory))
-    if not os.path.exists(args.work_directory):
-        os.makedirs(args.work_directory)
+    args.work_directory = str(os.path.abspath(kwargs['work_directory']))
+    if not os.path.exists(kwargs['work_directory']):
+        os.makedirs(kwargs['work_directory'])
         
-    log_dir = args.work_directory + '/log/'
+    log_dir = kwargs['work_directory'] + '/log/'
     if not os.path.exists(log_dir):
         os.makedirs(log_dir)
         
@@ -30,15 +37,12 @@ def drep_wrapper(args):
     logging.info("***Logger made at {0}***".format(args.work_directory + '/logger.log'))
     logging.info("Arguments: {0}".format(args))
     
-    # Call the intended operation
-    if args.operation == "cluster":
-        cluster_operation(**vars(args))
-
-def cluster_operation(**kwargs):
-    
     logging.info("Starting the clustering operation")
     drep_modules.d_cluster.d_cluster_wrapper(kwargs['work_directory'],**kwargs)
     logging.info("Finished the clustering operation")
+
+def analyze_operation(**kwargs):
+    drep_modules.d_analyze.d_analyze_wrapper(kwargs['work_directory'],**kwargs)    
 
 """
 ########################################
@@ -57,7 +61,9 @@ if __name__ == '__main__':
     parser = argparse.ArgumentParser(formatter_class=SmartFormatter)
     subparsers = parser.add_subparsers(help='Desired operation',dest='operation')
     
+    '''
     ####### Arguments for clustering operation ######
+    '''
     
     cluster_parser = subparsers.add_parser("cluster",formatter_class=SmartFormatter)
     cluster_parser.add_argument("work_directory",help="R|Directory where data and output\
@@ -103,10 +109,24 @@ if __name__ == '__main__':
     Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
                         default=False, action= "store_true")
     
-    ####### Arguments for filtering operation ######
+    '''
+    ####### Arguments for analyze operation ######
+    '''
     
-    filter_parser = subparsers.add_parser("filter")
-    filter_parser.add_argument("-l",'--length',help="Minimum length")
+    analyze_parser = subparsers.add_parser("analyze",formatter_class=SmartFormatter)
+    analyze_parser.add_argument("work_directory",help="R|Directory where data and output\
+    \n*** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***")
+    
+    # Clustering analysis
+    Caflags = analyze_parser.add_argument_group('CLUSTERING ANALYSIS')
+    Caflags.add_argument("-cviz", "--cluster_visualization", help= "Plot denendrograms\
+                        and clustermaps showing where ANIn and MASH clusters were made",
+                        action='store_true')
+    Caflags.add_argument("-sp", "--scatterplots", help= "Plot scatterplots comparing\
+                        various comparison metrics (ANIn, MASH, ANIn_cov, len, etc.)",
+                        action='store_true')
+    Caflags.add_argument("-he", "--heatmaps", help= "Plot heatmaps of various metrics\
+                        (MASH, ANIn, ANIn_cov)", action='store_true')
     
     args = parser.parse_args()
     drep_wrapper(args)

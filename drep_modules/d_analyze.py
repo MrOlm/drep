@@ -9,6 +9,12 @@ import seaborn as sns
 from matplotlib import pyplot as plt
 import scipy.cluster.hierarchy
 
+# !!! This is just for testing purposes, obviously
+import sys
+sys.path.append('/home/mattolm/Programs/drep/')
+import drep_modules as dm
+import drep_modules
+
 """#############################################################################
                             MODULE ARCHITECTURE
 
@@ -60,9 +66,45 @@ Graphs - Custom
       - Show the average and max tightness within and between all clusters
 ################################################################################
 """
+"""
+WRAPPERS
+"""
 
-METHOD = 'single'
+def d_analyze_wrapper(wd, **kwargs):
+    
+    # Load the workDirectory
+    wd = drep_modules.WorkDirectory.WorkDirectory(wd)
+    
+    # Make the plot directory
+    plot_dir = wd.location + '/figures/'
+    if not os.path.exists(plot_dir):
+        os.makedirs(plot_dir)
+        
+    # Load dataframs
+    Mdb = wd.get_db('Mdb')
+    Ndb = wd.get_db('Ndb')
+    Cdb = wd.get_db('Cdb')
+    
+    # Load pickles
+    Mlinkage = wd.get_MASH_linkage()
+    Nlinkages = wd.get_ANIn_linkages()
+    
+    # Load arguments
+    cluster_arguments = wd.arguments['cluster']
+    ML_thresh = cluster_arguments.pop('ML_thresh', 0.1)
+    NL_thresh = cluster_arguments.pop('NL_thresh', 0.01)
+        
+    if kwargs.pop('cluster_visualization') == True:
+        cluster_vis_wrapper(plot_dir, Mdb, Mlinkage, Ndb, Nlinkages, Cdb,\
+                cluster_arguments, **kwargs)
 
+def cluster_vis_wrapper(loc, Mdb, Mlinkage, Ndb, Nlinkages, Cdb, clust_args, **kwargs):
+    ML_thresh = clust_args.pop('ML_thresh', 0.1)
+    NL_thresh = clust_args.pop('NL_thresh', 0.01)
+    
+    plot_MASH_clusters(Mdb, Cdb, Mlinkage, loc= loc, threshold= ML_thresh)
+    plt.clf()
+    plot_ANIn_clusters(Ndb, Cdb, Nlinkages, loc= loc, threshold= NL_thresh)
 
 """
 HEAT MAPS
@@ -148,7 +190,7 @@ def plot_MASH_clusters(Mdb, Cdb, linkage, threshold= False, loc= None):
     name2color = gen_color_dictionary(names, name2cluster)
     
     # Make the dendrogram
-    g = fancy_dengrogram(linkage,names,name2color,threshold=0.1)
+    g = fancy_dengrogram(linkage,names,name2color,threshold=threshold)
     plt.title('MASH clustering')
     plt.ylabel('distance (about 1 - MASH_ANI)')
     plt.ylim([0,1])
@@ -196,7 +238,7 @@ def plot_ANIn_clusters(Ndb, Cdb, cluster2linkage, threshold= False, loc= None):
         name2color = gen_color_dictionary(names, name2cluster)
     
         # Make the dendrogram
-        g = fancy_dengrogram(linkage,names,name2color,threshold=0.01)
+        g = fancy_dengrogram(linkage,names,name2color,threshold=threshold)
         plt.title('ANI of MASH cluster {0}'.format(cluster))
         plt.ylabel('distance (about 1 - ANIn)')
         plt.ylim([0,0.1])

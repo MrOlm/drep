@@ -6,11 +6,12 @@ from Bio import SeqIO
 import shutil
 
 def run_cmd(cmd,dry=False,shell=True):
+    devnull = open(os.devnull, 'w')
     if shell:
-        if not dry: call(cmd,shell=True)
+        if not dry: call(cmd,shell=True,stdout=devnull, stderr=devnull)
         else: print(cmd)
     else: 
-        if not dry: call(cmd)
+        if not dry: call(cmd,stdout=devnull, stderr=devnull)
         else: print(' '.join(cmd))
     return
     

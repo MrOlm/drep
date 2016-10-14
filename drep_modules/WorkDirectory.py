@@ -4,6 +4,7 @@ import os
 import logging
 import pandas as pd
 import pickle
+import json
 
 """
 This is the file that maintains the integrity of the work directory
@@ -23,7 +24,7 @@ workDirectory
 ...../Cdb.csv # Genomes and cluster designations
 ./log
 ...../logger.log
-...../cluster_arguments.txt
+...../cluster_arguments.json
 
 
 The data tables
@@ -39,6 +40,7 @@ class WorkDirectory:
         self.location = os.path.abspath(location)
         self.data_tables = {}
         self.pickles = {}
+        self.arguments = {}
         self.overwrite = False
         self.name = None
         
@@ -53,6 +55,12 @@ class WorkDirectory:
         if not os.path.exists(loc):
             os.makedirs(loc)
         self.import_pickles(loc)
+        
+        # Import arguments
+        loc = self.location + '/log/'
+        if not os.path.exists(loc):
+            os.makedirs(loc)
+        self.import_arguments(loc)
         
     def __str__(self):
         string = "Located: {0}\nDatatables: {1}\nPickles: {2}".format(\
@@ -72,6 +80,14 @@ class WorkDirectory:
             assert p.endswith('.pickle'), "{0} is incorrectly in the data/Clustering_files folder".format(t)
             self.pickles[os.path.basename(p).replace('.pickle','')] = pickle.load(open(p,'rb'))
             
+    def import_arguments(self,loc):
+        args = [os.path.join(loc, t) for t in os.listdir(loc) if os.path.isfile(os.path.join(loc, t))]
+        for j in args:
+            if j.endswith('_arguments.json'):
+                with open(j) as data_file:
+                    data = json.load(data_file)
+                self.arguments[os.path.basename(j).replace('_arguments.json','')] = data
+    
     def hasDb(self,db):
         return (db in self.data_tables)
         
@@ -81,6 +97,9 @@ class WorkDirectory:
             if pickle.startswith('ANIn_linkage_cluster_'):
                 to_return[pickle.replace('ANIn_linkage_cluster_','')] = self.pickles[pickle]        
         return to_return
+        
+    def get_MASH_linkage(self): 
+        return self.pickles['MASH_linkage']
             
     def store_db(self,db,name):
         loc = self.location + '/data_tables/'
@@ -90,3 +109,13 @@ class WorkDirectory:
             
         db.to_csv(loc + name + '.csv')
         self.data_tables[name] = db
+        
+    def get_db(self, name, return_none=True):
+        if name in self.data_tables:
+            return self.data_tables[name]
+        else:
+            if return_none:
+                return None
+            else:
+                assert False, "Datatable {0} is not in the work directory {1}".format(\
+                                name, self.location) 
