@@ -11,6 +11,7 @@ from subprocess import call
 import sys
 import json
 import scipy.cluster.hierarchy
+import scipy.spatial.distance as ssd
 import numpy as np
 import pickle
 
@@ -223,6 +224,14 @@ def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
     
     # Generate linkage dataframe
     arr =  np.asarray(db)
+    try:
+        arr = ssd.squareform(arr)
+    except:
+        file = "/data3/Human/NIH_4/Testing_dereplication/np.p"
+        print("The database passed in is not symmetrical! Saving to {0}".format(file))
+        pickle.dump(arr, open(file,'wb'))
+        print(arr)
+        sys.exit()
     linkage = scipy.cluster.hierarchy.linkage(arr, method= linkage_method)
     
     # Form clusters
@@ -277,7 +286,10 @@ def cluster_anin_database(Cdb, Ndb, method= 'hierarchical', data_folder = False,
                 continue
             
             # Make a linkagedb
-            db = d.pivot("reference", "querry", "ani")
+            d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+            d['dist'] = 1 - d['av_ani']
+            
+            db = d.pivot("reference", "querry", "dist")
             Gdb, linkage = cluster_hierarchical(db, linkage_method= N_Lmethod, \
                                         linkage_cutoff= N_Lcutoff)
             
@@ -476,7 +488,8 @@ def cluster_mash_database(db, method=('simple','hierarchical'), data_folder= Fal
         Cdb = Cdb.rename(columns={'cluster':'MASH_cluster'})
     
     elif method == 'hierarchical':
-        linkage_db = db.pivot("genome1","genome2","similarity")
+        db['dist'] = 1 - db['similarity']
+        linkage_db = db.pivot("genome1","genome2","dist")
         Cdb, linkage = cluster_hierarchical(linkage_db, linkage_method= M_Lmethod, \
                                     linkage_cutoff= M_Lcutoff)
         Cdb = Cdb.rename(columns={'cluster':'MASH_cluster'})
@@ -646,6 +659,17 @@ def load_genomes(genome_list):
     
     Bdb = pd.DataFrame(Table)
     return Bdb
+    
+def average_ani(row,db):
+    g1 = row['querry']
+    g2 = row['reference']
+    if g1 == g2:
+        return 1
+    else:
+        ani1 = float(row['ani'])
+        ani2 = float(db['ani'][(db['reference'] == g1) & (db['querry'] == g2)].tolist()[0])
+        avg = np.mean([ani1,ani2])
+        return avg
     
 def nucmer_preset(preset):
    #nucmer argument c, n_maxgap, n_noextend, n_method

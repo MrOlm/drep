@@ -139,8 +139,7 @@ def plot_ANIn_vs_ANIn_cov(Ndb):
 CLUSETER PLOTS
 """
 
-def plot_MASH_clusters(Mdb, Cdb, linkage, threshold= False):
-    gs = list()
+def plot_MASH_clusters(Mdb, Cdb, linkage, threshold= False, loc= None):
     
     db = Mdb.pivot("genome1","genome2","similarity")
     names = list(db.columns)
@@ -148,35 +147,44 @@ def plot_MASH_clusters(Mdb, Cdb, linkage, threshold= False):
     colors = gen_color_list(names, name2cluster)
     name2color = gen_color_dictionary(names, name2cluster)
     
-    
     # Make the dendrogram
     g = fancy_dengrogram(linkage,names,name2color,threshold=0.1)
     plt.title('MASH clustering')
     plt.ylabel('distance (about 1 - MASH_ANI)')
+    plt.ylim([0,1])
+    
+    # Adjust the figure size
     fig = plt.gcf()
-    gs.append(fig)
-    plt.clf()
+    fig.set_size_inches(8, 10)
+    plt.subplots_adjust(bottom=0.5)
+    
+    # Save the figure
+    if loc != None:
+        plt.savefig(loc + 'MASH_clustering_dendrogram.pdf')
+    plt.show()
     
     
     # Make the clustermap
     g = sns.clustermap(db, row_linkage = linkage, col_linkage = linkage, \
-                        row_colors = colors, col_colors = colors)
+                        row_colors = colors, col_colors = colors, vmin = 0.8, \
+                        vmax = 1)
     g.fig.suptitle("MASH clustering")
     plt.setp(g.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
-    fig = plt.gcf()
-    gs.append(fig)
-    plt.clf()
     
-    return gs
+    # Adjust the figure size
+    plt.subplots_adjust(bottom=0.3, right=0.7)
+    
+    #Save the figure
+    if loc != None:
+        plt.savefig(loc + 'MASH_clustering_heatmap.pdf')
+    plt.show()
     
 
-def plot_ANIn_clusters(Ndb, Cdb, cluster2linkage, threshold= False):
-    gs = list()
-    
+def plot_ANIn_clusters(Ndb, Cdb, cluster2linkage, threshold= False, loc= None):
     for cluster in cluster2linkage.keys():
         linkage = cluster2linkage[cluster]
         
-        # Refine Ndb to just have the clusters of the linkage
+        # Filter Ndb to just have the clusters of the linkage
         c_genomes = Cdb['genome'][Cdb['MASH_cluster'] == int(cluster)]
         db = Ndb[Ndb['reference'].isin(c_genomes)]
         db = db.pivot("reference","querry","ani")
@@ -188,25 +196,37 @@ def plot_ANIn_clusters(Ndb, Cdb, cluster2linkage, threshold= False):
         name2color = gen_color_dictionary(names, name2cluster)
     
         # Make the dendrogram
-        g = fancy_dengrogram(linkage,names,name2color,threshold=0.1)
+        g = fancy_dengrogram(linkage,names,name2color,threshold=0.01)
         plt.title('ANI of MASH cluster {0}'.format(cluster))
         plt.ylabel('distance (about 1 - ANIn)')
+        plt.ylim([0,0.1])
+        
+        # Adjust the figure size
         fig = plt.gcf()
-        plt.close()
-        gs.append(fig)
-        gs.append(g)
+        fig.set_size_inches(8, 10)
+        plt.subplots_adjust(bottom=0.5)
+        
+        # Save the dendrogram
+        if loc != None:
+            plt.savefig(loc + 'ANIn_Mcluster{0}_dendrogram.pdf'.format(cluster))
+        plt.show()
+
     
         # Make the clustermap
         g = sns.clustermap(db, row_linkage = linkage, col_linkage = linkage, \
-                            row_colors = colors, col_colors = colors)
+                            row_colors = colors, col_colors = colors, vmin= 0.9,\
+                            vmax= 1)
         g.fig.suptitle('ANI of MASH cluster {0}'.format(cluster))
         plt.setp(g.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
-        fig = plt.gcf()
-        plt.close()
-        gs.append(fig)
-    
-    return gs
-    
+        
+        # Adjust the figure size
+        plt.subplots_adjust(bottom=0.3, right=0.7)
+        
+        # Save the clustermap
+        if loc != None:
+            plt.savefig(loc + 'ANIn_Mcluster{0}_heatmap.pdf'.format(cluster))
+        plt.show()
+
 """
 OTHER
 """

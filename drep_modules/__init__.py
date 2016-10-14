@@ -19,7 +19,7 @@ def make_dir(outdirname,dry=False,overwrite=False):
         return
     if os.path.exists(outdirname):
         if overwrite:
-            shutil.rmtree(outdirname)
+            shutil.rmtree(outdirname, ignore_errors=True)
             os.makedirs(outdirname)
         else:
             assert False, "{0} already exsists! Will not overwrite with current settings".\
