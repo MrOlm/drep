@@ -50,12 +50,8 @@ Cdb = pandas containing clustering information (both MASH and ANIn)
     WorkDirectory object.
 """
 
-def cluster_genomes(Bdb, data_folder, MASH_ANI=.90, skipMash=False, ANIn=.99, 
-                    ANIn_cov=0.5, skipANIn=False, MASH_s=1000, n_c=65,
-                    n_maxgap=90, n_noextend=False, n_method='mum', n_preset=None,
-                    M_clusterAlg='hierarchical', M_Lmethod='single', M_Lcutoff=0.1,
-                    N_clusterAlg='hierarchical', N_Lmethod='single', N_Lcutoff=0.01,
-                    dry=False, threads=6, overwrite=False):
+def cluster_genomes(Bdb, data_folder, **kwargs):
+
     """
     Takes a number of command line arguments and returns a couple pandas dataframes
 
@@ -106,40 +102,38 @@ def cluster_genomes(Bdb, data_folder, MASH_ANI=.90, skipMash=False, ANIn=.99,
     logging.info(
     "Step 1. Parse Arguments")
     
+    
     # Deal with nucmer presets
-    if n_preset != None:
-        n_c, n_maxgap, n_noextend, n_method = nucmer_preset(n_preset)
+    if kwargs.pop('n_preset',None) != None:
+        kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
+        = nucmer_preset(kwargs['n_PRESET'])
     
     logging.info(
     "Step 2. Perform MASH clustering")
-    if not skipMash:
+    if not kwargs.pop('skipMash', False):
 
         logging.info(
         "2a. Run pair-wise MASH clustering")
-        Mdb = all_vs_all_MASH(Bdb, data_folder, MASH_s = MASH_s, dry=dry,
-                            overwrite= overwrite)
+        Mdb = all_vs_all_MASH(Bdb, data_folder, **kwargs)
         
         logging.info(
         "2b. Cluster pair-wise MASH clustering")
-        Cdb = cluster_mash_database(Mdb, M_clusterAlg, data_folder= data_folder, MASH_ANI= MASH_ANI, dry=dry,
-                                    M_Lmethod= M_Lmethod, M_Lcutoff= M_Lcutoff, overwrite= overwrite)
+        Cdb = cluster_mash_database(Mdb, data_folder= data_folder, **kwargs)
         
     else:
         Cdb = gen_nomash_cdb(Bdb)
         
     logging.info(
     "Step 3. Perform ANIn clustering")
-    if not skipANIn:
+    if not kwargs.pop('skipANIn', False):
         
         logging.info(
         "3a. Run pair-wise ANIn within Cdb clusters")
-        Ndb = run_anin_on_clusters(Bdb, Cdb, data_folder, n_c=n_c, n_maxgap=n_maxgap,
-                                    n_noextend=n_noextend, p= threads, n_method=n_method, 
-                                    dry=dry, overwrite= overwrite)
+        Ndb = run_anin_on_clusters(Bdb, Cdb, data_folder, **kwargs)
         
         logging.info(
         "3b. Cluster pair-wise ANIn within Cdb clusters")
-        Cdb = cluster_anin_database(Cdb, Ndb, data_folder= data_folder, ANIn=ANIn, cov_thresh=ANIn_cov)
+        Cdb = cluster_anin_database(Cdb, Ndb, data_folder = data_folder, **kwargs)
         
     else:
         Cdb = gen_nomani_cdb(Bdb, Mdb)
@@ -149,27 +143,21 @@ def cluster_genomes(Bdb, data_folder, MASH_ANI=.90, skipMash=False, ANIn=.99,
     
     return Cdb, Mdb, Ndb
 
-def d_cluster_wrapper(args):
+def d_cluster_wrapper(workDirectory, **kwargs):
     
     # Load the WorkDirectory.
     logging.info("Loading work directory")
-    workDirectory = drep_modules.WorkDirectory.WorkDirectory(args.work_directory)
+    workDirectory = drep_modules.WorkDirectory.WorkDirectory(workDirectory)
     logging.info(str(workDirectory))
     
     # Parse arguments
-    Bdb, data_folder = parse_arguments(args,workDirectory)
-    a = vars(args)
-    if a['n_PRESET'] != None:
-        a['n_c'], a['n_maxgap'], a['n_noextend'], a['n_method'] = nucmer_preset(\
-                                                                            a['n_PRESET'])
+    Bdb, data_folder = parse_arguments(workDirectory, **kwargs)
+    if kwargs['n_PRESET'] != None:
+        kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
+        = nucmer_preset(kwargs['n_PRESET'])
     
     # Run the main program
-    Cdb, Mdb, Ndb = cluster_genomes(Bdb, data_folder, MASH_ANI= a['MASH_ani'],\
-                    skipMash= a['SkipMash'], ANIn= a['ANIn_ANI'], ANIn_cov= a['ANIn_cov'],\
-                    skipANIn= a['SkipANIn'], MASH_s= a['MASH_sketch'], n_c= a['n_c'],\
-                    n_maxgap= a['n_maxgap'], n_noextend= a['n_noextend'],\
-                    n_method= a['n_method'], n_preset= a['n_PRESET'], dry = a['dry'],\
-                    threads= a['processors'], overwrite= a['overwrite'])
+    Cdb, Mdb, Ndb = cluster_genomes(Bdb, data_folder, **kwargs)
                     
     # Save the output
     data_dir = workDirectory.location + '/data_tables/'
@@ -186,18 +174,18 @@ def d_cluster_wrapper(args):
     # Log arguments
     cluster_log = workDirectory.location + '/log/cluster_arguments.json'
     with open(cluster_log, 'w') as fp:
-        json.dump(a, fp)
+        json.dump(kwargs, fp)
     fp.close()
     
-def parse_arguments(args,workDirectory):
+def parse_arguments(workDirectory, **kwargs):
     
     # If genomes are provided, load them
-    if args.genomes != None:
+    if kwargs.pop('genomes',None) != None:
         assert workDirectory.hasDb("Bdb") == False, \
-        "Must either provide a genome list, or run the 'filter' operation with the same work directory"
-        Bdb = load_genomes(args.genomes)    
+        "Don't provide new genomes- you already have them in the work directory"
+        Bdb = load_genomes(kwargs['genomes'])
     # If genomes are not provided, don't load them
-    if args.genomes == None:
+    if kwargs.pop('genomes',None) == None:
         assert workDirectory.hasDb("Bdb") != False, \
         "Must either provide a genome list, or run the 'filter' operation with the same work directory"
         Bdb = workDirectory.data_tables['Bdb']
@@ -253,11 +241,17 @@ def gen_cdb_from_fclust(fclust,names):
     return pd.DataFrame(Table)    
     
 
-def cluster_anin_database(Cdb, Ndb, method= 'hierarchical', data_folder = False, ANIn=.99, 
-                            cov_thresh=0.5, N_Lmethod= 'single', N_Lcutoff= 0.01, 
-                            overwrite= False):
+def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
     
     logging.info('Clustering ANIn database')
+    
+    method = kwargs.pop('method','hierarchical')
+    ANIm = kwargs.pop('ANIn',0.99)
+    cov_thresh = kwargs.pop('cov_thresh',0.5)
+    N_Lmethod = kwargs.pop('N_Lmethod', 'single')
+    N_Lcutoff = kwargs.pop('N_Lcutoff', 0.01)
+    overwrite = kwargs.pop('overwrite', False)
+    
     
     if (data_folder != False) & (method == 'hierarchical'):
         data_folder = data_folder + 'Clustering_files/'
@@ -348,13 +342,20 @@ def cluster_anin_simple(Cdb, Ndb, ANIn=.99, cov_thresh=0.5):
     
     return pd.merge(Gdb,Cdb)
 
-def run_anin_on_clusters(Bdb, Cdb, data_folder, n_c= 65, n_maxgap= 90, n_noextend= False,
-                        n_method= 'mum', p = 6, dry= False, overwrite= False):
+def run_anin_on_clusters(Bdb, Cdb, data_folder, **kwargs):
 
     """
     For each cluster in Cdb, run pairwise ANIn
-    
     """
+    
+    n_c = kwargs.pop('n_c', 65)
+    n_maxgap = kwargs.pop('n_maxgap', 90)
+    n_noextend = kwargs.pop('n_noextend', False)
+    n_method = kwargs.pop('mum', False)
+    p = kwargs.pop('p', 6)
+    dry = kwargs.pop('dry',False)
+    overwrite = kwargs.pop('overwrite', False)
+    
     
     # Set up folders
     ANIn_folder = data_folder + 'ANIn_files/'
@@ -427,10 +428,14 @@ def run_nucmer_genomeList(genomes,outf,b2s,c=65,maxgap=90,noextend=False,method=
     
     return data
      
-def all_vs_all_MASH(Bdb, data_folder, MASH_s=1000, dry=False, overwrite=False):
+def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     """
     Run MASH pairwise within all samples in Bdb
     """
+    
+    MASH_s = kwargs.pop('MASH_s',1000)
+    dry = kwargs.pop('dry',False)
+    overwrite = kwargs.pop('overwrite', False)
     
     # Set up folders
     MASH_folder = data_folder + 'MASH_files/'
@@ -473,15 +478,21 @@ def all_vs_all_MASH(Bdb, data_folder, MASH_s=1000, dry=False, overwrite=False):
     
     return Mdb
     
-def cluster_mash_database(db, method=('simple','hierarchical'), data_folder= False,
-                            MASH_ANI= 90, dry=False, 
-                            M_Lmethod= 'single', M_Lcutoff= 0.10, overwrite= False):
+def cluster_mash_database(db, data_folder= False, **kwargs):
     
     logging.info('Clustering MASH database')
     
+    method = kwargs.pop('M_clusterAlg', 'hierarchical')
+    MASH_ANI = kwargs.pop('MASH_ANI', 90)
+    M_Lmethod = kwargs.pop('M_Lmethod', 'single')
+    M_Lcutoff = kwargs.pop('M_Lcutoff', 0.1)
+    dry = kwargs.pop('dry',False)
+    overwrite = kwargs.pop('overwrite', False)
+    
     if (data_folder != False) & (method == 'hierarchical'):
         data_folder = data_folder + 'Clustering_files/'
-        dm.make_dir(data_folder, dry, overwrite)
+        if not os.path.exists(data_folder):
+            os.makedirs(data_folder)
     
     if method == 'simple':
         Cdb = cluster_database(db, MASH_ANI, dry= dry)
