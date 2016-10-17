@@ -151,7 +151,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     return Cdb, Mdb, Ndb
 
 def d_cluster_wrapper(workDirectory, **kwargs):
-    
+
     # Load the WorkDirectory.
     logging.info("Loading work directory")
     workDirectory = drep_modules.WorkDirectory.WorkDirectory(workDirectory)
@@ -187,12 +187,12 @@ def d_cluster_wrapper(workDirectory, **kwargs):
 def parse_arguments(workDirectory, **kwargs):
     
     # If genomes are provided, load them
-    if kwargs.pop('genomes',None) != None:
+    if kwargs.get('genomes',None) != None:
         assert workDirectory.hasDb("Bdb") == False, \
         "Don't provide new genomes- you already have them in the work directory"
         Bdb = load_genomes(kwargs['genomes'])
     # If genomes are not provided, don't load them
-    if kwargs.pop('genomes',None) == None:
+    if kwargs.get('genomes',None) == None:
         assert workDirectory.hasDb("Bdb") != False, \
         "Must either provide a genome list, or run the 'filter' operation with the same work directory"
         Bdb = workDirectory.data_tables['Bdb']
