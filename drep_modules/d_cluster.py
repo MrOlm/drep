@@ -22,6 +22,7 @@ sys.path.append('/home/mattolm/Programs/drep/')
 import drep_modules as dm
 import drep_modules
 
+# This is to make pandas shut up with it's warnings
 pd.options.mode.chained_assignment = None
 
 """

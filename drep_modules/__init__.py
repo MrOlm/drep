@@ -5,13 +5,22 @@ import os
 from Bio import SeqIO
 import shutil
 
-def run_cmd(cmd,dry=False,shell=True):
+def run_cmd(cmd,dry=False,shell=True,quiet= True):
     devnull = open(os.devnull, 'w')
     if shell:
-        if not dry: call(cmd,shell=True,stdout=devnull, stderr=devnull)
-        else: print(cmd)
+        if not dry: 
+            if quiet:
+                call(cmd,shell=True,stdout=devnull, stderr=devnull)
+            else:
+                call(cmd,shell=True)
+        else: 
+            print(cmd)
     else: 
-        if not dry: call(cmd,stdout=devnull, stderr=devnull)
+        if not dry: 
+            if quiet:
+                call(cmd,stdout=devnull, stderr=devnull)
+            else:
+                call(cmd)
         else: print(' '.join(cmd))
     return
     

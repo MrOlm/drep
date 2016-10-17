@@ -16,6 +16,9 @@ workDirectory
 ...../MASH_files/
 ...../ANIn_files/
 ...../Clustering_files/
+...../checkM/
+........./genomes/
+........./checkM_outdir/
 ./figures
 ./data_tables
 ...../Bdb.csv # Sequence locations and filenames

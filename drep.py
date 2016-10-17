@@ -11,6 +11,7 @@ import drep_modules as dm
 import drep_modules.WorkDirectory
 import drep_modules.d_cluster
 import drep_modules.d_analyze
+import drep_modules.d_filter
 
 def drep_wrapper(args):
     """
@@ -20,29 +21,40 @@ def drep_wrapper(args):
     if args.operation == "cluster":
         cluster_operation(**vars(args))
     if args.operation == "analyze":
-        analyze_operation(**vars(args)) 
+        analyze_operation(**vars(args))
+    if args.operation == "filter":
+        filter_operation(**vars(args)) 
 
 def cluster_operation(**kwargs):
-    # Make the WorkDirectory if it doesn't yet exist, and make a logger in it.
-    args.work_directory = str(os.path.abspath(kwargs['work_directory']))
-    if not os.path.exists(kwargs['work_directory']):
-        os.makedirs(kwargs['work_directory'])
-        
-    log_dir = kwargs['work_directory'] + '/log/'
-    if not os.path.exists(log_dir):
-        os.makedirs(log_dir)
-        
-    logging.basicConfig(filename=log_dir + 'logger.log',level=logging.DEBUG,\
-        format='%(asctime)s %(message)s')
-    logging.info("***Logger made at {0}***".format(args.work_directory + '/logger.log'))
-    logging.info("Arguments: {0}".format(args))
+    makeload_logger(kwargs['work_directory'])
     
     logging.info("Starting the clustering operation")
     drep_modules.d_cluster.d_cluster_wrapper(kwargs['work_directory'],**kwargs)
     logging.info("Finished the clustering operation")
 
 def analyze_operation(**kwargs):
-    drep_modules.d_analyze.d_analyze_wrapper(kwargs['work_directory'],**kwargs)    
+    drep_modules.d_analyze.d_analyze_wrapper(kwargs['work_directory'],**kwargs)
+    
+def filter_operation(**kwargs):
+    makeload_logger(kwargs['work_directory'])
+    
+    logging.info("Starting the filter operation")
+    drep_modules.d_filter.d_filter_wrapper(kwargs['work_directory'],**kwargs)
+    logging.info("Finished the filter operation")
+    
+def makeload_logger(wd):
+    wd = str(os.path.abspath(wd))
+    if not os.path.exists(wd):
+        os.makedirs(wd)
+        
+    log_dir = wd + '/log/'
+    if not os.path.exists(log_dir):
+        os.makedirs(log_dir)
+        
+    logging.basicConfig(filename=log_dir + 'logger.log',level=logging.DEBUG,\
+        format='%(asctime)s %(message)s')
+    logging.info("***Logger started up at {0}***".format(log_dir + 'logger.log'))
+    
 
 """
 ########################################
@@ -127,6 +139,38 @@ if __name__ == '__main__':
                         action='store_true')
     Caflags.add_argument("-he", "--heatmaps", help= "Plot heatmaps of various metrics\
                         (MASH, ANIn, ANIn_cov)", action='store_true')
+                        
+    '''
+    ####### Arguments for filter operation ######
+    '''
     
+    filter_parser = subparsers.add_parser("filter",formatter_class=SmartFormatter)
+    filter_parser.add_argument("work_directory",help="R|Directory where data and output\
+    \n*** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***")
+    
+    # Filtering options, which will either filter Bdb or Wdb
+    fiflags = filter_parser.add_argument_group('Filtering Options')
+    fiflags.add_argument("-l","--length", help= "Minimum genome length",default=500000)
+    fiflags.add_argument("-comp","--completeness", help="Minumum genome completeness",
+                            default = 75, type = float)
+    fiflags.add_argument("-con","--contamination", help="Maximum genome contamination",
+                            default = 25, type = float)
+                            
+    # I/O Parameters
+    Iflags = filter_parser.add_argument_group('I/O PARAMETERS')
+    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to filter in .fasta format.\
+                        Not necessary if Bdb or Wdb already exist')
+    Iflags.add_argument('--Chdb',help='checkM run already completed. Must be in \
+                        --tab_table format.')
+        
+    # Biotite Parameters
+    Bflags = filter_parser.add_argument_group('SYSTEM PARAMETERS')
+    Bflags.add_argument('-p','--processors',help='threads',default=6)
+    Bflags.add_argument('-d','--dry',help='dry run- dont do anything',default=False,
+                        action= "store_true")
+    Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
+                        default=False, action= "store_true")
+    
+
     args = parser.parse_args()
     drep_wrapper(args)
