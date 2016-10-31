@@ -3,6 +3,7 @@ De-replication of microbial genomes
 
 # Normal use case
 
+```
 drep.py filter workD -g genomelist
 
 drep.py cluster workD
@@ -12,6 +13,7 @@ drep.py choose workD
 drep.py analyze workD -cviz a
 
 drep.py adjust workD something
+```
 
 # Module summaries
 
@@ -51,7 +53,19 @@ Can read:
 
 - Chdb 
 
-# Dataframes
+## analyze
+
+Make plots and visualize how new clustering methods would look
+
+Can modify:
+
+- NA
+
+Can read:
+
+-
+
+# DataTables
 
 Bdb
 
@@ -70,3 +84,35 @@ Ndb
 :   Holds raw information about ANIn comparions
 
 :   reference, querry, alignment_length, ani, reference_coverage, querry_coverage, alignment_coverage, MASH_cluster, ...
+
+# Other user-facing data
+
+./figures
+
+./dereplicated_genomes
+
+# Work directory tree
+
+workDirectory
+./data
+...../MASH_files/
+...../ANIn_files/
+...../gANI_files/
+...../Clustering_files/
+...../checkM/
+........./genomes/
+........./checkM_outdir/
+...../prodigal/
+./figures
+./data_tables
+...../Bdb.csv  # Sequence locations and filenames
+...../Mdb.csv  # Raw results of MASH comparisons
+...../Ndb.csv  # Raw results of ANIn comparisons
+...../Cdb.csv  # Genomes and cluster designations
+...../Chdb.csv # CheckM results for Bdb
+...../Sdb.csv  # Scoring information
+...../Wdb.csv  # Winning genomes
+./dereplicated_genomes
+./log
+...../logger.log
+...../cluster_arguments.json
