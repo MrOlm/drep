@@ -21,15 +21,15 @@ filter
 
 Bdb
 
-: Holds sequence locations and filenames
-: genome, location
+:   Holds sequence locations and filenames
+:   genome, location
 
 Mdb
 
-: Holds raw information about MASH comparisons
-: genome1,genome2,dist,p,kmers,similarity
+:   Holds raw information about MASH comparisons
+:   genome1,genome2,dist,p,kmers,similarity
 
 Ndb
 
-: Holds raw information about ANIn comparions
-: reference, querry, alignment_length, ani, reference_coverage, querry_coverage, alignment_coverage, MASH_cluster, ...
+:   Holds raw information about ANIn comparions
+:   reference, querry, alignment_length, ani, reference_coverage, querry_coverage, alignment_coverage, MASH_cluster, ...
