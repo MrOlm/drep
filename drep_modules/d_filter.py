@@ -6,6 +6,8 @@ import pandas as pd
 import os
 import sys
 import shutil
+import multiprocessing
+
 
 # !!! This is just for testing purposes, obviously
 import sys
@@ -13,6 +15,7 @@ sys.path.append('/home/mattolm/Programs/drep/')
 import drep_modules.WorkDirectory
 import drep_modules as dm
 import drep_modules.d_cluster
+import drep_modules.d_choose
 
 
 '''
@@ -52,8 +55,8 @@ def d_filter_wrapper(wd,**kwargs):
     if kwargs.get('length', 0) > 1:
         bdb = filter_bdb_length(bdb, kwargs['length'], verbose=True)
     
-    # If a contaminant or completeness threshold exist...
-    if (kwargs.get('completeness',0) > 0) or (kwargs.get('contamination',1000) < 1000):
+    # If not skipping CheckM...
+    if (not kwargs.get('skipCheckM',False)):
         
         # Run checkM
         if kwargs.get('Chdb',None) != None:
@@ -67,25 +70,7 @@ def d_filter_wrapper(wd,**kwargs):
             validate_chdb(Chdb, bdb)
         
         else:        
-            print("Running CheckM...")
-            # Make the folder to house the checkM info
-            checkM_loc = workDirectory.location + '/data/checkM/'
-            dm.make_dir(checkM_loc,dry=kwargs.get('dry',False),\
-                        overwrite=kwargs.get('overwrite',False))
-        
-            # Make a 'genomes' folder for input to checkM
-            checkM_genomes = checkM_loc + 'genomes/'
-            dm.make_dir(checkM_genomes,dry=kwargs.get('dry',False),\
-                        overwrite=kwargs.get('overwrite',False))
-            copy_bdb_loc(bdb, checkM_genomes, extension='.fna')
-        
-            # Run checkM
-            checkM_outfolder = checkM_loc + 'checkM_outdir/'
-            Chdb = run_checkM(checkM_genomes, checkM_outfolder, **kwargs)
-            validate_chdb(Chdb, bdb)
-            
-            # Save checkM run
-            workDirectory.store_db(Chdb,'Chdb')
+            Chdb = run_checkM_wrapper(bdb, workDirectory, **kwargs)
             
         # Filter bdb
         bdb = filter_bdb(bdb, Chdb, **kwargs)
@@ -100,6 +85,8 @@ def d_filter_wrapper(wd,**kwargs):
         workDirectory.data_tables['Wdb'] = bdb
     
     
+
+
 def filter_bdb(bdb, chdb, **kwargs):
     min_comp = kwargs.get('completeness',0)
     max_con = kwargs.get('contamination',1000)
@@ -110,7 +97,7 @@ def filter_bdb(bdb, chdb, **kwargs):
     keep_genomes = list(db['Bin Id'].unique())
     bdb = bdb[bdb['genome'].isin(keep_genomes)]
     
-    print("{0}% of genomes passed checkM filtering".format((len(keep_genomes)/len(start_genomes))*100))
+    print("{0:.2f}% of genomes passed checkM filtering".format((len(keep_genomes)/len(start_genomes))*100))
     
     return bdb
 
@@ -120,7 +107,7 @@ def filter_bdb_length(bdb, min_length, verbose=False):
     x = bdb[bdb['length'] >= min_length]
     end = len(x['location'].unique())
     
-    print("{0}% of genomes passed length filtering".format((end/start)*100))
+    print("{0:.2f}% of genomes passed length filtering".format((end/start)*100))
     
     return x
     
@@ -155,13 +142,13 @@ def validate_arguments(wd,**kwargs):
         return bdb_from_wdb(wd.get_db('Wdb')), 'Wdb'
     elif wd.hasDb('Bdb'):
         if kwargs.get('genomes',None) != None:
-            print("Both Bdb and a genome list are found- either don't include\
-                    a genome list or start a new work directory!")
+            print("Both Bdb and a genome list are found- either don't include "\
+                    + "a genome list or start a new work directory!")
             sys.exit()
         if wd.hasDb('Cdb'):
-            print("You can't filter this work directory- it's already clustered.\
-                    Either choose a winner and filter the winners, or make a new\
-                    work directory")
+            print("You can't filter this work directory- it's already clustered.\n"\
+                    + "Either choose a winner and filter the winners, or make a new "\
+                    + "work directory")
             sys.exit()
         print("Will filter Bdb")
         return wd.get_db('Bdb'), 'Bdb'
@@ -173,18 +160,68 @@ def validate_arguments(wd,**kwargs):
         bdb = drep_modules.d_cluster.load_genomes(kwargs['genomes'])
         return bdb, 'Bdb'
 
+def run_checkM_wrapper(bdb, workDirectory, **kwargs):
+    
+    # Make the folder to house the checkM info
+    checkM_loc = workDirectory.location + '/data/checkM/'
+    dm.make_dir(checkM_loc,dry=kwargs.get('dry',False),\
+                overwrite=kwargs.get('overwrite',False))
+
+    # Run prodigal
+    prod_folder = workDirectory.location + '/data/prodigal/'
+    dm.make_dir(prod_folder,dry=kwargs.get('dry',False),\
+                overwrite=kwargs.get('overwrite',False))
+    print("Running prodigal")
+    run_prodigal(bdb, prod_folder)
+
+    # Run checkM
+    checkM_outfolder = checkM_loc + 'checkM_outdir/'
+    Chdb = run_checkM(prod_folder, checkM_outfolder, **kwargs)
+    validate_chdb(Chdb, bdb)
+    
+    # Save checkM run
+    workDirectory.store_db(Chdb,'Chdb')
+    
+    return Chdb
+
+def run_prodigal(bdb, out_dir, t = '6'):
+    cmds = []
+    for genome in bdb['location'].unique():
+        fna = "{0}{1}{2}".format(out_dir,os.path.basename(genome),'.fna')
+        faa = "{0}{1}{2}".format(out_dir,os.path.basename(genome),'.faa')
+        if os.path.exists(fna) and os.path.exists(faa):
+            pass
+        else:
+            cmds.append(['prodigal','-i',genome,'-d',fna,'-a',faa])
+    
+    if len(cmds) > 0:
+        drep_modules.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
+    else:
+        print("Past prodigal runs found- will not re-run")
+
 def run_checkM(genome_folder,checkm_outf,**kwargs):
     t = str(kwargs.get('processors','6'))
     check_exe = '/home/mattolm/.pyenv/versions/anaconda2-4.1.0/bin/checkm'
     
+    checkm_method = kwargs.get('checkM_method','lineage_wf')
+    
     # Run checkM initial
-    cmd = [check_exe,'lineage_wf',genome_folder,checkm_outf,'-f',\
-            checkm_outf + '/results.tsv','--tab_table','-t',str(t),'--pplacer_threads',t]
+    if checkm_method == 'taxonomy_wf':
+         cmd = [check_exe,checkm_method,'domain','Bacteria',genome_folder,checkm_outf,'-f',\
+            checkm_outf + '/results.tsv','--tab_table','-t',str(t),'-g','-x','faa']
+    else:
+         cmd = [check_exe,checkm_method,genome_folder,checkm_outf,'-f',\
+            checkm_outf + '/results.tsv','--tab_table','-t',str(t),'--pplacer_threads',\
+            str(t),'-g','-x','faa']
+    
     logging.info("Running CheckM with command: {0}".format(cmd))
     dm.run_cmd(cmd,shell=False,quiet=False)
     
     # Run checkM again for the better table
-    lineage = checkm_outf + 'lineage.ms'
+    if checkm_method == 'taxonomy_wf':
+        lineage = checkm_outf + 'Bacteria.ms'
+    else:
+        lineage = checkm_outf + 'lineage.ms'
     desired_file = checkm_outf + 'Chdb.tsv'
     cmd = [check_exe,'qa', lineage, checkm_outf, '-f', desired_file, '-t',\
             str(t), '--tab_table','-o', '2']

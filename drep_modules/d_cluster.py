@@ -79,7 +79,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     * ANIn_cov      - Coverage threshold for simple ANIn clustering
     * N_Lmethod     - ANIn method of determining linkage  
                     (to be passed to scipy.cluster.hierarchy.linkage)
-    * M_Lcutoff     - ANIn linkage cutoff 
+    * N_Lcutoff     - ANIn linkage cutoff 
     
     
     ***** Comparison Algorithm Arguments *****
@@ -108,14 +108,16 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     
     
     # Deal with nucmer presets
-    if kwargs.pop('n_preset',None) != None:
+    if kwargs.get('n_preset',None) != None:
         kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
         = nucmer_preset(kwargs['n_PRESET'])
+        
+    logging.info(kwargs)
     
     logging.info(
     "Step 2. Perform MASH clustering")
     print("Running MASH clustering...")
-    if not kwargs.pop('skipMash', False):
+    if not kwargs.get('skipMash', False):
 
         logging.info(
         "2a. Run pair-wise MASH clustering")
@@ -128,10 +130,13 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     else:
         Cdb = gen_nomash_cdb(Bdb)
         
+    logging.info("{0} MASH clusters made".format(len(Cdb['MASH_cluster'].unique())))
+    print("{0} MASH clusters made".format(len(Cdb['MASH_cluster'].unique())))
+    
     logging.info(
     "Step 3. Perform ANIn clustering")
     print("Running ANIn clustering...")
-    if not kwargs.pop('skipANIn', False):
+    if not kwargs.get('skipANIn', False):
         
         logging.info(
         "3a. Run pair-wise ANIn within Cdb clusters")
@@ -145,13 +150,18 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
         Cdb = gen_nomani_cdb(Bdb, Mdb)
 
     logging.info(
-    "Step 4. Return output")
+    "Step 4a. Save clustering information in Cdb")
+    
+    
+    logging.info(
+    "Step 4b. Return output")
+    
     print("Clustering finished!")
     
     return Cdb, Mdb, Ndb
 
 def d_cluster_wrapper(workDirectory, **kwargs):
-
+    
     # Load the WorkDirectory.
     logging.info("Loading work directory")
     workDirectory = drep_modules.WorkDirectory.WorkDirectory(workDirectory)
@@ -252,12 +262,12 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
     
     logging.info('Clustering ANIn database')
     
-    method = kwargs.pop('method','hierarchical')
-    ANIm = kwargs.pop('ANIn',0.99)
-    cov_thresh = kwargs.pop('cov_thresh',0.5)
-    N_Lmethod = kwargs.pop('N_Lmethod', 'single')
-    N_Lcutoff = kwargs.pop('N_Lcutoff', 0.01)
-    overwrite = kwargs.pop('overwrite', False)
+    method = kwargs.get('method','hierarchical')
+    ANIm = kwargs.get('ANIn',0.99)
+    cov_thresh = kwargs.get('cov_thresh',0.5)
+    N_Lmethod = kwargs.get('N_Lmethod', 'single')
+    N_Lcutoff = kwargs.get('N_Lcutoff', 0.01)
+    overwrite = kwargs.get('overwrite', False)
     
     
     if (data_folder != False) & (method == 'hierarchical'):
@@ -289,8 +299,8 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
             # Make a linkagedb
             d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
             d['dist'] = 1 - d['av_ani']
-            
             db = d.pivot("reference", "querry", "dist")
+            
             Gdb, linkage = cluster_hierarchical(db, linkage_method= N_Lmethod, \
                                         linkage_cutoff= N_Lcutoff)
             
@@ -316,7 +326,12 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
                     pickle.dump(linkage, handle)
     
     Gdb = pd.DataFrame(Table)
-    return pd.merge(Gdb, Cdb)
+    Cdb = pd.merge(Gdb, Cdb)
+    Cdb['threshold'] = N_Lcutoff
+    Cdb['cluster_method'] = N_Lmethod
+    Cdb['comparison_algorithm'] = 'ANIn'
+    
+    return Cdb
     
     
                             
@@ -355,18 +370,19 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, **kwargs):
     For each cluster in Cdb, run pairwise ANIn
     """
     
-    n_c = kwargs.pop('n_c', 65)
-    n_maxgap = kwargs.pop('n_maxgap', 90)
-    n_noextend = kwargs.pop('n_noextend', False)
-    n_method = kwargs.pop('mum', False)
-    p = kwargs.pop('p', 6)
-    dry = kwargs.pop('dry',False)
-    overwrite = kwargs.pop('overwrite', False)
+    n_c = kwargs.get('n_c', 65)
+    n_maxgap = kwargs.get('n_maxgap', 90)
+    n_noextend = kwargs.get('n_noextend', False)
+    n_method = kwargs.get('method', 'mum')
+    p = kwargs.get('processors', 6)
+    dry = kwargs.get('dry',False)
+    overwrite = kwargs.get('overwrite', False)
     
     
     # Set up folders
     ANIn_folder = data_folder + 'ANIn_files/'
-    #dm.make_dir(ANIn_folder,dry,overwrite)
+    if not os.path.exists(ANIn_folder):
+        os.makedirs(ANIn_folder)
     
     # Add cluster information to Cdb
     Bdb = pd.merge(Bdb,Cdb)
@@ -375,31 +391,59 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, **kwargs):
 
     
     # Step 1. Make the directories and generate the list of commands to be run    
-    
     cmds = []
     for cluster in Bdb['MASH_cluster'].unique():
         d = Bdb[Bdb['MASH_cluster'] == cluster]
         genomes = d['location'].tolist()
+        for g1 in genomes:
+            for g2 in genomes:
+                file_name = "{0}{1}_vs_{2}".format(ANIn_folder, \
+                            get_genome_name_from_fasta(g1),\
+                            get_genome_name_from_fasta(g2))
+                
+                # If the file doesn't already exist, add it to what needs to be run
+                if not os.path.isfile(file_name + '.delta'):
+                    cmds.append(gen_nucmer_cmd(file_name,g1,g2,c=n_c,noextend=n_noextend,\
+                                maxgap=n_maxgap,method=n_method))
+    
+    '''
+    cmds = []
+    for cluster in Bdb['MASH_cluster'].unique():
+        d = Bdb[Bdb['MASH_cluster'] == cluster]
+        genomes = d['location'].tolist()
+        
         outf = "{0}{1}/".format(ANIn_folder,cluster)
         dm.make_dir(outf,dry,overwrite)
+        
         cmds += gen_nucmer_commands(genomes, outf, maxgap=n_maxgap, noextend=n_noextend,\
                                     c= n_c, method= 'mum')
+    '''
         
     # Step 2. Run the nucmer commands  
     
     if not dry:
-        thread_nucmer_cmds_status(cmds,p)
-        pass
+        if len(cmds) > 0:
+            thread_nucmer_cmds_status(cmds,p)
         
     # Step 3. Parse the nucmer output
     
+    '''
     Ndb = pd.DataFrame()
     org_lengths = {y:dm.fasta_length(x) for x,y in zip(Bdb['location'].tolist(),Bdb['genome'].tolist())}
     for cluster in Bdb['MASH_cluster'].unique():
+        d = Bdb[Bdb['MASH_cluster'] == cluster]
         outf = "{0}{1}/".format(ANIn_folder,cluster)
         data = process_deltadir(outf, org_lengths)
         data['MASH_cluster'] = cluster
         Ndb = pd.concat([Ndb,data],ignore_index=True)
+    '''
+    
+    org_lengths = {y:dm.fasta_length(x) for x,y in zip(Bdb['location'].tolist(),Bdb['genome'].tolist())}
+    Ndb = process_deltadir(ANIn_folder, org_lengths)
+    Ndb['MASH_cluster'] = None
+    for cluster in Bdb['MASH_cluster'].unique():
+        d = Bdb[Bdb['MASH_cluster'] == cluster]
+        Ndb['MASH_cluster'][Ndb['reference'].isin(d['genome'].tolist())] = cluster
         
     return Ndb
         
@@ -440,25 +484,33 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     Run MASH pairwise within all samples in Bdb
     """
     
-    MASH_s = kwargs.pop('MASH_s',1000)
-    dry = kwargs.pop('dry',False)
-    overwrite = kwargs.pop('overwrite', False)
+    MASH_s = kwargs.get('MASH_s',1000)
+    dry = kwargs.get('dry',False)
+    overwrite = kwargs.get('overwrite', False)
     
     # Set up folders
     MASH_folder = data_folder + 'MASH_files/'
-    dm.make_dir(MASH_folder, dry, overwrite)
+    if not os.path.exists(MASH_folder):
+        os.makedirs(MASH_folder)
     
     sketch_folder = MASH_folder + 'sketches/'
-    assert os.path.exists(sketch_folder) == False
-    dm.make_dir(sketch_folder,dry)
+    if not os.path.exists(sketch_folder):
+        os.makedirs(sketch_folder)
     
     # Make the MASH sketches
+    cmds = []
     for fasta in Bdb['location'].unique():
         genome = Bdb['genome'][Bdb['location'] == fasta].tolist()[0]
-        cmd = ['/opt/bin/bio/mash', 'sketch', fasta, '-s', str(MASH_s), '-o',
-                sketch_folder + genome]
-        cmd = ' '.join(cmd)
-        dm.run_cmd(cmd,dry,True)
+        file = sketch_folder + genome
+        if not os.path.isfile(file + '.msh'):
+            cmd = ['/opt/bin/bio/mash', 'sketch', fasta, '-s', str(MASH_s), '-o',
+                file]
+            cmds.append(cmd)
+        
+    if not dry:
+        if len(cmds) > 0:
+            thread_mash_cmds_status(cmds) 
+        
         
     # Combine MASH sketches
     cmd = ['/opt/bin/bio/mash', 'paste', MASH_folder + 'ALL.msh', sketch_folder+ '*']
@@ -489,12 +541,12 @@ def cluster_mash_database(db, data_folder= False, **kwargs):
     
     logging.info('Clustering MASH database')
     
-    method = kwargs.pop('M_clusterAlg', 'hierarchical')
-    MASH_ANI = kwargs.pop('MASH_ANI', 90)
-    M_Lmethod = kwargs.pop('M_Lmethod', 'single')
-    M_Lcutoff = kwargs.pop('M_Lcutoff', 0.1)
-    dry = kwargs.pop('dry',False)
-    overwrite = kwargs.pop('overwrite', False)
+    method = kwargs.get('M_clusterAlg', 'hierarchical')
+    MASH_ANI = kwargs.get('MASH_ANI', 90)
+    M_Lmethod = kwargs.get('M_Lmethod', 'single')
+    M_Lcutoff = kwargs.get('M_Lcutoff', 0.1)
+    dry = kwargs.get('dry',False)
+    overwrite = kwargs.get('overwrite', False)
     
     if (data_folder != False) & (method == 'hierarchical'):
         data_folder = data_folder + 'Clustering_files/'
@@ -582,6 +634,12 @@ def parse_delta(filename):
             sim_errors += int(line[4])
     return aln_length, sim_errors
 
+def gen_gANI_cmd(file, g1, g2, dir, exe):
+    cmd = [exe,'-genome1fna',g1,'-genome2fna',g2,'-outfile',file,'-outdir',file + 'TEMP']
+    #cmd = [exe,'-genome1fna',g1,'-genome2fna',g2,'-outfile',file,'-outdir',dir]
+    return cmd
+
+
 def process_deltadir(delta_dir, org_lengths, logger=None):
     """Returns a tuple of ANIm results for .deltas in passed directory.
     - delta_dir - path to the directory containing .delta files
@@ -640,6 +698,87 @@ def process_deltadir(delta_dir, org_lengths, logger=None):
     df = pd.DataFrame(Table)
     return df
     
+def process_deltafiles(deltafiles, org_lengths, logger=None):
+
+    Table = {'querry':[],'reference':[],'alignment_length':[],'similarity_errors':[],
+            'ref_coverage':[],'querry_coverage':[],'ani':[], 'reference_length':[],
+            'querry_length':[],'alignment_coverage':[]}
+        
+    # Process .delta files assuming that the filename format holds:
+    # org1_vs_org2.delta
+    zero_error = False  # flag to register a divide-by-zero error
+    for deltafile in deltafiles:
+        qname, sname = os.path.splitext(os.path.split(deltafile)[-1])[0].split('_vs_')
+        tot_length, tot_sim_error = parse_delta(deltafile)
+        if tot_length == 0 and logger is not None:
+            print("Total alignment length reported in " +
+                               "%s is zero!" % deltafile)
+        query_cover = float(tot_length) / org_lengths[qname]
+        sbjct_cover = float(tot_length) / org_lengths[sname]
+        # Calculate percentage ID of aligned length. This may fail if
+        # total length is zero.
+        # The ZeroDivisionError that would arise should be handled
+        # Common causes are that a NUCmer run failed, or that a very
+        # distant sequence was included in the analysis.
+        try:
+            perc_id = 1 - float(tot_sim_error) / tot_length
+        except ZeroDivisionError:
+            #print("Alignment between {0} and {1} has 0 alignment!".format(qname,sname))
+            perc_id = 0  # set arbitrary value of zero identity
+            zero_error = True
+        
+        Table['querry'].append(qname)
+        Table['querry_length'].append(org_lengths[qname])
+        Table['reference'].append(sname)
+        Table['reference_length'].append(org_lengths[sname])
+        Table['alignment_length'].append(tot_length)
+        Table['similarity_errors'].append(tot_sim_error)
+        Table['ani'].append(perc_id)
+        Table['ref_coverage'].append(sbjct_cover)
+        Table['querry_coverage'].append(query_cover)
+        Table['alignment_coverage'].append((tot_length * 2)/(org_lengths[qname]\
+                                                             + org_lengths[sname]))
+    
+    df = pd.DataFrame(Table)
+    return df
+    
+def process_gani_files(files):
+    Table = {'querry':[],'reference':[],'ani':[],'coverage':[]}
+    for file in files:
+        results = parse_gani_file(file)
+        
+        # Add forward results
+        Table['reference'].append(results['reference'])
+        Table['querry'].append(results['querry'])
+        Table['ani'].append(float(results['rq_ani'])/100)
+        Table['coverage'].append(results['rq_coverage'])
+        
+        # Add reverse results
+        Table['reference'].append(results['querry'])
+        Table['querry'].append(results['reference'])
+        Table['ani'].append(float(results['qr_ani'])/100)
+        Table['coverage'].append(results['qr_coverage'])
+    
+    # Add self comparisons
+    for g in set(Table['reference']):
+        Table['reference'].append(g)
+        Table['querry'].append(g)
+        Table['ani'].append(1)
+        Table['coverage'].append(1)
+        
+    Gdb = pd.DataFrame(Table)
+    return Gdb
+        
+    
+    
+def parse_gani_file(file):
+    x = pd.read_table(file)
+    x = x.rename(columns={'GENOME1':'reference','GENOME2':'querry','AF(1->2)':'rq_coverage',\
+                        'AF(2->1)':'qr_coverage','ANI(1->2)':'rq_ani','ANI(2->1)':'qr_ani'})
+    dict = x.to_dict(orient='list')
+    dict = {k:v[0] for k,v in dict.items()}
+    return dict
+
 def gen_nucmer_cmd(prefix,ref,querry,c='65',noextend=False,maxgap='90',method='mum'):
     cmd = ['nucmer','--' + method,'-p',prefix,'-c',str(c),'-g',str(maxgap)]
     if noextend: cmd.append('--noextend')
@@ -655,15 +794,40 @@ def thread_nucmer_cmds(cmds,t=10):
     
 def thread_nucmer_cmds_status(cmds,t=10):
     total = len(cmds)
-    print("Running {0} mummer comparisons...".format(total))
+    minutes = ((total * (float(0.33))) /float(t))
+    print("Running {0} mummer comparisons: should take ~ {0:.1f} min".format(total,minutes))
+    pool = multiprocessing.Pool(processes=int(t))
+    rs = pool.map_async(run_nucmer_cmd,cmds)
+    pool.close()
+    
+    '''
+    while(True):
+        done = total - rs._number_left
+        percR = (done/total) * 100
+        sys.stdout.write('\r')
+        sys.stdout.write("[{0:20}] {1:3.2f}% {2} of {3} remaining".format('='*int(percR/5), \
+                        percR,rs._number_left,total))
+        sys.stdout.flush()
+        if (rs.ready()): 
+            sys.stdout.write('\n')
+            break
+        time.sleep(0.5)
+    '''
+        
+    pool.join()
+    return
+    
+def thread_mash_cmds_status(cmds,t=10):
+    total = len(cmds)
     pool = multiprocessing.Pool(processes=t)
     rs = pool.map_async(run_nucmer_cmd,cmds)
     pool.close()
     
     while(True):
-        remaining = total - rs._number_left
+        done = total - rs._number_left
+        percR = (done/total) * 100
         sys.stdout.write('\r')
-        sys.stdout.write("[{0:20}] {1:3}%".format('='*int(((remaining/total) * 100)/5), int(((remaining/total) * 100))))
+        sys.stdout.write("[{0:20}] {1:3.2f}%".format('='*int(percR/5), percR))
         sys.stdout.flush()
         if (rs.ready()): 
             sys.stdout.write('\n')
@@ -687,6 +851,10 @@ def run_nucmer_cmd(cmd,dry=False,shell=False):
         if not dry: call(cmd, stderr=devnull,stdout=devnull)
         else: print(' '.join(cmd))
     return
+    
+def run_mash_cmd(cmds):
+    cmd = ' '.join(cmd)
+    dm.run_cmd(cmd,dry=False,shell=True)
     
 def load_genomes(genome_list):
     Table = {'genome':[],'location':[]}

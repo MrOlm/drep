@@ -15,16 +15,22 @@ workDirectory
 ./data
 ...../MASH_files/
 ...../ANIn_files/
+...../gANI_files/
 ...../Clustering_files/
 ...../checkM/
 ........./genomes/
 ........./checkM_outdir/
+...../prodigal/
 ./figures
 ./data_tables
-...../Bdb.csv # Sequence locations and filenames
-...../Mdb.csv # Raw results of MASH comparisons
-...../Ndb.csv # Raw results of ANIn comparisons
-...../Cdb.csv # Genomes and cluster designations
+...../Bdb.csv  # Sequence locations and filenames
+...../Mdb.csv  # Raw results of MASH comparisons
+...../Ndb.csv  # Raw results of ANIn comparisons
+...../Cdb.csv  # Genomes and cluster designations
+...../Chdb.csv # CheckM results for Bdb
+...../Sdb.csv  # Scoring information
+...../Wdb.csv  # Winning genomes
+./dereplicated_genomes
 ./log
 ...../logger.log
 ...../cluster_arguments.json
@@ -66,8 +72,9 @@ class WorkDirectory:
         self.import_arguments(loc)
         
     def __str__(self):
-        string = "Located: {0}\nDatatables: {1}\nPickles: {2}".format(\
-                    self.location,list(self.data_tables.keys()),list(self.pickles.keys()))
+        string = "Located: {0}\nDatatables: {1}\nPickles: {2}\nArguments: {3}".format(\
+                    self.location,list(self.data_tables.keys()),list(self.pickles.keys()),\
+                    list(self.arguments.keys()))
         
         return string
         
@@ -101,16 +108,23 @@ class WorkDirectory:
                 to_return[pickle.replace('ANIn_linkage_cluster_','')] = self.pickles[pickle]        
         return to_return
         
+    def get_gANI_linkages(self):
+        to_return = {}
+        for pickle in self.pickles:
+            if pickle.startswith('gANI_linkage_cluster_'):
+                to_return[pickle.replace('gANI_linkage_cluster_','')] = self.pickles[pickle]        
+        return to_return
+        
     def get_MASH_linkage(self): 
         return self.pickles['MASH_linkage']
             
-    def store_db(self,db,name):
+    def store_db(self,db,name,overwrite=False):
         loc = self.location + '/data_tables/'
         
         if os.path.isfile(loc + name + '.csv'):
-            assert self.overwrite == True, "data_table {0} already exists".format(name)
+            assert overwrite == True, "data_table {0} already exists".format(name)
             
-        db.to_csv(loc + name + '.csv')
+        db.to_csv(loc + name + '.csv', index=False)
         self.data_tables[name] = db
         
     def get_db(self, name, return_none=True):

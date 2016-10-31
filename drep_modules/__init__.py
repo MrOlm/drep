@@ -4,6 +4,7 @@ from subprocess import call
 import os
 from Bio import SeqIO
 import shutil
+import multiprocessing
 
 def run_cmd(cmd,dry=False,shell=True,quiet= True):
     devnull = open(os.devnull, 'w')
@@ -29,8 +30,9 @@ def make_dir(outdirname,dry=False,overwrite=False):
         return
     if os.path.exists(outdirname):
         if overwrite:
-            shutil.rmtree(outdirname, ignore_errors=True)
-            os.makedirs(outdirname)
+            pass
+            #shutil.rmtree(outdirname, ignore_errors=True)
+            #os.makedirs(outdirname)
         else:
             assert False, "{0} already exsists! Will not overwrite with current settings".\
                             format(outdirname)
