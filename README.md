@@ -22,7 +22,8 @@ drep.py adjust workD something
 Filters a genome list, Bdb, or Wdb, based on length and checkM information
 
 Can modify:  
-- Bdb, Chdb, Wdb  
+- Bdb, Chdb, Wdb
+
 Can read:  
 - Bdb, Wdb  
 
