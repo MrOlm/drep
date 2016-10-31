@@ -93,26 +93,26 @@ Ndb
 
 # Work directory tree
 
-workDirectory
-./data
-...../MASH_files/
-...../ANIn_files/
-...../gANI_files/
-...../Clustering_files/
-...../checkM/
-........./genomes/
-........./checkM_outdir/
-...../prodigal/
-./figures
-./data_tables
-...../Bdb.csv  # Sequence locations and filenames
-...../Mdb.csv  # Raw results of MASH comparisons
-...../Ndb.csv  # Raw results of ANIn comparisons
-...../Cdb.csv  # Genomes and cluster designations
-...../Chdb.csv # CheckM results for Bdb
-...../Sdb.csv  # Scoring information
-...../Wdb.csv  # Winning genomes
-./dereplicated_genomes
-./log
-...../logger.log
-...../cluster_arguments.json
+workDirectory  
+./data  
+...../MASH_files/  
+...../ANIn_files/  
+...../gANI_files/  
+...../Clustering_files/  
+...../checkM/  
+........./genomes/  
+........./checkM_outdir/  
+...../prodigal/  
+./figures  
+./data_tables  
+...../Bdb.csv  # Sequence locations and filenames  
+...../Mdb.csv  # Raw results of MASH comparisons  
+...../Ndb.csv  # Raw results of ANIn comparisons  
+...../Cdb.csv  # Genomes and cluster designations  
+...../Chdb.csv # CheckM results for Bdb  
+...../Sdb.csv  # Scoring information  
+...../Wdb.csv  # Winning genomes  
+./dereplicated_genomes  
+./log  
+...../logger.log  
+...../cluster_arguments.json  
