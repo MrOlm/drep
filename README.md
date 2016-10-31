@@ -15,21 +15,58 @@ drep.py adjust workD something
 
 # Module summaries
 
-filter
+## filter
+
+Filters a genome list, Bdb, or Wdb, based on length and checkM information
+
+Can modify:
+
+- Bdb, Chdb, Wdb
+
+Can read:
+
+- Bdb, Wdb
+
+## cluster
+
+Clusters genomes first by MASH, and then by a secondary method (ANIn or gANI)
+
+Can modify:
+
+- Cdb, Mdb, Ndb
+
+Can read:
+
+-  Bdb
+
+## choose
+
+Chooses the winning representative of each secondary cluster
+
+Can modify:
+
+- Bdb, Cdb, Chdb, Sdb, Wdb
+
+Can read:
+
+- Chdb 
 
 # Dataframes
 
 Bdb
 
 :   Holds sequence locations and filenames
+
 :   genome, location
 
 Mdb
 
 :   Holds raw information about MASH comparisons
+
 :   genome1,genome2,dist,p,kmers,similarity
 
 Ndb
 
 :   Holds raw information about ANIn comparions
+
 :   reference, querry, alignment_length, ani, reference_coverage, querry_coverage, alignment_coverage, MASH_cluster, ...
