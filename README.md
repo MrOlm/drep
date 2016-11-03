@@ -24,6 +24,7 @@ pip install .
 
 # Normal use case
 
+```
 drep.py filter workD -g genomelist
 
 drep.py cluster workD
