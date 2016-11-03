@@ -1,5 +1,25 @@
 # drep
-De-replication of microbial genomes
+De-replication of microbial genomes.
+
+When time-series metagenomes are available,
+often scientists do a co-assembly of all time-points together and then
+bin those genomes using the time-series signal. Due to strain variation,
+however, often a genome will assemble better in an individual sample than the
+co-assembly. Often in the end what scientists want is a single set of genomes,
+and so assembling each time-point seperately creates the problem of having to
+"de-replicate" the genomes assembled at each time-point to the single, best
+genome available from all assemblies. Drep can help the user identity cases
+where the same genotype was assembled multiple times, and choose the best
+genome for downstream analysis.
+
+# Installation
+
+```
+git clone git@github.com:MrOlm/drep.git
+
+cd drep
+
+pip install .
 
 # Normal use case
 
@@ -49,7 +69,7 @@ Can modify:
 
 Can read:
 
-- Chdb 
+- Chdb
 
 ## analyze
 
@@ -101,7 +121,7 @@ Ndb
 
 ./Clustering_files
 
-These pickle files store information on both primary and secondary clusters. 
+These pickle files store information on both primary and secondary clusters.
 Loading the **first** value gives you the linkage, loading the **second** value gives you the db that was used to make the linkage, loading the **third** value give you a dictionary of the arguments that were used to make the linkage.
 
 Example:  
