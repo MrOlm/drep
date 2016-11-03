@@ -45,7 +45,7 @@ Chooses the winning representative of each secondary cluster
 
 Can modify:
 
-- Bdb, Cdb, Chdb, Sdb, Wdb
+- Cdb, Chdb, Sdb, Wdb
 
 Can read:
 
@@ -61,7 +61,17 @@ Can modify:
 
 Can read:
 
--
+- All
+
+## adjust
+
+Adjust secondary clustering of a single primary cluster
+
+Can modify:
+
+- Cdb, Wdb
+
+Can read:
 
 # DataTables
 
@@ -88,6 +98,19 @@ Ndb
 ./figures
 
 ./dereplicated_genomes
+
+./Clustering_files
+
+These pickle files store information on both primary and secondary clusters. 
+Loading the **first** value gives you the linkage, loading the **second** value gives you the db that was used to make the linkage, loading the **third** value give you a dictionary of the arguments that were used to make the linkage.
+
+Example:  
+```
+f = open(pickle, 'rb')
+linkage = pickle.load(f)
+db = pickle.load(f)
+arguments = pickle.load(f)
+```
 
 # Work directory tree
 
