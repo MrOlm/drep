@@ -8,7 +8,7 @@ setup(name='drep',
       author_email='mattolm@berkeley.edu',
       license='MIT',
       packages=['drep'],
-      scripts=['bin/drep.py'],
+      scripts=['bin/Drep'],
       install_requires=[
           #'numpy',
           #'pandas',
