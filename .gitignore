@@ -1,4 +1,15 @@
+# Compiled python modules
 *.pyc
-test/test/*
-test/test_backend/*
-drep_modules/__pycache__/__init__.cpython-35.pyc
+
+# Python egg metadata, regenerated from source files by setuptools.
+/*.egg-info
+
+# pyenv files
+*python-version
+
+# completed test files
+tests/test/*
+tests/test_backend/*
+
+# development symlink
+bin/drep
