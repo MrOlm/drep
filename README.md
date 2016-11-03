@@ -20,10 +20,10 @@ git clone git@github.com:MrOlm/drep.git
 cd drep
 
 pip install .
+```
 
 # Normal use case
 
-```
 drep.py filter workD -g genomelist
 
 drep.py cluster workD
