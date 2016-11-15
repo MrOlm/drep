@@ -132,9 +132,9 @@ def validate_arguments(wd,**kwargs):
     if wd.hasDb('Wdb'):
         print("Going to filter Wdb")
         print("Matt- write this part")
-        sys.exit()
-        return bdb_from_wdb(wd.get_db('Wdb')), 'Wdb'
-    elif wd.hasDb('Bdb'):
+        #sys.exit()
+        #return bdb_from_wdb(wd.get_db('Wdb')), 'Wdb'
+    if wd.hasDb('Bdb'):
         if kwargs.get('genomes',None) != None:
             print("Both Bdb and a genome list are found- either don't include "\
                     + "a genome list or start a new work directory!")

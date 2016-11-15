@@ -251,7 +251,7 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
 
     logging.info('Clustering ANIn database')
 
-    cov_thresh = kwargs.get('cov_thresh',0.5)
+    cov_thresh = float(kwargs.get('cov_thresh',0.5))
     S_Lmethod = kwargs.get('S_Lmethod', 'single')
     S_Lcutoff = kwargs.get('S_Lcutoff', 0.01)
     overwrite = kwargs.get('overwrite', False)
@@ -385,6 +385,7 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, **kwargs):
 
     # Step 1. Make the directories and generate the list of commands to be run
     cmds = []
+    files = []
     for cluster in Bdb['MASH_cluster'].unique():
         d = Bdb[Bdb['MASH_cluster'] == cluster]
         genomes = d['location'].tolist()
@@ -393,24 +394,12 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, **kwargs):
                 file_name = "{0}{1}_vs_{2}".format(ANIn_folder, \
                             get_genome_name_from_fasta(g1),\
                             get_genome_name_from_fasta(g2))
+                files.append(file_name + '.delta')
 
                 # If the file doesn't already exist, add it to what needs to be run
                 if not os.path.isfile(file_name + '.delta'):
                     cmds.append(gen_nucmer_cmd(file_name,g1,g2,c=n_c,noextend=n_noextend,\
                                 maxgap=n_maxgap,method=n_method))
-
-    '''
-    cmds = []
-    for cluster in Bdb['MASH_cluster'].unique():
-        d = Bdb[Bdb['MASH_cluster'] == cluster]
-        genomes = d['location'].tolist()
-
-        outf = "{0}{1}/".format(ANIn_folder,cluster)
-        dm.make_dir(outf,dry,overwrite)
-
-        cmds += gen_nucmer_commands(genomes, outf, maxgap=n_maxgap, noextend=n_noextend,\
-                                    c= n_c, method= 'mum')
-    '''
 
     # Step 2. Run the nucmer commands
 
@@ -420,19 +409,8 @@ def run_anin_on_clusters(Bdb, Cdb, data_folder, **kwargs):
 
     # Step 3. Parse the nucmer output
 
-    '''
-    Ndb = pd.DataFrame()
     org_lengths = {y:dm.fasta_length(x) for x,y in zip(Bdb['location'].tolist(),Bdb['genome'].tolist())}
-    for cluster in Bdb['MASH_cluster'].unique():
-        d = Bdb[Bdb['MASH_cluster'] == cluster]
-        outf = "{0}{1}/".format(ANIn_folder,cluster)
-        data = process_deltadir(outf, org_lengths)
-        data['MASH_cluster'] = cluster
-        Ndb = pd.concat([Ndb,data],ignore_index=True)
-    '''
-
-    org_lengths = {y:dm.fasta_length(x) for x,y in zip(Bdb['location'].tolist(),Bdb['genome'].tolist())}
-    Ndb = process_deltadir(ANIn_folder, org_lengths)
+    Ndb = process_deltadir(files, org_lengths)
     Ndb['MASH_cluster'] = None
     for cluster in Bdb['MASH_cluster'].unique():
         d = Bdb[Bdb['MASH_cluster'] == cluster]
@@ -454,6 +432,7 @@ def run_nucmer_genomeList(genomes,outf,b2s,c=65,maxgap=90,noextend=False,method=
     genomes is a list of locations of genomes in .fasta file. This will do pair-wise
     comparisons of those genomes using the nucmer settings given
     """
+
     # Run commands on biotite
     cmds = []
     for g1 in genomes:
@@ -516,7 +495,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     cmd = ' '.join(cmd)
     dm.run_cmd(cmd,dry,True)
 
-    # Make Mdb
+    # Make Mdb based on all genomes in the MASH folder
     Mdb = pd.DataFrame()
     file = MASH_folder + 'MASH_table.tsv'
 
@@ -526,6 +505,11 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     table['genome2'] = table['genome2'].apply(get_genome_name_from_fasta)
     Mdb = pd.concat([Mdb,table],ignore_index=True)
     Mdb['similarity'] = 1 - Mdb['dist'].astype(float)
+
+    # Filter out those genomes that are in the MASH folder but shouldn't be in Mdb
+    genomes = Bdb['genome'].unique()
+    Mdb = Mdb[Mdb['genome1'].isin(genomes)]
+    Mdb = Mdb[Mdb['genome2'].isin(genomes)]
 
     return Mdb
 
@@ -632,7 +616,7 @@ def gen_gANI_cmd(file, g1, g2, dir, exe):
     return cmd
 
 
-def process_deltadir(delta_dir, org_lengths, logger=None):
+def process_deltadir(deltafiles, org_lengths, logger=None):
     """Returns a tuple of ANIm results for .deltas in passed directory.
     - delta_dir - path to the directory containing .delta files
     - org_lengths - dictionary of total sequence lengths, keyed by sequence
@@ -646,7 +630,7 @@ def process_deltadir(delta_dir, org_lengths, logger=None):
     very distant sequence was included in the analysis.
     """
     # Process directory to identify input files
-    deltafiles = glob.glob(delta_dir + '*.delta')
+    #deltafiles = glob.glob(delta_dir + '*.delta')
 
     Table = {'querry':[],'reference':[],'alignment_length':[],'similarity_errors':[],
             'ref_coverage':[],'querry_coverage':[],'ani':[], 'reference_length':[],
@@ -762,7 +746,7 @@ def process_gani_files(files):
     return Gdb
 
 def compare_genomes(bdb, comp_method, wd, **kwargs):
-    p = kwargs.get('processors')
+    p = kwargs.get('processors',6)
     genomes = bdb['location'].tolist()
 
     if comp_method == 'ANIn':
@@ -786,7 +770,7 @@ def compare_genomes(bdb, comp_method, wd, **kwargs):
 
         # Run commands
         if len(cmds) > 0:
-            dClust.thread_nucmer_cmds_status(cmds,p)
+            thread_nucmer_cmds_status(cmds,p)
 
         # Parse output
         org_lengths = {get_genome_name_from_fasta(y):dm.fasta_length(x) for x,y in zip(genomes,genomes)}
@@ -945,7 +929,7 @@ def load_genomes(genome_list):
     for genome in genome_list:
         assert os.path.isfile(genome)
         Table['genome'].append(os.path.basename(genome))
-        Table['location'].append(genome)
+        Table['location'].append(os.path.abspath(genome))
 
     Bdb = pd.DataFrame(Table)
     return Bdb

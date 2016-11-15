@@ -25,15 +25,15 @@ pip install .
 # Normal use case
 
 ```
-drep.py filter workD -g genomelist
+Drep filter workD -g genomelist
 
-drep.py cluster workD
+Drep cluster workD
 
-drep.py choose workD
+Drep choose workD
 
-drep.py analyze workD -cviz a
+Drep analyze workD -cviz a
 
-drep.py adjust workD something
+Drep adjust workD something
 ```
 
 # Module summaries
@@ -106,13 +106,19 @@ Mdb
 
 :   Holds raw information about MASH comparisons
 
-:   genome1,genome2,dist,p,kmers,similarity
+:   genome1, genome2, dist, p, kmers, similarity
 
 Ndb
 
 :   Holds raw information about ANIn comparions
 
 :   reference, querry, alignment_length, ani, reference_coverage, querry_coverage, alignment_coverage, MASH_cluster, ...
+
+Cdb
+
+:   Holds clustering information
+
+:   cluster_method, comparison_algorithm, genome, primary_cluster, secondary_cluster, threshold
 
 # Other user-facing data
 

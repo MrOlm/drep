@@ -131,7 +131,7 @@ def score_row(row, **kwargs):
     size = float(row['Genome size (bp)'].tolist()[0])
     str = float(row['Strain heterogeneity'].tolist()[0])
 
-    score = (com * comW) - (con * conW) + (np.log10(n50) * n50W) + (np.log10(size) * sizeW)
+    score = (com * comW) - (con * conW) + (np.log10(n50) * n50W) + (np.log10(size) * sizeW) - (strW * str)
     return score
 
 

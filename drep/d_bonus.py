@@ -3,6 +3,7 @@
 import logging
 import os
 import pandas as pd
+import sys
 
 import drep.WorkDirectory
 import drep as dm
@@ -22,6 +23,9 @@ def run_taxonomy(wd, **kwargs):
     Bdb = wd.get_db('Bdb')
     prod_dir = wd.get_dir('prodigal')
     cent_dir = wd.get_dir('centrifuge')
+    if wd.hasDb('Tdb') and (kwargs.get('overwrite',False) == False):
+        print('Tdb already exists- run with overwrite to overwrite')
+        sys.exit()
 
     # Run prodigal
     d_filter.run_prodigal(Bdb, prod_dir, **kwargs)
@@ -59,6 +63,16 @@ def run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs):
 
     else:
         print('Past centrifuge runs found- will not re-run')
+
+def gen_read2bin(gene_files):
+    r2b = {}
+    for f in gene_files:
+        genome = os.path.basename(f)[:-4]
+        with open(f) as handle:
+          for line in handle:
+            if line.startswith('>'):
+              r2b.setdefault(genome,[]).append(line.strip()[1:].split(' ')[0])
+    return r2b
 
 def parse_centrifuge(Bdb, cent_dir, **kwargs):
 
@@ -154,6 +168,20 @@ def gen_centrifuge_cmd(genes,cent,**kwargs):
     cent_exe = kwargs.get('cent_exe', '/home/mattolm/download/centrifuge/centrifuge')
     cmd = [cent_exe, '-f', '-x', cent_indicies, genes, '-S', "{0}_hits.tsv".format(cent),\
             '-p','1','--report-file',"{0}_report.tsv".format(cent)]
+
+    return cmd
+
+def gen_giant_centrifuge_cmd(genes,base,**kwargs):
+    ind = kwargs.get('tax_db','ncbi')
+    if ind == 'ncbi':
+        cent_indicies = kwargs.get('cent_indicies', '/data3/Human/NIH_4/CentrifugeIndex/nt')
+    elif ind == 'bac_only':
+        cent_indicies = kwargs.get('cent_exe', '/home/mattolm/download/centrifuge/indices/b+h+v')
+    cent_exe = kwargs.get('cent_exe', '/home/mattolm/download/centrifuge/centrifuge')
+    p = kwargs.get('processors')
+
+    cmd = [cent_exe, '-f', '-x', cent_indicies, '-U', ','.join(genes), '-S',\
+        "{0}_hits.tsv".format(base),'-p',str(p),'--report-file',"{0}_report.tsv".format(base)]
 
     return cmd
 

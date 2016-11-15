@@ -136,14 +136,18 @@ def cluster_vis_wrapper(wd, **kwargs):
 
     # 4) Comparison scatterplots
     if '4' in to_plot:
+        sns.set_style('whitegrid')
+
         # Load the required data
         Ndb = wd.get_db('Ndb')
         Mdb = wd.get_db('Mdb')
+        Cdb = wd.get_db('Cdb')
 
         # Make the plot
         print("Plotting Scatterplots...")
-        plot_scatterplots(Mdb, Ndb, plot_dir = plot_dir)
+        plot_scatterplots(Mdb, Ndb, Cdb, plot_dir = plot_dir)
 
+    '''
     # 5) Simple bin scorring
     if '5' in to_plot:
         # Load the required data
@@ -154,9 +158,10 @@ def cluster_vis_wrapper(wd, **kwargs):
         # Make the plot
         print("Plotting simple scorring plot...")
         plot_winner_scoring_simple(Wdb, Sdb, Cdb, plot_dir = plot_dir)
+    '''
 
-    # 6) Complex bin scorring
-    if '6' in to_plot:
+    # 5) Complex bin scorring
+    if '5' in to_plot:
         # Load the required data
         Sdb = wd.get_db('Sdb')
         Cdb = wd.get_db('Cdb')
@@ -164,8 +169,21 @@ def cluster_vis_wrapper(wd, **kwargs):
         Chdb = wd.get_db('Chdb')
 
         # Make the plot
-        print("Plotting complex scorring plot...")
+        print("Plotting bin scorring plot...")
         plot_winner_scoring_complex(Wdb, Sdb, Cdb, Chdb, plot_dir = plot_dir, **kwargs)
+
+    # 6) Winning plot
+    if '6' in to_plot:
+        # Load the required data
+        Wdb = wd.get_db('Wdb')
+        Chdb = wd.get_db('Chdb')
+        Wndb = wd.get_db('Wndb')
+        Wmdb = wd.get_db('Wmdb')
+        Widb = wd.get_db('Widb')
+
+        # Make the plot
+        print("Plotting winning genomes plot...")
+        plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir = plot_dir, **kwargs)
 
 def cluster_test_wrapper(wd, **kwargs):
 
@@ -267,11 +285,21 @@ def plot_ANIn_cov_heatmap(Ndb):
         gs.append(g)
     return gs
 
+def _make_heatmap(db):
+    g = sns.heatmap(db)
+    labels = list(db.columns)
+
+    # Adjust figure size
+    fig = plt.gcf()
+    fig.set_size_inches(x_fig_size(len(labels), factor=.5),x_fig_size(len(labels), factor=.5))
+    plt.subplots_adjust(left=0.3)
+    plt.subplots_adjust(bottom=0.3)
+
 """
 SCATTER PLOTS
 """
 
-def plot_scatterplots(Mdb, Ndb, plot_dir=False):
+def plot_scatterplots(Mdb, Ndb, Cdb, plot_dir=False):
     save = False
 
     # Initialize a .pdf
@@ -280,6 +308,10 @@ def plot_scatterplots(Mdb, Ndb, plot_dir=False):
         save = True
 
     g = plot_MASH_vs_ANIn_ani(Mdb,Ndb,exclude_zero_MASH=False)
+    if save: pp.savefig(g)
+    plt.show()
+
+    g = plot_MASH_vs_secondary_ani(Mdb,Ndb,Cdb,exclude_zero_MASH=False)
     if save: pp.savefig(g)
     plt.show()
 
@@ -314,6 +346,34 @@ def plot_MASH_vs_ANIn_ani(Mdb,Ndb,exclude_zero_MASH=True):
     db = pd.merge(mdb,Ndb)
     db.rename(columns={'ani':'ANIn'},inplace=True)
     g = sns.jointplot(x='ANIn',y='MASH_ANI',data=db)
+    plt.gcf().suptitle('MASH vs ANIn comparisons (all)')
+    plt.subplots_adjust(top=0.9)
+    #plt.subplots_adjust(left=0.2)
+    return plt.gcf()
+
+def plot_MASH_vs_secondary_ani(Mdb,Ndb,Cdb,exclude_zero_MASH=True):
+    plt.close('all')
+    Xdb = pd.DataFrame()
+
+    # Make a database of all comparisons
+    mdb = Mdb.copy()
+    mdb.rename(columns={'genome1':'querry','genome2':'reference',
+                        'similarity':'MASH_ANI'},inplace=True)
+    if exclude_zero_MASH:
+        mdb= mdb[mdb['MASH_ANI'] > 0]
+    db = pd.merge(mdb,Ndb)
+    db.rename(columns={'ani':'ANIn'},inplace=True)
+
+    # Filter to only comparisons within secondary clusters
+    g2c = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+    db['ref_secondary_cluster'] = db['reference'].map(g2c)
+    db['qu_secondary_cluster'] = db['querry'].map(g2c)
+    db = db[db['ref_secondary_cluster'] == db['qu_secondary_cluster']]
+
+    g = sns.jointplot(x='ANIn',y='MASH_ANI',data=db)
+    plt.gcf().suptitle('MASH vs ANIn comparisons (within secondary clusters only)')
+    plt.subplots_adjust(top=0.9)
+    #plt.subplots_adjust(left=0.2)
     return plt.gcf()
 
 def plot_MASH_vs_ANIn_cov(Mdb,Ndb,exclude_zero_MASH=True):
@@ -347,6 +407,16 @@ def plot_MASH_vs_len(Mdb,Ndb,exclude_zero_MASH=True):
     db = pd.merge(mdb,Ndb)
     db['length_difference'] = abs(db['reference_length'] - db['querry_length'])
     g = sns.jointplot(x='MASH_ANI',y='length_difference',data=db)
+
+    # Make a decending xaxis
+    axs = plt.gcf().get_axes()
+    plt.sca(axs[0])
+    plt.xlim(db['MASH_ANI'].max(),db['MASH_ANI'].min())
+
+    plt.gcf().suptitle('MASH vs length difference of genomes compared')
+    plt.subplots_adjust(top=0.9)
+    plt.subplots_adjust(left=0.2)
+
     return plt.gcf()
 
 def plot_ANIn_vs_len(Mdb,Ndb,exclude_zero_MASH=True):
@@ -361,43 +431,25 @@ def plot_ANIn_vs_len(Mdb,Ndb,exclude_zero_MASH=True):
     db['length_difference'] = abs(db['reference_length'] - db['querry_length'])
     db.rename(columns={'ani':'ANIn'},inplace=True)
     g = sns.jointplot(x='ANIn',y='length_difference',data=db)
+
+    # Make a decending xaxis
+    axs = plt.gcf().get_axes()
+    plt.sca(axs[0])
+    plt.xlim(db['ANIn'].max(),db['ANIn'].min())
+
+    plt.gcf().suptitle('ANIn vs length difference of genomes compared')
+    plt.subplots_adjust(top=0.9)
+    plt.subplots_adjust(left=0.2)
     return plt.gcf()
 
 """
 CLUSETER PLOTS
 """
 
-'''
-def plot_MASH_clustermap(Mdb, Cdb, linkage, threshold = False, plot_dir = False, **kwargs):
-    db = Mdb.pivot("genome1","genome2","similarity")
-    names = list(db.columns)
-    name2cluster = Cdb.set_index('genome')['MASH_cluster'].to_dict()
-    colors = gen_color_list(names, name2cluster)
-    name2color = gen_color_dictionary(names, name2cluster)
-
-    # Make the clustermap
-    g = sns.clustermap(db, row_linkage = linkage, col_linkage = linkage, \
-                        row_colors = colors, col_colors = colors, vmin = 0.8, \
-                        vmax = 1)
-    g.fig.suptitle("MASH clustering")
-    plt.setp(g.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
-
-    # Adjust the figure size
-    plt.subplots_adjust(bottom=0.3, right=0.7)
-    fig = plt.gcf()
-    fig.set_size_inches(x_fig_size(len(names)),x_fig_size(len(names)))
-
-    #Save the figure
-    if plot_dir != None:
-        plt.savefig(plot_dir + 'Cviz_MASH_clustermap.pdf')
-    plt.show()
-    plt.close('all')
-'''
-
 def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold = False, plot_dir = False, **kwargs):
     db = Mdb.pivot("genome1","genome2","similarity")
     names = list(db.columns)
-    name2cluster = Cdb.set_index('genome')['primary_cluster'].to_dict()
+    name2cluster = Cdb.set_index('genome')['secondary_cluster'].to_dict()
     name2color = gen_color_dictionary(names, name2cluster)
 
     # Make the dendrogram
@@ -408,10 +460,10 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold = False, plot_dir = False,
 
     # Adjust the figure size
     fig = plt.gcf()
-    fig.set_size_inches(10,x_fig_size(len(names)))
+    fig.set_size_inches(10,x_fig_size(len(names),factor=.2))
     plt.subplots_adjust(left=0.3)
 
-    # Adjust the labels
+    # Adjust the x labels
     plt.tick_params(axis='both', which='major', labelsize=8)
     axes = plt.gca()
     labels = axes.xaxis.get_majorticklocs()
@@ -419,6 +471,13 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold = False, plot_dir = False,
         labels[i] = (1 - float(label)) * 100
     axes.set_xticklabels(labels)
 
+    # Add cluster to the y axis
+    g2c = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+    axes = plt.gca()
+    labels = [item.get_text() for item in axes.get_yticklabels()]
+    for i, label in enumerate(labels):
+        labels[i] = "{0} ({1})".format(label, g2c[label])
+    axes.set_yticklabels(labels)
 
     # Save the figure
     if plot_dir != None:
@@ -427,54 +486,6 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold = False, plot_dir = False,
     plt.close('all')
 
 '''
-def plot_ANIn_clustermaps(Ndb, Cdb, cluster2linkage, threshold = False, plot_dir = False, **kwargs):
-    save = False
-
-    # Initialize a .pdf
-    if plot_dir != False:
-        pp = PdfPages(plot_dir + 'Cviz_ANIn_clustermaps.pdf')
-        save = True
-
-    for cluster in sorted([int(x) for x in cluster2linkage.keys()]):
-        cluster = str(cluster)
-        logging.info("plotting ANIn cluster {0}".format(cluster))
-        linkage = cluster2linkage[cluster]
-
-        # Filter Ndb to just have the clusters of the linkage
-        c_genomes = Cdb['genome'][Cdb['MASH_cluster'] == int(cluster)]
-        db = Ndb[Ndb['reference'].isin(c_genomes)]
-        db = db.pivot("reference","querry","ani")
-
-        # Get the colors set up
-        names = list(db.columns)
-        name2cluster = Cdb.set_index('genome')['secondary_cluster'].to_dict()
-        name2color = gen_color_dictionary(names, name2cluster)
-        colors = [name2color[x] for x in names]
-
-        # Make the clustermap
-        g = sns.clustermap(db, row_linkage = linkage, col_linkage = linkage, \
-                            row_colors = colors, col_colors = colors, vmin= 0.95,\
-                            vmax= 1)
-
-        g.fig.suptitle('ANI of MASH cluster {0}'.format(cluster))
-        plt.setp(g.ax_heatmap.yaxis.get_majorticklabels(), rotation=0)
-
-        # Adjust the figure size
-        plt.subplots_adjust(bottom=0.3, right=0.7)
-        fig = plt.gcf()
-        fig.set_size_inches(10,x_fig_size(len(names)))
-        fig.suptitle("MASH Cluster {0}".format(cluster), fontsize=20)
-
-        # Save the clustermap
-        if save == True:
-            pp.savefig(fig)
-        plt.show()
-        plt.close(fig)
-
-    pp.close()
-    plt.close('all')
-'''
-
 def plot_ANIn_dendrograms(Ndb, Cdb, cluster2linkage, threshold = False, plot_dir = False, **kwargs):
     save = False
 
@@ -532,6 +543,7 @@ def plot_ANIn_dendrograms(Ndb, Cdb, cluster2linkage, threshold = False, plot_dir
 
     pp.close()
     plt.close('all')
+'''
 
 def plot_secondary_dendrograms(wd, plot_dir, **kwargs):
     save = False
@@ -603,11 +615,11 @@ def plot_secondary_dendrograms(wd, plot_dir, **kwargs):
 
         plt.xlabel('Average Nucleotide Identity (ANI)')
         if threshold != False:
-            plt.xlim([0,2*threshold])
+            plt.xlim([0,3*threshold])
 
         # Adjust the figure size
         fig = plt.gcf()
-        fig.set_size_inches(10,x_fig_size(len(names)))
+        fig.set_size_inches(10,x_fig_size(len(names),factor=.5))
         plt.subplots_adjust(left=0.5)
 
         # Adjust the labels
@@ -672,7 +684,7 @@ def plot_single_dendrogram(linkage, names, threshold=False, title=None, loc = No
 
     # Adjust the figure size
     fig = plt.gcf()
-    fig.set_size_inches(10,x_fig_size(len(names)))
+    fig.set_size_inches(10,x_fig_size(len(names),factor = .14))
     plt.subplots_adjust(left=0.5)
 
     # Adjust the labels
@@ -689,10 +701,40 @@ def plot_single_dendrogram(linkage, names, threshold=False, title=None, loc = No
     plt.show()
     plt.close(fig)
 
+'''
+names can be gotten like:
+db = db.pivot("reference","querry","ani")
+names = list(db.columns)
+'''
+def _make_dendrogram(linkage, names, **kwargs):
+    threshold = kwargs.get('threshold',False)
+    title = kwargs.get('title',False)
+
+    # Make the dendrogram
+    g = fancy_dendrogram(linkage,names,threshold=threshold)
+    plt.title(title)
+    plt.xlabel(kwargs.get('xlabel','ANI'))
+    if threshold != False:
+        plt.xlim([0,2*threshold])
+
+    # Adjust the figure size
+    fig = plt.gcf()
+    fig.set_size_inches(10,x_fig_size(len(names),factor=.2))
+    plt.subplots_adjust(left=0.3)
+
+    # Adjust the x labels
+    plt.tick_params(axis='both', which='major', labelsize=8)
+    axes = plt.gca()
+    labels = axes.xaxis.get_majorticklocs()
+    for i, label in enumerate(labels):
+        labels[i] = (1 - float(label)) * 100
+    axes.set_xticklabels(labels)
 
 """
 WINNER PLOTS
 """
+
+'''
 def plot_winner_scoring_simple(Wdb, Sdb, Cdb, plot_dir= False, **kwargs):
     save = False
 
@@ -730,13 +772,14 @@ def plot_winner_scoring_simple(Wdb, Sdb, Cdb, plot_dir= False, **kwargs):
     if save:
         pp.close()
     plt.close('all')
+'''
 
 def plot_winner_scoring_complex(Wdb, Sdb, Cdb, Chdb, plot_dir= False, **kwargs):
     save = False
 
     # Initialize a .pdf
     if plot_dir != False:
-        pp = PdfPages(plot_dir + 'Complex_cluster_scoring.pdf')
+        pp = PdfPages(plot_dir + 'Cluster_scoring.pdf')
         save = True
 
     # Figure out what you're going to show
@@ -802,9 +845,242 @@ def plot_winner_scoring_complex(Wdb, Sdb, Cdb, Chdb, plot_dir= False, **kwargs):
         pp.close()
     plt.close('all')
 
+'''
+db is the database to plot- must contain 'genome' and all columns listed in 'bars'
+bars is all of the columns in the database to become bars
+for taxonomy, put genome2taxonomy in kwargs
+'''
+def _make_scoring_plot(db, bars,**kwargs):
+    sns.set_style('whitegrid')
+
+    # Make the normalized bar plot
+    nd = normalize(db)
+    d = pd.melt(nd, id_vars=['genome'], value_vars=bars)
+    g = sns.barplot(data=d, y='genome', x='value', hue='variable')
+
+    # Get a list of the un-normalized values
+    x = pd.melt(db, id_vars=['genome'], value_vars=bars)
+    vals = []
+    for variable in x['variable'].unique():
+        vals += [v for v in x['value'][x['variable'] == variable].tolist()]
+
+    # Add un-normalized values to barplots
+    i = 0
+    for p in g.patches:
+        g.annotate("{0:.1f}".format(vals[i]), (p.get_width(), p.get_y()+(p.get_height()/1.1) ), fontsize=8)
+        i += 1
+
+    # Add taxonomy if available
+    axes = plt.gca()
+    labels = [item.get_text() for item in axes.get_yticklabels()]
+    if kwargs.get('genome2taxonomy',False) != False:
+        g2t = kwargs.get('genome2taxonomy')
+        for i, label in enumerate(labels):
+            labels[i] = "{0}\n{1}".format(label, g2t[label.replace(' *','')])
+        axes.set_yticklabels(labels)
+
+    # Adjust labels
+    plt.xlabel('Normalized Score')
+    plt.legend(loc='lower right')
+    plt.tick_params(axis='both', which='major', labelsize=8)
+
+    # Adjust figure size
+    fig = plt.gcf()
+    fig.set_size_inches(12,x_fig_size(len(labels), factor=1))
+    plt.subplots_adjust(left=0.5)
+
+def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
+    save = False
+
+    # Initialize a .pdf
+    if plot_dir != False:
+        pp = PdfPages(plot_dir + 'Winning_genomes.pdf')
+        save = True
+
+    # Make piecharts
+    labels = []
+    sizes = []
+    for com in Widb['completeness_metric'].unique():
+        d = Widb[Widb['completeness_metric'] == com]
+        labels.append(com)
+        sizes.append(len(d['genome'].unique()))
+    labels = annotate_labels(labels,'comp')
+    _make_piechart(labels,sizes)
+    plt.title('Overall Winner Completeness')
+
+    # Save this page
+    if save == True:
+        fig = plt.gcf()
+        pp.savefig(fig)
+    plt.show()
+    plt.close(fig)
+
+    labels = []
+    sizes = []
+    for com in Widb['contamination_metric'].unique():
+        d = Widb[Widb['contamination_metric'] == com]
+        labels.append(com)
+        sizes.append(len(d['genome'].unique()))
+    labels = annotate_labels(labels,'con')
+    _make_piechart(labels,sizes)
+    plt.title('Overall Winner Contamination')
+
+    # Save this page
+    if save == True:
+        fig = plt.gcf()
+        pp.savefig(fig)
+    plt.show()
+    plt.close(fig)
+
+    # Figure out what you're going to show
+    bars = kwargs.get('to_show',['score','N50 (scaffolds)','Completeness',\
+            'Contamination','Genome size (bp)', 'Strain heterogeneity'])
+
+    # Make a db for the winners
+    Chdb['genome'] = Chdb['Bin Id']
+    d = Wdb.sort_values('score', ascending=False)
+    d = d.merge(Chdb, how='left', on= 'genome')
+    d = d[bars + ['genome']]
+
+    # Make the scoring plot
+    _make_scoring_plot(d,bars,**kwargs)
+    plt.title('Scoring of winning genomes')
+
+    # Save this page
+    if save == True:
+        fig = plt.gcf()
+        pp.savefig(fig)
+    plt.show()
+    plt.close(fig)
+
+    # Make a MASH linkage for the dendrogram
+    db = Wmdb.copy()
+    db['dist'] = 1 - db['similarity']
+    linkage_db = db.pivot("genome1","genome2","dist")
+    names = list(linkage_db.columns)
+    Cdb, linkage = dClust.cluster_hierarchical(linkage_db, linkage_method= 'average', \
+                                linkage_cutoff= 0)
+
+    # Make the MASH dendrogram
+    _make_dendrogram(linkage,names)
+    plt.title('MASH dendrogram')
+
+    # Save this page
+    if save == True:
+        fig = plt.gcf()
+        pp.savefig(fig)
+    plt.show()
+    plt.close(fig)
+
+    # Make the MASH heatmap
+    db['ani'] = db['similarity'] * 100
+    d = db.pivot("genome1","genome2","ani")
+    _make_heatmap(d)
+    plt.title("MASH heatmap")
+
+    # Save this page
+    if save == True:
+        fig = plt.gcf()
+        pp.savefig(fig)
+    plt.show()
+    plt.close(fig)
+
+    # Make a ANIn linkage for the dendrogram
+    d = Wndb.copy()
+    d['av_ani'] = d.apply(lambda row: dClust.average_ani (row,d),axis=1)
+    d['dist'] = 1 - d['av_ani']
+    db = d.pivot("reference", "querry", "dist")
+    names = list(db.columns)
+    Cdb, linkage = dClust.cluster_hierarchical(db, linkage_method= 'average', \
+                                linkage_cutoff= 0)
+
+    # Make the ANIn dendrogram
+    _make_dendrogram(linkage,names)
+    plt.title('ANIn dendrogram (NOT filtered for alignment length)')
+
+    # Save this page
+    if save == True:
+        fig = plt.gcf()
+        pp.savefig(fig)
+    plt.show()
+    plt.close(fig)
+
+    # Make the ANIn heatmap
+    dd = d.pivot("reference","querry","ani")
+    _make_heatmap(dd)
+    plt.title("ANIn heatmap")
+
+    # Save this page
+    if save == True:
+        fig = plt.gcf()
+        pp.savefig(fig)
+    plt.show()
+    plt.close(fig)
+
+    # Make the ANIn coverage heatmap
+    dd = d.pivot("reference","querry","alignment_coverage")
+    _make_heatmap(dd)
+    plt.title("ANIn alignment_coverage heatmap")
+
+    # Save this page
+    if save == True:
+        fig = plt.gcf()
+        pp.savefig(fig)
+    plt.show()
+    plt.close(fig)
+
+    # Save the .pdf
+    if save:
+        pp.close()
+    plt.close('all')
+
 """
 OTHER
 """
+
+def _make_piechart(labels,sizes):
+    plt.pie(sizes,labels=labels,startangle=45,\
+            autopct=make_autopct(sizes),\
+            shadow = True)
+    plt.axis('equal')
+
+def make_autopct(values):
+    def my_autopct(pct):
+        total = sum(values)
+        val = int(round(pct*total/100.0))
+        return '{p:.2f}%  ({v:d})'.format(p=pct,v=val)
+    return my_autopct
+
+def annotate_labels(labels,how):
+    if how == 'comp':
+        labs = []
+        for label in labels:
+            if label == 'near':
+                labs.append('near (>90%)')
+            if label == 'perfect':
+                labs.append('perfect (100%)')
+            if label == 'substantial':
+                labs.append('substantial (>70%)')
+            if label == 'moderate':
+                labs.append('moderate (>50%)')
+            if label == 'partial':
+                labs.append('partial (<50%)')
+        return labs
+
+    if how == 'con':
+        labs = []
+        for label in labels:
+            if label == 'low':
+                labs.append('low (<5%)')
+            if label == 'none':
+                labs.append('none (0%)')
+            if label == 'medium':
+                labs.append('medium (<10%)')
+            if label == 'high':
+                labs.append('high (<15%)')
+            if label == 'very high':
+                labs.append('very high (>15%)')
+        return labs
 
 def x_fig_size(points, factor= .07, min= 8):
     size = points * factor

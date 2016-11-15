@@ -18,6 +18,7 @@ import drep.d_filter
 import drep.d_choose
 import drep.d_adjust
 import drep.d_bonus
+import drep.d_evaluate
 
 
 def drep_wrapper(args):
@@ -37,6 +38,8 @@ def drep_wrapper(args):
         adjust_operation(**vars(args))
     if args.operation == "bonus":
         bonus_operation(**vars(args))
+    if args.operation == "evaluate":
+        evaluate_operation(**vars(args))
 
 def cluster_operation(**kwargs):
     if (kwargs['P_ani'] > 1) or (kwargs['S_ani'] > 1):
@@ -59,6 +62,7 @@ def analyze_operation(**kwargs):
     makeload_logger(kwargs['work_directory'])
 
     logging.info("Starting the analyze operation")
+    logging.info(str(kwargs))
     drep.d_analyze.d_analyze_wrapper(kwargs['work_directory'],**kwargs)
     logging.info("!!! Finished the analyze operation !!!")
 
@@ -66,6 +70,7 @@ def filter_operation(**kwargs):
     makeload_logger(kwargs['work_directory'])
 
     logging.info("Starting the filter operation")
+    logging.info(str(kwargs))
     drep.d_filter.d_filter_wrapper(kwargs['work_directory'],**kwargs)
     logging.info("!!! Finished the filter operation !!!")
 
@@ -73,6 +78,7 @@ def choose_operation(**kwargs):
     makeload_logger(kwargs['work_directory'])
 
     logging.info("Starting the choose operation")
+    logging.info(str(kwargs))
     drep.d_choose.d_choose_wrapper(kwargs['work_directory'],**kwargs)
     logging.info("!!! Finished the choose operation !!!")
 
@@ -80,6 +86,7 @@ def adjust_operation(**kwargs):
     makeload_logger(kwargs['work_directory'])
 
     logging.info("Starting the adjust operation")
+    logging.info(str(kwargs))
     drep.d_adjust.d_adjust_wrapper(kwargs['work_directory'],**kwargs)
     logging.info("!!! Finished the adjust operation !!!")
 
@@ -87,7 +94,22 @@ def bonus_operation(**kwargs):
     makeload_logger(kwargs['work_directory'])
 
     logging.info("Starting the bonus operation")
+    logging.info(str(kwargs))
     drep.d_bonus.d_bonus_wrapper(kwargs['work_directory'],**kwargs)
+    logging.info("!!! Finished the bonus operation !!!")
+
+def evaluate_operation(**kwargs):
+    makeload_logger(kwargs['work_directory'])
+
+    logging.info("Starting the evaluate_operation")
+    logging.info(str(kwargs))
+
+    if kwargs.get('read_free_evaluation',False):
+        kwargs['cluster_winners'] = True
+        kwargs['winners_warnings'] = True
+        kwargs['winners_summary'] = True
+
+    drep.d_evaluate.d_evaluate_wrapper(kwargs['work_directory'],**kwargs)
     logging.info("!!! Finished the bonus operation !!!")
 
 def makeload_logger(wd):
@@ -187,8 +209,8 @@ if __name__ == '__main__':
     # Comparison Parameters
     Compflags = cluster_parser.add_argument_group('COMPARISON PARAMETERS')
     Compflags.add_argument("-ms","--MASH_sketch",help="MASH sketch size", default=1000)
-    Compflags.add_argument("-nc", "--ANIn_cov", help="Minmum level of overlap between\
-        genomes when doing ANIn comparisons", default=0.5)
+    Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
+        genomes when doing secondary comparisons", default=0.1)
     Compflags.add_argument("-n_PRESET", help=
         """R|tight   = only align highly conserved regions
         normal  = default ANIn parameters""", choices=['normal','tight'],default='normal')
@@ -276,8 +298,8 @@ if __name__ == '__main__':
                         + "2) Secondary clustering dendrograms\n"
                         + "3) Secondary clusters heatmaps\n"
                         + "4) Comparison scatterplots\n"
-                        + "5) Simple bin scorring\n"
-                        + "6) Complex bin scorring\n",
+                        + "5) Cluster scorring plot\n"
+                        + "6) Winning genomes\n",
                         nargs='*')
 
     # Cluster testing
@@ -342,6 +364,29 @@ if __name__ == '__main__':
 
     # Biotite Parameters
     Bflags = bonus_parser.add_argument_group('SYSTEM PARAMETERS')
+    Bflags.add_argument('-p','--processors',help='threads',default=6)
+    Bflags.add_argument('-d','--dry',help='dry run- dont do anything',default=False,
+                        action= "store_true")
+    Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
+                        default=False, action= "store_true")
+
+    '''
+    ####### Arguments for evaluate operation ######
+    '''
+
+    evaluate_parser = subparsers.add_parser("evaluate",formatter_class=SmartFormatter)
+    evaluate_parser.add_argument("work_directory",help="R|Directory where data and output\
+    \n*** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***")
+
+    # Read-free evaluation
+    Fflags = evaluate_parser.add_argument_group("READ-FREE EVALUATION")
+    Fflags.add_argument('-rf','--read_free_evaluation',action = 'store_true',
+                        help= "cluster winning bins, find warnings for "+\
+                        "close-calls, and make a winner summary")
+
+
+    # Biotite Parameters
+    Bflags = evaluate_parser.add_argument_group('SYSTEM PARAMETERS')
     Bflags.add_argument('-p','--processors',help='threads',default=6)
     Bflags.add_argument('-d','--dry',help='dry run- dont do anything',default=False,
                         action= "store_true")
