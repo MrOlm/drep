@@ -155,6 +155,7 @@ def adjust_cluster_wrapper(wd, **kwargs):
     comp_method = kwargs.get('clustering_method')
     clust_method = kwargs.get('clusterAlg')
     threshold = kwargs.pop('threshold',None)
+    cov_thresh = float(kwargs.get('minimum_coverage'))
     if threshold != None: threshold = 1- float(threshold)
 
     # Make a bdb listing the genomes to cluster
@@ -165,6 +166,9 @@ def adjust_cluster_wrapper(wd, **kwargs):
 
     # Make the comparison database
     Xdb = dClust.compare_genomes(bdb,comp_method,wd,**kwargs)
+
+    # Remove values without enough coverage
+    Xdb.loc[Xdb['alignment_coverage'] <= cov_thresh, 'ani'] = 0
 
     # Make it symmetrical
     Xdb['av_ani'] = Xdb.apply(lambda row: dClust.average_ani (row,Xdb),axis=1)
@@ -180,7 +184,7 @@ def adjust_cluster_wrapper(wd, **kwargs):
     # Save the pickle
     data_folder = wd.location + '/data/Clustering_files/'
     arguments = {'linkage_method':clust_method,'linkage_cutoff':threshold,\
-                        'comparison_algorithm':comp_method}
+                        'comparison_algorithm':comp_method,'minimum_coverage':cov_thresh}
     pickle_name = "secondary_linkage_cluster_{0}.pickle".format(cluster)
     logging.info('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
                                                         pickle_name))

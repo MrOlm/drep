@@ -16,11 +16,6 @@ import pickle
 import time
 import glob
 
-'''
-# !!! This is just for testing purposes, obviously
-import sys
-sys.path.append('/home/mattolm/Programs/drep/')
-'''
 import drep as dm
 import drep
 import drep.d_filter as dFilter
@@ -106,7 +101,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     logging.info(
     "Step 2. Perform MASH (primary) clustering")
     print("Running primary clustering...")
-    if not kwargs.get('skipMash', False):
+    if not kwargs.get('SkipMash', False):
 
         logging.info(
         "2a. Run pair-wise MASH clustering")
@@ -140,7 +135,8 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
             print("WRITE THIS PART YOU LAZY ASS")
 
     else:
-        Cdb = gen_nomani_cdb(Bdb, Mdb)
+        Cdb = gen_nomani_cdb(Cdb, Mdb, data_folder = data_folder, **kwargs)
+        Ndb = pd.DataFrame({'Blank':[]})
 
     logging.info(
     "Step 4. Return output")
@@ -157,7 +153,7 @@ def d_cluster_wrapper(workDirectory, **kwargs):
     logging.info(str(workDirectory))
 
     # Parse arguments
-    Bdb, data_folder = parse_arguments(workDirectory, **kwargs)
+    Bdb, data_folder, kwargs = parse_arguments(workDirectory, **kwargs)
     if kwargs['n_PRESET'] != None:
         kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
         = nucmer_preset(kwargs['n_PRESET'])
@@ -185,6 +181,13 @@ def d_cluster_wrapper(workDirectory, **kwargs):
 
 def parse_arguments(workDirectory, **kwargs):
 
+    # Make sure you have the required program installed
+    loc = shutil.which('mash')
+    if loc == None:
+        print('Cannot locate the program {0}- make sure its in the system path'\
+            .format(prog))
+    kwargs['mash_exe'] = loc
+
     # If genomes are provided, load them
     if kwargs.get('genomes',None) != None:
         assert workDirectory.hasDb("Bdb") == False, \
@@ -209,7 +212,7 @@ def parse_arguments(workDirectory, **kwargs):
     # Make data_folder
     data_folder = os.path.join(workDirectory.location, 'data/')
 
-    return Bdb, data_folder
+    return Bdb, data_folder, kwargs
 
 def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
 
@@ -252,8 +255,8 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
     logging.info('Clustering ANIn database')
 
     cov_thresh = float(kwargs.get('cov_thresh',0.5))
-    S_Lmethod = kwargs.get('S_Lmethod', 'single')
-    S_Lcutoff = kwargs.get('S_Lcutoff', 0.01)
+    S_Lmethod = kwargs.get('clusterAlg', 'single')
+    S_Lcutoff = 1 - kwargs.get('S_ani', .99)
     overwrite = kwargs.get('overwrite', False)
 
 
@@ -263,6 +266,7 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
             os.makedirs(data_folder)
 
         # Delete all existing pickles
+        logging.info('clobbering {0}'.format(data_folder))
         if kwargs.get('overwrite',False):
             for fn in glob.glob(data_folder + 'secondary_linkage_cluster*'):
                 os.remove(fn)
@@ -307,7 +311,7 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
         # Save the linkage
         if (data_folder != False):
             arguments = {'linkage_method':S_Lmethod,'linkage_cutoff':S_Lcutoff,\
-                        'comparison_algorithm':'ANIn'}
+                        'comparison_algorithm':'ANIn','minimum_coverage':cov_thresh}
             pickle_name = "secondary_linkage_cluster_{0}.pickle".format(cluster)
             logging.info('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
                                                                 pickle_name))
@@ -459,6 +463,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     MASH_s = kwargs.get('MASH_s',1000)
     dry = kwargs.get('dry',False)
     overwrite = kwargs.get('overwrite', False)
+    mash_exe = kwargs.get('mash_exe', 'mash')
 
     # Set up folders
     MASH_folder = data_folder + 'MASH_files/'
@@ -475,7 +480,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
         genome = Bdb['genome'][Bdb['location'] == fasta].tolist()[0]
         file = sketch_folder + genome
         if not os.path.isfile(file + '.msh'):
-            cmd = ['/opt/bin/bio/mash', 'sketch', fasta, '-s', str(MASH_s), '-o',
+            cmd = [mash_exe, 'sketch', fasta, '-s', str(MASH_s), '-o',
                 file]
             cmds.append(cmd)
 
@@ -484,13 +489,13 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
             thread_mash_cmds_status(cmds)
 
     # Combine MASH sketches
-    cmd = ['/opt/bin/bio/mash', 'paste', MASH_folder + 'ALL.msh', sketch_folder+ '*']
+    cmd = [mash_exe, 'paste', MASH_folder + 'ALL.msh', sketch_folder+ '*']
     cmd = ' '.join(cmd)
     dm.run_cmd(cmd,dry,True)
 
     # Calculate distances
     all_file = MASH_folder + 'ALL.msh'
-    cmd = ['/opt/bin/bio/mash', 'dist', all_file, all_file, '>', MASH_folder
+    cmd = [mash_exe, 'dist', all_file, all_file, '>', MASH_folder
             + 'MASH_table.tsv']
     cmd = ' '.join(cmd)
     dm.run_cmd(cmd,dry,True)
@@ -517,9 +522,8 @@ def cluster_mash_database(db, data_folder= False, **kwargs):
 
     logging.info('Clustering MASH database')
 
-    MASH_ANI = kwargs.get('MASH_ANI', 90)
-    P_Lmethod = kwargs.get('P_Lmethod', 'single')
-    P_Lcutoff = kwargs.get('P_Lcutoff', 0.1)
+    P_Lmethod = kwargs.get('clusterAlg','single')
+    P_Lcutoff = 1 - kwargs.get('P_ani',.9)
     dry = kwargs.get('dry',False)
     overwrite = kwargs.get('overwrite', False)
 
@@ -780,7 +784,8 @@ def compare_genomes(bdb, comp_method, wd, **kwargs):
         return df
 
     elif comp_method == 'gANI':
-        gANI_exe = kwargs.get('gANI_exe','/home/mattolm/download/ANIcalculator_v1/ANIcalculator')
+        #gANI_exe = kwargs.get('gANI_exe','/home/mattolm/download/ANIcalculator_v1/ANIcalculator')
+        gANI_exe = kwargs.get('gANI_exe','ANIcalculator')
 
         # Make folders
         gANI_folder = wd.location + '/data/gANI_files/'
@@ -956,8 +961,25 @@ def nucmer_preset(preset):
     elif preset == 'normal':
         return 65, 90, False, 'mum'
 
-def gen_nomani_cdb(Bdb, Mdb):
-    assert False, "Sorry, I haven't written this part of the program yet"
+def gen_nomani_cdb(Cdb, Mdb, **kwargs):
+    c_method = kwargs.get('clusterAlg','single')
+    threshold = 1 - kwargs.get('P_ani',.9)
+    data_folder = kwargs.get('data_folder') + 'Clustering_files/'
+
+    # Make Cdb look like Cdb
+    cdb = Cdb.copy()
+    cdb['secondary_cluster'] = ["{0}_0".format(i) for i in cdb['MASH_cluster']]
+    cdb.rename(columns={'MASH_cluster': 'primary_cluster'}, inplace=True)
+    cdb['threshold'] = threshold
+    cdb['cluster_method'] = c_method
+    cdb['comparison_algorithm'] = 'MASH'
+
+    # Delete any only secondary clusters
+    if kwargs.get('overwrite',False):
+        for fn in glob.glob(data_folder + 'secondary_linkage_cluster*'):
+            os.remove(fn)
+
+    return cdb
 
 def test_clustering():
 

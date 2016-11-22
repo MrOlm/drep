@@ -68,6 +68,9 @@ def d_choose_wrapper(wd,**kwargs):
         Bdb = workDirectory.get_db('Bdb')
 
         output_folder = workDirectory.location + '/dereplicated_genomes/'
+        if os.path.exists(output_folder):
+            logging.info("{0} already exists: removing and remaking".format(output_folder))
+            shutil.rmtree(output_folder)
         dm.make_dir(output_folder,dry=kwargs.get('dry',False),\
                         overwrite=kwargs.get('overwrite',False))
 

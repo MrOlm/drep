@@ -75,19 +75,30 @@ def d_filter_wrapper(wd,**kwargs):
     # Save Bdb or the new Wdb, depending on arguments above
     loc = workDirectory.location + '/data_tables/'
     if saveAs == 'Bdb':
-        bdb.to_csv(loc + 'Bdb.csv')
+        bdb.to_csv(loc + 'Bdb.csv',index=False)
         workDirectory.data_tables['Bdb'] = bdb
+
+    '''
     elif saveAs == 'Wdb':
         bdb.to_csv(loc + 'Wdb.csv')
         workDirectory.data_tables['Wdb'] = bdb
+    '''
 
 def filter_bdb(bdb, chdb, **kwargs):
-    min_comp = kwargs.get('completeness',0)
-    max_con = kwargs.get('contamination',1000)
+    min_comp = kwargs.get('completeness',False)
+    max_con = kwargs.get('contamination',False)
+    min_strain_htr = kwargs.get('strain_htr',False)
     start_genomes = list(bdb['genome'].unique())
     assert len(start_genomes) > 0
 
-    db = chdb[(chdb['Completeness'] >= min_comp) & (chdb['Contamination'] <= max_con)]
+    db = chdb.copy()
+
+    if min_comp != False:
+        db = db[(db['Completeness'] >= min_comp)]
+    if max_con != False:
+        db = db[db['Contamination'] <= max_con]
+    if min_strain_htr != False:
+        db = db[db['Strain heterogeneity'] <= min_strain_htr]
     keep_genomes = list(db['Bin Id'].unique())
     bdb = bdb[bdb['genome'].isin(keep_genomes)]
 
@@ -130,8 +141,7 @@ def validate_arguments(wd,**kwargs):
 
     # Figure out what you're going to filter, and return that db
     if wd.hasDb('Wdb'):
-        print("Going to filter Wdb")
-        print("Matt- write this part")
+        print("NOTE: Wdb already exists! This will not be filtered! Be sure you know what you're doing")
         #sys.exit()
         #return bdb_from_wdb(wd.get_db('Wdb')), 'Wdb'
     if wd.hasDb('Bdb'):
@@ -140,10 +150,8 @@ def validate_arguments(wd,**kwargs):
                     + "a genome list or start a new work directory!")
             sys.exit()
         if wd.hasDb('Cdb'):
-            print("You can't filter this work directory- it's already clustered.\n"\
-                    + "Either choose a winner and filter the winners, or make a new "\
-                    + "work directory")
-            sys.exit()
+            print("NOTE: Clustering already exists! This will not be filtered! Be sure you know what you're doing")
+            #sys.exit()
         print("Will filter Bdb")
         return wd.get_db('Bdb'), 'Bdb'
     else:
@@ -163,8 +171,8 @@ def run_checkM_wrapper(bdb, workDirectory, **kwargs):
 
     # Run prodigal
     prod_folder = workDirectory.location + '/data/prodigal/'
-    dm.make_dir(prod_folder,dry=kwargs.get('dry',False),\
-                overwrite=kwargs.get('overwrite',False))
+    if not os.path.exists(prod_folder):
+        os.makedirs(prod_folder)
     print("Running prodigal")
     run_prodigal(bdb, prod_folder)
 
@@ -203,6 +211,7 @@ def calc_n50(loc):
           sequence = []
         else:
           sequence += line.strip()
+    lengths.append(len(''.join(sequence)))
 
     n50 = sorted(lengths)[int(len(lengths)/2)]
     return n50
@@ -217,7 +226,7 @@ def run_prodigal(bdb, out_dir, **kwargs):
         if os.path.exists(fna) and os.path.exists(faa):
             pass
         else:
-            cmds.append(['prodigal','-i',genome,'-d',fna,'-a',faa])
+            cmds.append(['prodigal','-i',genome,'-d',fna,'-a',faa,'-m','-p','meta'])
 
     if len(cmds) > 0:
         drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
@@ -226,7 +235,12 @@ def run_prodigal(bdb, out_dir, **kwargs):
 
 def run_checkM(genome_folder,checkm_outf,**kwargs):
     t = str(kwargs.get('processors','6'))
-    check_exe = '/home/mattolm/.pyenv/versions/anaconda2-4.1.0/bin/checkm'
+    #check_exe = '/home/mattolm/.pyenv/versions/anaconda2-4.1.0/bin/checkm'
+    loc = shutil.which('checkm')
+    if loc == None:
+        print('Cannot locate the program {0}- make sure its in the system path'\
+            .format(checkm))
+    check_exe = loc
 
     checkm_method = kwargs.get('checkM_method','lineage_wf')
 

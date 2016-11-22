@@ -22,6 +22,21 @@ cd drep
 pip install .
 ```
 
+# Dependencies
+
+Not all dependencies are required for all operations. Excecutable must be in the
+system path.
+
+MASH - https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x
+
+Nucmer - http://mummer.sourceforge.net/
+
+CheckM - http://ecogenomics.github.io/CheckM/
+
+gANI - https://ani.jgi-psf.org/html/download.php?
+
+centrifuge (bonus) - https://omictools.com/centrifuge-tool
+
 # Normal use case
 
 ```

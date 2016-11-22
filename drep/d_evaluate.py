@@ -17,7 +17,14 @@ def d_evaluate_wrapper(wd,**kwargs):
     wd = drep.WorkDirectory.WorkDirectory(wd)
     logging.info(str(wd))
 
-    if kwargs.get('cluster_winners', False):
+    # Determine what to evaluate
+    evs = kwargs.get('evaluate')
+    options = ['1','2','3']
+    to_eval = dAnal.parse_options(options, evs)
+    logging.info("evaluating {0}".format(to_eval))
+
+    # 1) Evaluate de-replicated genome similarity
+    if '1' in to_eval:
         logging.info('will compare winners')
         Wmdb, Wndb = compare_winners(wd,**kwargs)
 
@@ -25,7 +32,8 @@ def d_evaluate_wrapper(wd,**kwargs):
         wd.store_db(Wmdb,'Wmdb',overwrite=kwargs.get('overwrite',False))
         wd.store_db(Wndb,'Wndb',overwrite=kwargs.get('overwrite',False))
 
-    if kwargs.get('winners_warnings',False):
+    # 2) Throw warnings for clusters that were almost different
+    if '2' in to_eval:
         logging.info('will provide warnings about clusters')
         warnings = evaluate_warnings(wd, **kwargs)
 
@@ -36,7 +44,8 @@ def d_evaluate_wrapper(wd,**kwargs):
             file.write('\n')
         print("{0} warnings generated: saved to {1}".format(len(warnings),warn_log))
 
-    if kwargs.get('winners_summary',False):
+    # 3) Generate a database of information on winning genomes
+    if '3' in to_eval:
         logging.info('will produce Widb (winner information db)')
         Widb = evaluate_winners(wd, **kwargs)
 
@@ -65,13 +74,17 @@ def compare_winners(wd, **kwargs):
 def evaluate_warnings(wd, **kwargs):
     Cdb = wd.get_db('Cdb')
     Ndb = wd.get_db('Ndb')
-    warn_dist = kwargs.get('warn_dist',.25)
+    warn_dist = float(kwargs.get('warn_dist',.25))
+
+    if 'Blank' in Ndb:
+        print ("Ndb is blank (was run with --SkipSecondary) - "\
+                + "will skip cluster evaluation")
 
     if wd.hasDb('Wmdb'):
         Wmdb = wd.get_db('Wmdb')
         Wndb = wd.get_db('Wndb')
-        warn_sim = kwargs.get('warn_sim',.98)
-        warn_aln = kwargs.get('warn_aln',.25)
+        warn_sim = float(kwargs.get('warn_sim',.98))
+        warn_aln = float(kwargs.get('warn_aln',.25))
 
     warnings = []
 
@@ -79,6 +92,9 @@ def evaluate_warnings(wd, **kwargs):
     # That is, a case where a cluster was almost split or not-split
     for cluster in sorted(Cdb['primary_cluster'].unique()):
         d = Cdb[Cdb['primary_cluster'] == cluster]
+
+        if 'Blank' in Ndb:
+            continue
 
         # Skip if it's a singleton
         if len(d['genome'].unique()) == 1:
@@ -197,16 +213,22 @@ def evaluate_winners(wd, **kwrags):
         Table['cluster'].append(row['cluster'])
 
         # Add clustering info
-        d = Cdb[Cdb['secondary_cluster'] == row['cluster']]
-        ndb = Ndb[(Ndb['reference'] == row['genome']) & (Ndb['querry'].isin(d['genome'].tolist()))\
-                 & (Ndb['reference'] != Ndb['querry'])]
-        members = len(d['genome'].unique())
+        if 'Blank' not in Ndb:
+            d = Cdb[Cdb['secondary_cluster'] == row['cluster']]
+            ndb = Ndb[(Ndb['reference'] == row['genome']) & (Ndb['querry'].isin(d['genome'].tolist()))\
+                     & (Ndb['reference'] != Ndb['querry'])]
+            members = len(d['genome'].unique())
 
-        if members > 1:
-            Table['closest_cluster_member'].append("{0:.2f}".format(ndb['ani'].max()*100))
-            Table['furthest_cluster_member'].append("{0:.2f}".format(ndb['ani'].min()*100))
-            Table['cluster_members'].append(len(d['genome'].unique()))
+            if members > 1:
+                Table['closest_cluster_member'].append("{0:.2f}".format(ndb['ani'].max()*100))
+                Table['furthest_cluster_member'].append("{0:.2f}".format(ndb['ani'].min()*100))
+                Table['cluster_members'].append(len(d['genome'].unique()))
+            else:
+                Table['closest_cluster_member'].append("NA")
+                Table['furthest_cluster_member'].append("NA")
+                Table['cluster_members'].append(len(d['genome'].unique()))
         else:
+            d = Cdb[Cdb['secondary_cluster'] == row['cluster']]
             Table['closest_cluster_member'].append("NA")
             Table['furthest_cluster_member'].append("NA")
             Table['cluster_members'].append(len(d['genome'].unique()))

@@ -159,19 +159,27 @@ def get_scaff(read):
     return "_".join(read.split('_')[:-1])
 
 def gen_centrifuge_cmd(genes,cent,**kwargs):
-    ind = kwargs.get('tax_db','ncbi')
-    if ind == 'ncbi':
-        cent_indicies = kwargs.get('cent_indicies', '/data3/Human/NIH_4/CentrifugeIndex/nt')
-    elif ind == 'bac_only':
-        cent_indicies = kwargs.get('cent_exe', '/home/mattolm/download/centrifuge/indices/b+h+v')
+    cent_exe = shutil.which('centrifuge')
+    if cent_exe == None:
+        print("Can't find centrifuge- make sure it's in your system path")
+        sys.exit()
 
-    cent_exe = kwargs.get('cent_exe', '/home/mattolm/download/centrifuge/centrifuge')
+    cent_indicies = kwargs.get('cent_index', False)
+    if cent_indicies == False:
+        print("Can't find centrifuge index- must provide for taxonomy")
+        sys.exit()
+
     cmd = [cent_exe, '-f', '-x', cent_indicies, genes, '-S', "{0}_hits.tsv".format(cent),\
             '-p','1','--report-file',"{0}_report.tsv".format(cent)]
 
     return cmd
 
+'''
 def gen_giant_centrifuge_cmd(genes,base,**kwargs):
+    loc = shutil.which('centrifuge')
+    if loc == None:
+        print("Can't find centrifuge- make sure it's in your system path")
+        sys.exit()
     ind = kwargs.get('tax_db','ncbi')
     if ind == 'ncbi':
         cent_indicies = kwargs.get('cent_indicies', '/data3/Human/NIH_4/CentrifugeIndex/nt')
@@ -184,6 +192,7 @@ def gen_giant_centrifuge_cmd(genes,base,**kwargs):
         "{0}_hits.tsv".format(base),'-p',str(p),'--report-file',"{0}_report.tsv".format(base)]
 
     return cmd
+'''
 
 def test_bonus():
     print("Write this you lazy bum")
