@@ -1,4 +1,4 @@
-# drep
+# dRep
 De-replication of microbial genomes.
 
 When time-series metagenomes are available,
@@ -40,15 +40,7 @@ centrifuge (bonus) - https://omictools.com/centrifuge-tool
 # Normal use case
 
 ```
-Drep filter workD -g genomelist
-
-Drep cluster workD
-
-Drep choose workD
-
-Drep analyze workD -cviz a
-
-Drep adjust workD something
+dRep dereplicate_wf workD -g genomelist
 ```
 
 # Module summaries
