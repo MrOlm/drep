@@ -43,65 +43,9 @@ centrifuge (bonus) - https://omictools.com/centrifuge-tool
 dRep dereplicate_wf workD -g genomelist
 ```
 
-# Module summaries
-
-## filter
-
-Filters a genome list, Bdb, or Wdb, based on length and checkM information
-
-Can modify:  
-- Bdb, Chdb, Wdb
-
-Can read:  
-- Bdb, Wdb  
-
-## cluster
-
-Clusters genomes first by MASH, and then by a secondary method (ANIn or gANI)
-
-Can modify:
-
-- Cdb, Mdb, Ndb
-
-Can read:
-
--  Bdb
-
-## choose
-
-Chooses the winning representative of each secondary cluster
-
-Can modify:
-
-- Cdb, Chdb, Sdb, Wdb
-
-Can read:
-
-- Chdb
-
-## analyze
-
-Make plots and visualize how new clustering methods would look
-
-Can modify:
-
-- NA
-
-Can read:
-
-- All
-
-## adjust
-
-Adjust secondary clustering of a single primary cluster
-
-Can modify:
-
-- Cdb, Wdb
-
-Can read:
-
 # DataTables
+
+## The following datatables will be available in the work directory in the folder "data_tables" upon completion of a run
 
 Bdb
 
