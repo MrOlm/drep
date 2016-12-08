@@ -268,7 +268,13 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     dm.run_cmd(cmd,shell=False,quiet=False)
 
     # Load table and return it
-    chdb = pd.read_table(desired_file,sep='\t')
+    try:
+        chdb = pd.read_table(desired_file,sep='\t')
+    except:
+        print("!!! checkM failed !!!\nIf using pyenv, make sure both python2 and " +\
+            "python3 are available (for example: pyenv local anaconda2-4.1.0 " +\
+            "anaconda3-4.1.0)")
+        sys.exit()
     return chdb
 
 def copy_bdb_loc(bdb,loc,extension=''):

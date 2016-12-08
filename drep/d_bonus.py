@@ -4,6 +4,7 @@ import logging
 import os
 import pandas as pd
 import sys
+import shutil
 
 import drep.WorkDirectory
 import drep as dm
