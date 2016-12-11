@@ -15,6 +15,12 @@ genome for downstream analysis.
 # Installation
 
 ```
+pip install drep
+```
+
+OR
+
+```
 git clone git@github.com:MrOlm/drep.git
 
 cd drep
