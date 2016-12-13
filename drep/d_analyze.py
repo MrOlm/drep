@@ -331,13 +331,19 @@ def plot_scatterplots(Mdb, Ndb, Cdb, plot_dir=False):
     if save: pp.savefig(g)
     plt.show()
 
-    g = plot_MASH_vs_len(Mdb,Ndb)
-    if save: pp.savefig(g)
-    plt.show()
+    try:
+        g = plot_MASH_vs_len(Mdb,Ndb)
+        if save: pp.savefig(g)
+        plt.show()
+    except:
+        pass
 
-    g = plot_ANIn_vs_len(Mdb,Ndb)
-    if save: pp.savefig(g)
-    plt.show()
+    try:
+        g = plot_ANIn_vs_len(Mdb,Ndb)
+        if save: pp.savefig(g)
+        plt.show()
+    except:
+        pass
 
     if save:
         pp.close()

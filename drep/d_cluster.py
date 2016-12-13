@@ -181,19 +181,113 @@ def run_secondary_clustering(Bdb, Cdb, data_folder, **kwargs):
         ndb['MASH_cluster'] = name
         Ndb = pd.concat([Ndb,ndb], ignore_index= True)
 
-    # Ndb should now have comparisons within clusters, and mark the clusters
-    if algorithm != 'ANIn':
-        print("Sorry, clustering with {0} is not yet supported!".format(algorithm))
-        sys.exit()
+    # Clear out clustering folder
+    c_folder = data_folder + 'Clustering_files/'
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
+    logging.info('clobbering {0}'.format(data_folder))
+    if kwargs.get('overwrite',False):
+        for fn in glob.glob(data_folder + 'secondary_linkage_cluster*'):
+            os.remove(fn)
 
-    Cdb = cluster_anin_database(Cdb, Ndb, data_folder = data_folder, **kwargs)
+    # Run clustering
+    Cdb = pd.DataFrame()
+    for ndb, name in iteratre_clusters(Ndb,Ndb):
+        cdb = genome_hierarchical_clustering(ndb, c_folder, algorithm,\
+                cluster=name, **kwargs)
+        cdb['primary_cluster'] = name
+        Cdb = pd.concat([Cdb,cdb], ignore_index=True)
 
     return Ndb, Cdb
 
-def iteratre_clusters(Bdb, Cdb):
+'''
+Description
+'''
+def genome_hierarchical_clustering(Ndb, data_folder, comp_method, **kwargs):
+    logging.info('Clustering ANIn database')
+    S_Lmethod = kwargs.get('clusterAlg', 'single')
+    S_Lcutoff = 1 - kwargs.get('S_ani', .99)
+    cov_thresh = float(kwargs.get('cov_thresh',0.5))
+
+    cluster = kwargs.get('cluster','')
+
+    Table = {'genome':[],'secondary_cluster':[]}
+
+    # Handle the case where there's only one genome
+    if len(Ndb['reference'].unique()) == 1:
+        Table['genome'].append(Ndb['reference'].unique().tolist()[0])
+        Table['secondary_cluster'].append("{0}_0".format(cluster))
+
+    else:
+        # 2) Make a linkage-db in algorithm-specific manner
+        Ldb = make_linkage_Ndb(Ndb,comp_method,**kwargs)
+
+        # 3) Cluster the linkagedb
+        Gdb, linkage = cluster_hierarchical(Ldb, linkage_method= S_Lmethod, \
+                                    linkage_cutoff= S_Lcutoff)
+
+        # 4) Extract secondary clusters
+        for clust in Gdb['cluster'].unique():
+            d = Gdb[Gdb['cluster'] == clust]
+            for genome in d['genome'].tolist():
+                Table['genome'].append(genome)
+                Table['secondary_cluster'].append("{0}_{1}".format(cluster,clust))
+
+        # 5) Save the linkage
+        arguments = {'linkage_method':S_Lmethod,'linkage_cutoff':S_Lcutoff,\
+                    'comparison_algorithm':comp_method,'minimum_coverage':cov_thresh}
+        pickle_name = "secondary_linkage_cluster_{0}.pickle".format(cluster)
+        logging.info('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
+                                                            pickle_name))
+        with open(data_folder + pickle_name, 'wb') as handle:
+            pickle.dump(linkage, handle)
+            pickle.dump(Ldb,handle)
+            pickle.dump(arguments,handle)
+
+    # Return the database
+    Gdb = pd.DataFrame(Table)
+    Gdb['threshold'] = S_Lcutoff
+    Gdb['cluster_method'] = S_Lmethod
+    Gdb['comparison_algorithm'] = comp_method
+
+    return Gdb
+
+'''
+Filter the Ndb folder in accordance with the kwargs, depending on the algorithm
+'''
+def make_linkage_Ndb(Ndb,algorithm,**kwargs):
+    d = Ndb.copy()
+
+    if algorithm == 'ANIn':
+        cov_thresh = float(kwargs.get('cov_thresh',0.5))
+
+        # Remove values without enough coverage
+        d.loc[d['alignment_coverage'] <= cov_thresh, 'ani'] = 0
+
+        # Make a linkagedb by averaging values and setting self-compare to 1
+        d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+        d['dist'] = 1 - d['av_ani']
+        db = d.pivot("reference", "querry", "dist")
+
+    if algorithm == 'gANI':
+        cov_thresh = float(kwargs.get('cov_thresh',0.5))
+
+        # Remove values without enough coverage
+        d.loc[d['alignment_coverage'] <= cov_thresh, 'ani'] = 0
+
+        # Make a linkagedb by averaging values and setting self-compare to 1
+        d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+        d['dist'] = 1 - d['av_ani']
+        #print(d[d.duplicated()])
+
+        db = d.pivot("reference", "querry", "dist")
+
+    return db
+
+def iteratre_clusters(Bdb, Cdb, id='MASH_cluster'):
     Bdb = pd.merge(Bdb,Cdb)
-    for cluster in Bdb['MASH_cluster'].unique():
-        d = Bdb[Bdb['MASH_cluster'] == cluster]
+    for cluster in Bdb[id].unique():
+        d = Bdb[Bdb[id] == cluster]
         yield d, cluster
 
 def estimate_time(comps, alg):
@@ -781,7 +875,7 @@ def process_deltafiles(deltafiles, org_lengths, logger=None):
     return df
 
 def process_gani_files(files):
-    Table = {'querry':[],'reference':[],'ani':[],'coverage':[]}
+    Table = {'querry':[],'reference':[],'ani':[],'alignment_coverage':[]}
     for file in files:
         results = parse_gani_file(file)
 
@@ -789,20 +883,20 @@ def process_gani_files(files):
         Table['reference'].append(results['reference'])
         Table['querry'].append(results['querry'])
         Table['ani'].append(float(results['rq_ani'])/100)
-        Table['coverage'].append(results['rq_coverage'])
+        Table['alignment_coverage'].append(results['rq_coverage'])
 
         # Add reverse results
         Table['reference'].append(results['querry'])
         Table['querry'].append(results['reference'])
         Table['ani'].append(float(results['qr_ani'])/100)
-        Table['coverage'].append(results['qr_coverage'])
+        Table['alignment_coverage'].append(results['qr_coverage'])
 
     # Add self comparisons
     for g in set(Table['reference']):
         Table['reference'].append(g)
         Table['querry'].append(g)
         Table['ani'].append(1)
-        Table['coverage'].append(1)
+        Table['alignment_coverage'].append(1)
 
     Gdb = pd.DataFrame(Table)
     return Gdb
@@ -922,6 +1016,19 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
 
     # Parse output
     df = process_gani_files(files)
+
+    # Add self-comparisons in case of empty
+    if len(genomes) == 1:
+        Table = {'reference':[],'querry':[],'ani':[],'alignment_coverage':[]}
+        for genome in set(genomes):
+            name = get_genome_name_from_fasta(genome)
+
+            Table['reference'].append(name)
+            Table['querry'].append(name)
+            Table['ani'].append(1)
+            Table['alignment_coverage'].append(1)
+        d = pd.DataFrame(Table)
+        df = pd.concat([df,d],ignore_index=True)
 
     return df
 
