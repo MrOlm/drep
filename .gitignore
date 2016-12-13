@@ -13,3 +13,6 @@ tests/test_backend/*
 
 # development symlink
 bin/drep
+
+# most recent distribution for pypi
+dist/
