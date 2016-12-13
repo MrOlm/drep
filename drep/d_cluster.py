@@ -129,6 +129,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
 
             logging.info(
             "3b. Cluster pair-wise ANIn within Cdb clusters")
+            # this is where I'm going to edit
             Cdb = cluster_anin_database(Cdb, Ndb, data_folder = data_folder, **kwargs)
 
         elif kwargs.get('S_algorithm') == 'gANI':
