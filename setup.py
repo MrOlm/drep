@@ -1,7 +1,13 @@
 from setuptools import setup
+import os
+
+def version():
+    setupDir = os.path.dirname(os.path.realpath(__file__))
+    versionFile = open(os.path.join(setupDir, 'drep', 'VERSION'))
+    return versionFile.read().strip()
 
 setup(name='drep',
-      version='0.2.0',
+      version=version(),
       description='De-replication of microbial genomes assembled from multiple samples',
       url='https://github.com/MrOlm/drep',
       author='Matt Olm',

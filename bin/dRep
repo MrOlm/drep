@@ -11,7 +11,6 @@ __author__ = "Matt Olm"
 __license__ = "MIT"
 __email__ = "mattolm@gmail.com"
 __status__ = "Development"
-VERSION = "0.2.0"
 
 import argparse
 import logging
@@ -29,6 +28,11 @@ import drep.d_bonus
 import drep.d_evaluate
 import drep.d_workflows
 
+def version():
+    versionFile = open(os.path.join(drep.__path__[0], 'VERSION'))
+    return versionFile.read().strip()
+
+VERSION = version()
 
 def drep_wrapper(args):
     """
@@ -39,7 +43,7 @@ def drep_wrapper(args):
         dereplicate_wf_operation(**vars(args))
     if args.operation == "compare_wf":
         compare_wf_operation(**vars(args))
-    
+
     if args.operation == "filter":
         filter_operation(**vars(args))
     if args.operation == "cluster":
@@ -114,7 +118,7 @@ def evaluate_operation(**kwargs):
 
     drep.d_evaluate.d_evaluate_wrapper(kwargs['work_directory'],**kwargs)
     logging.info("!!! Finished the evaluate operation !!!")
-    
+
 def dereplicate_wf_operation(**kwargs):
     makeload_logger(kwargs['work_directory'])
 
@@ -122,9 +126,9 @@ def dereplicate_wf_operation(**kwargs):
     logging.info(str(kwargs))
 
     drep.d_workflows.dereplicate_wrapper(kwargs['work_directory'],**kwargs)
-    
+
     logging.info("!!! Finished the dereplicate_wf operation !!!")
-    
+
 def compare_wf_operation(**kwargs):
     makeload_logger(kwargs['work_directory'])
 
@@ -132,7 +136,7 @@ def compare_wf_operation(**kwargs):
     logging.info(str(kwargs))
 
     drep.d_workflows.compare_wrapper(kwargs['work_directory'],**kwargs)
-    
+
     logging.info("!!! Finished the compare_wf operation !!!")
 
 def makeload_logger(wd):
@@ -161,19 +165,19 @@ class SmartFormatter(argparse.ArgumentDefaultsHelpFormatter):
             return text[2:].splitlines()
         # this is the RawTextHelpFormatter._split_lines
         return argparse.HelpFormatter._split_lines(self, text, width)
-        
+
 def printHelp():
     print('')
     print('                ...::: dRep v' + VERSION + ' :::...''')
     print('''\
-  
+
   Choose one of the operations below for more detailed help.
   Example: dRep dereplicate_wf -h
-  
+
   Workflows:
     dereplicate_wf  -> Combine several of the operations below to de-replicate a genome list
     compare_wf      -> Simply compare a list of genomes
-    
+
   Single opterations:
     filter          -> Filter a genome list based on size, completeness, and/or contamination
     cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
@@ -194,7 +198,7 @@ if __name__ == '__main__':
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument("work_directory",help="R|Directory where data and output\
     \n*** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***")
-    
+
     Bflags = parent_parser.add_argument_group('SYSTEM PARAMETERS')
     Bflags.add_argument('-p','--processors',help='threads',default=6)
     Bflags.add_argument('-d','--dry',help='dry run- dont do anything',default=False,
@@ -202,7 +206,7 @@ if __name__ == '__main__':
     Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
                         default=False, action= "store_true")
     Bflags.add_argument("-h", "--help", action="help", help="show this help message and exit")
-    
+
     #
     # Make a parent parser for filter operation
     #
@@ -218,7 +222,7 @@ if __name__ == '__main__':
                             default = 25, type = float)
     fiflags.add_argument("--skipCheckM", help="Don't run checkM- will ignore con and "\
                             + "comp settings", action='store_true')
-                            
+
     #
     # Make a parent parser for the cluster operation
     #
@@ -243,7 +247,7 @@ if __name__ == '__main__':
                         just do secondary clustering on all genomes",action='store_true')
     Compflags.add_argument("--SkipSecondary", help="Skip secondary clustering, just perform MASH\
                         clustering", action='store_true')
-                        
+
     #
     # Make a parent parser for scoring
     #
@@ -261,7 +265,7 @@ if __name__ == '__main__':
                         help='weight of log(genome size)')
     Sflags.add_argument("-strW","--strain_heterogeneity_weight", default = 1, type= float,
                         help='strain heterogeneity weight')
-                        
+
     #
     # Make a parent parser for taxonomy
     #
@@ -271,7 +275,7 @@ if __name__ == '__main__':
                     action = "store_true")
     Tflags.add_argument("--cent_index",help='path to centrifuge index (for example, ' + \
                     "/home/mattolm/download/centrifuge/indices/b+h+v")
-                    
+
     #
     # Make a parent parser for evaluate
     #
@@ -283,7 +287,7 @@ if __name__ == '__main__':
                         " warnings between dereplicated genomes")
     Fflags.add_argument("--warn_aln", default= 0.25, help= "Minimum aligned fraction for " +\
                         " warnings between dereplicated genomes (ANIn)")
-                        
+
     #
     # Make a parent parser for adjust
     #
@@ -299,7 +303,7 @@ if __name__ == '__main__':
     Nflags.add_argument("-a","--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage)",default='average',choices=\
                         {'single','complete','average','weighted'})
-    
+
     '''
     ####### Arguments for filter operation ######
     '''
@@ -397,7 +401,7 @@ if __name__ == '__main__':
                         + "2) Throw warnings for clusters that were almost different\n"
                         + "3) Generate a database of information on winning genomes\n",
                         nargs='*')
-                        
+
     '''
     ####### Arguments for dereplicate_wf ######
     '''
@@ -405,7 +409,7 @@ if __name__ == '__main__':
                         parents=[parent_parser, filter_parent, cluster_parent, scoring_parent,\
                         tax_parent, evaluate_parent], add_help=False, epilog=\
                         "Example: dRep dereplicate_wf output_dir/ -g /path/to/genomes/*.fasta")
-                        
+
     # I/O
     Iflags = dereplicate_parser.add_argument_group('I/O PARAMETERS')
     Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format')
@@ -414,7 +418,7 @@ if __name__ == '__main__':
                             default = 'taxonomy_wf')
     Iflags.add_argument('--Chdb',help='checkM run already completed. Must be in \
                         --tab_table format.')
-                        
+
     '''
     ####### Arguments for compare_wf ######
     '''
@@ -422,7 +426,7 @@ if __name__ == '__main__':
                         parents=[parent_parser, cluster_parent, tax_parent, evaluate_parent],\
                          add_help=False, epilog=\
                         "Example: dRep compare_wf output_dir/ -g /path/to/genomes/*.fasta")
-                        
+
     # I/O
     Iflags = dereplicate_parser.add_argument_group('I/O PARAMETERS')
     Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format')
@@ -430,7 +434,7 @@ if __name__ == '__main__':
     '''
     ####### PARSE THE ARGUMENTS ######
     '''
-    
+
     # Handle the situation where the user wants the raw help
     args = None
     if (len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv == '--help'):
@@ -438,6 +442,6 @@ if __name__ == '__main__':
         sys.exit(0)
     else:
         args = parser.parse_args()
-    
+
     # do what you came here to do :)
     drep_wrapper(args)

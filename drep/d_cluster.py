@@ -120,6 +120,11 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     logging.info(
     "Step 3. Perform secondary clustering")
     print("Running secondary clustering...")
+
+    Ndb, Cdb = run_secondary_clustering(Bdb, Cdb, data_folder, Mdb = Mdb, \
+                **kwargs)
+
+    '''
     if not kwargs.get('SkipSecondary', False):
 
         if kwargs.get('S_algorithm','ANIn') == 'ANIn':
@@ -138,6 +143,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     else:
         Cdb = gen_nomani_cdb(Cdb, Mdb, data_folder = data_folder, **kwargs)
         Ndb = pd.DataFrame({'Blank':[]})
+    '''
 
     logging.info(
     "Step 4. Return output")
@@ -145,6 +151,55 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     print("Clustering finished!")
 
     return Cdb, Mdb, Ndb
+
+def run_secondary_clustering(Bdb, Cdb, data_folder, **kwargs):
+    SkipSecondary = kwargs.get('SkipSecondary', False)
+    algorithm = kwargs.get('S_algorithm', 'ANIn')
+
+    # This should only happen when called from the wrapper, and Mdb need to be provided
+    if SkipSecondary:
+        Mdb = kwargs.get('Mdb')
+
+        Cdb = gen_nomani_cdb(Cdb, Mdb, data_folder = data_folder, **kwargs)
+        Ndb = pd.DataFrame({'Blank':[]})
+
+        return Ndb, Cdb
+
+    # Estimate time
+    comps = 0
+    for bdb, name in iteratre_clusters(Bdb,Cdb):
+        g = len(bdb['genome'].unique())
+        comps += (g * g)
+    time = estimate_time(comps, algorithm)
+    print("Running {0} {1} comparisons- should take ~ {2:.1f} min".format(\
+            comps, algorithm, time))
+
+    # Run comparisons
+    Ndb = pd.DataFrame()
+    for bdb, name in iteratre_clusters(Bdb,Cdb):
+        ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
+        ndb['MASH_cluster'] = name
+        Ndb = pd.concat([Ndb,ndb], ignore_index= True)
+
+    # Ndb should now have comparisons within clusters, and mark the clusters
+    if algorithm != 'ANIn':
+        print("Sorry, clustering with {0} is not yet supported!".format(algorithm))
+        sys.exit()
+
+    Cdb = cluster_anin_database(Cdb, Ndb, data_folder = data_folder, **kwargs)
+
+    return Ndb, Cdb
+
+def iteratre_clusters(Bdb, Cdb):
+    Bdb = pd.merge(Bdb,Cdb)
+    for cluster in Bdb['MASH_cluster'].unique():
+        d = Bdb[Bdb['MASH_cluster'] == cluster]
+        yield d, cluster
+
+def estimate_time(comps, alg):
+    if alg == 'ANIn':
+        time = comps * .33
+    return time
 
 def d_cluster_wrapper(workDirectory, **kwargs):
 
@@ -750,6 +805,119 @@ def process_gani_files(files):
     Gdb = pd.DataFrame(Table)
     return Gdb
 
+'''
+This method takes in bdb (a table with the columns location and genome), runs
+pair-wise comparisons between all genomes in the sample, and returns a table
+with at least the columns 'reference', 'querry', 'ani','coverage', depending
+on what algorithm is called
+'''
+def compare_genomes(bdb, algorithm, data_folder, **kwargs):
+    # To handle other versions of this method which passed in a WorkDirectory
+    # instead of data_folder string
+    if isinstance(data_folder,drep.WorkDirectory.WorkDirectory):
+        data_folder = data_folder.location + '/data/'
+
+    if algorithm == 'ANIn':
+        genome_list = bdb['location'].tolist()
+        working_data_folder = data_folder + 'ANIn_files/'
+        df = run_pairwise_ANIn(genome_list, working_data_folder, **kwargs)
+        return df
+
+    elif algorithm == 'gANI':
+        working_data_folder = data_folder + 'gANI_files/'
+        df = run_pairwise_gANI(bdb, working_data_folder, **kwargs)
+        return df
+
+def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
+    p = kwargs.get('processors',6)
+    genomes = genome_list
+
+    # Make folder
+    if not os.path.exists(ANIn_folder):
+        os.makedirs(ANIn_folder)
+
+    # Gen commands
+    cmds = []
+    files = []
+    for g1 in genomes:
+        for g2 in genomes:
+            file_name = "{0}{1}_vs_{2}".format(ANIn_folder, \
+                        get_genome_name_from_fasta(g1),\
+                        get_genome_name_from_fasta(g2))
+            files.append(file_name)
+
+            # If the file doesn't already exist, add it to what needs to be run
+            if not os.path.isfile(file_name + '.delta'):
+                cmds.append(gen_nucmer_cmd(file_name,g1,g2))
+
+    # Run commands
+    if len(cmds) > 0:
+        thread_nucmer_cmds_status(cmds,p,verbose=False)
+
+    # Parse output
+    org_lengths = {get_genome_name_from_fasta(y):dm.fasta_length(x) \
+                    for x,y in zip(genomes,genomes)}
+    deltafiles = ["{0}.delta".format(file) for file in files]
+    df = process_deltafiles(deltafiles, org_lengths)
+
+    return df
+
+def run_pairwise_gANI(genomes, data_folder, **kwargs):
+    gANI_exe = kwargs.get('gANI_exe','ANIcalculator')
+    p = kwargs.get('processors',6)
+
+    # Make folder
+    if not os.path.exists(data_folder):
+        os.makedirs(gANI_folder)
+
+    # Remove crap folders- they shouldn't exist and if they do it messes things up
+    crap_folders = glob.glob(gANI_folder + '*.gANITEMP')
+    for crap_folder in crap_folders:
+        if os.path.exists(crap_folder):
+            logging.info("CRAP FOLDER EXISTS FOR gANI- removing {0}".format(crap_folder))
+            shutil.rmtree(crap_folder)
+
+    prod_folder = wd.location + '/data/prodigal/'
+    if not os.path.exists(prod_folder):
+        os.makedirs(prod_folder)
+
+    # Run prodigal
+    print("Running prodigal...")
+    dFilter.run_prodigal(bdb, prod_folder)
+
+    # Gen gANI commands
+    print("Running gANI...")
+    cmds = []
+    files = []
+    for i, g1 in enumerate(genomes):
+        for j, g2 in enumerate(genomes):
+            if i > j:
+                name1= get_genome_name_from_fasta(g1)
+                name2= get_genome_name_from_fasta(g2)
+                file_name = "{0}{1}_vs_{2}.gANI".format(gANI_folder, \
+                            name1, name2)
+                files.append(file_name)
+
+                # If the file doesn't already exist, add it to what needs to be run
+                if not os.path.isfile(file_name):
+                    fna1 = "{0}{1}.fna".format(prod_folder,name1)
+                    fna2 = "{0}{1}.fna".format(prod_folder,name2)
+                    cmds.append(gen_gANI_cmd(file_name,fna1,fna2,gANI_folder,gANI_exe))
+
+
+    # Run commands
+    if len(cmds) > 0:
+        logging.info('Running gANI commands: {0}'.format('\n'.join([' '.join(x) for x in cmds])))
+        thread_mash_cmds_status(cmds,p)
+    else:
+        print("gANI already run- will not re-run")
+
+    # Parse output
+    df = process_gani_files(files)
+
+    return df
+
+'''
 def compare_genomes(bdb, comp_method, wd, **kwargs):
     p = kwargs.get('processors',6)
     genomes = bdb['location'].tolist()
@@ -841,6 +1009,7 @@ def compare_genomes(bdb, comp_method, wd, **kwargs):
         return df
     print("ERROR- don't recognize comp method {0}".format(comp_method))
     sys.exit()
+'''
 
 def parse_gani_file(file):
     x = pd.read_table(file)
@@ -865,10 +1034,11 @@ def thread_nucmer_cmds(cmds,t=10):
     pool.join()
     return
 
-def thread_nucmer_cmds_status(cmds,t=10):
+def thread_nucmer_cmds_status(cmds,t=10,verbose=True):
     total = len(cmds)
-    minutes = ((float(total) * (float(0.33))) /float(t))
-    print("Running {0} mummer comparisons: should take ~ {1:.1f} min".format(total,minutes))
+    if verbose:
+        minutes = ((float(total) * (float(0.33))) /float(t))
+        print("Running {0} mummer comparisons: should take ~ {1:.1f} min".format(total,minutes))
     pool = multiprocessing.Pool(processes=int(t))
     rs = pool.map_async(run_nucmer_cmd,cmds)
     pool.close()
