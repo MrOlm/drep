@@ -199,6 +199,8 @@ def iteratre_clusters(Bdb, Cdb):
 def estimate_time(comps, alg):
     if alg == 'ANIn':
         time = comps * .33
+    if alg == 'gANI':
+        time = comps * .5
     return time
 
 def d_cluster_wrapper(workDirectory, **kwargs):
@@ -825,7 +827,9 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
 
     elif algorithm == 'gANI':
         working_data_folder = data_folder + 'gANI_files/'
-        df = run_pairwise_gANI(bdb, working_data_folder, **kwargs)
+        prod_folder = data_folder + 'prodigal/'
+        df = run_pairwise_gANI(bdb, working_data_folder, \
+                prod_folder = prod_folder, **kwargs)
         return df
 
 def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
@@ -862,12 +866,14 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
 
     return df
 
-def run_pairwise_gANI(genomes, data_folder, **kwargs):
+def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     gANI_exe = kwargs.get('gANI_exe','ANIcalculator')
     p = kwargs.get('processors',6)
+    prod_folder = kwargs.get('prod_folder')
+    genomes = bdb['location'].tolist()
 
     # Make folder
-    if not os.path.exists(data_folder):
+    if not os.path.exists(gANI_folder):
         os.makedirs(gANI_folder)
 
     # Remove crap folders- they shouldn't exist and if they do it messes things up
@@ -877,16 +883,17 @@ def run_pairwise_gANI(genomes, data_folder, **kwargs):
             logging.info("CRAP FOLDER EXISTS FOR gANI- removing {0}".format(crap_folder))
             shutil.rmtree(crap_folder)
 
-    prod_folder = wd.location + '/data/prodigal/'
     if not os.path.exists(prod_folder):
         os.makedirs(prod_folder)
 
     # Run prodigal
-    print("Running prodigal...")
-    dFilter.run_prodigal(bdb, prod_folder)
+    if verbose:
+        print("Running prodigal...")
+    dFilter.run_prodigal(bdb, prod_folder, verbose=verbose)
 
     # Gen gANI commands
-    print("Running gANI...")
+    if verbose:
+        print("Running gANI...")
     cmds = []
     files = []
     for i, g1 in enumerate(genomes):
@@ -910,7 +917,8 @@ def run_pairwise_gANI(genomes, data_folder, **kwargs):
         logging.info('Running gANI commands: {0}'.format('\n'.join([' '.join(x) for x in cmds])))
         thread_mash_cmds_status(cmds,p)
     else:
-        print("gANI already run- will not re-run")
+        if verbose:
+            print("gANI already run- will not re-run")
 
     # Parse output
     df = process_gani_files(files)

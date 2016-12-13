@@ -216,7 +216,7 @@ def calc_n50(loc):
     n50 = sorted(lengths)[int(len(lengths)/2)]
     return n50
 
-def run_prodigal(bdb, out_dir, **kwargs):
+def run_prodigal(bdb, out_dir, verbose=True, **kwargs):
     t = kwargs.get('processors','6')
 
     cmds = []
@@ -231,7 +231,8 @@ def run_prodigal(bdb, out_dir, **kwargs):
     if len(cmds) > 0:
         drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
     else:
-        print("Past prodigal runs found- will not re-run")
+        if verbose:
+            print("Past prodigal runs found- will not re-run")
 
 def run_checkM(genome_folder,checkm_outf,**kwargs):
     t = str(kwargs.get('processors','6'))
