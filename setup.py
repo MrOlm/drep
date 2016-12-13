@@ -2,7 +2,7 @@ from setuptools import setup
 
 setup(name='drep',
       version='0.2.0',
-      description='De-replication of microbial genomes assembled from multiple time-points',
+      description='De-replication of microbial genomes assembled from multiple samples',
       url='https://github.com/MrOlm/drep',
       author='Matt Olm',
       author_email='mattolm@berkeley.edu',

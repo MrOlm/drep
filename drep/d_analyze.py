@@ -116,7 +116,9 @@ def cluster_vis_wrapper(wd, **kwargs):
         Plinkage = Pcluster['linkage']
 
         clust_args = wd.arguments['cluster']
-        PL_thresh = clust_args.get('P_Lcutoff', False)
+        PL_thresh = clust_args.get('P_ani', False)
+        if PL_thresh != False:
+            PL_thresh = 1-PL_thresh
 
         # Make the plot
         print("Plotting primary dendrogram...")
@@ -453,9 +455,11 @@ CLUSETER PLOTS
 """
 
 def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold = False, plot_dir = False, **kwargs):
+    sns.set_style('white',{'axes.grid': False})
+
     db = Mdb.pivot("genome1","genome2","similarity")
     names = list(db.columns)
-    name2cluster = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+    name2cluster = Cdb.set_index('genome')['primary_cluster'].to_dict()
     name2color = gen_color_dictionary(names, name2cluster)
 
     # Make the dendrogram
@@ -463,6 +467,8 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold = False, plot_dir = False,
     plt.title('MASH clustering')
     plt.xlabel('MASH Average Nucleotide Identity (ANI)')
     #plt.xlim([0,.4])
+
+    sns.despine(left=True,top=True,right=True,bottom=False)
 
     # Adjust the figure size
     fig = plt.gcf()
@@ -487,7 +493,8 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold = False, plot_dir = False,
 
     # Save the figure
     if plot_dir != None:
-        plt.savefig(plot_dir + 'Primary_clustering_dendrogram.pdf')
+        plt.savefig(plot_dir + 'Primary_clustering_dendrogram.pdf',format="pdf",\
+            transparent=True, bbox_inches='tight')
     plt.show()
     plt.close('all')
 
@@ -1158,7 +1165,7 @@ def fancy_dendrogram(linkage,names,name2color=False,threshold=False,self_thresh=
 
     # Add the threshold
     if threshold:
-        plt.axvline(x=threshold, c='k')
+        plt.axvline(x=threshold, c='k', linestyle='dotted')
     if self_thresh:
         plt.axvline(x=self_thresh, c='red', linestyle='dotted', lw=1)
 
@@ -1202,7 +1209,7 @@ def gen_color_dictionary(names,name2cluster):
     '''
     Make the dictionary name2color
     '''
-    cm = rand_cmap(len(set(name2cluster.values()))+1,type='soft')
+    cm = rand_cmap(len(set(name2cluster.values()))+1,type='bright')
 
     # 1. generate cluster to color
     cluster2color = {}
