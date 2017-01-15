@@ -295,6 +295,8 @@ def estimate_time(comps, alg):
         time = comps * .33
     if alg == 'gANI':
         time = comps * .5
+    if alg == 'mauve':
+        time = comps * 1
     return time
 
 def d_cluster_wrapper(workDirectory, **kwargs):
@@ -767,7 +769,17 @@ def parse_delta(filename):
     return aln_length, sim_errors
 
 def gen_gANI_cmd(file, g1, g2, dir, exe):
-    cmd = [exe,'-genome1fna',g1,'-genome2fna',g2,'-outfile',file,'-outdir',file + 'TEMP']
+    # Handle self comparison
+    # Did a pretty exhaustive test- same comaprisons always give 100% ANI
+    if g1 == g2:
+        # make a copy of g1
+        #g1T = g1 + '.GANI_TEMP'
+        #shutil.copyfile(g1,g1T)
+
+        #cmd = [exe,'-genome1fna',g1T,'-genome2fna',g2,'-outfile',file,'-outdir',file + 'TEMP']
+        return []
+    else:
+        cmd = [exe,'-genome1fna',g1,'-genome2fna',g2,'-outfile',file,'-outdir',file + 'TEMP']
     #cmd = [exe,'-genome1fna',g1,'-genome2fna',g2,'-outfile',file,'-outdir',dir]
     return cmd
 
@@ -874,6 +886,8 @@ def process_deltafiles(deltafiles, org_lengths, logger=None):
     df = pd.DataFrame(Table)
     return df
 
+### MAKE IT SO THAT YOU REMOVE THE _TEMP MARKER FROM THE GENOMES, AND DELTE THE
+### FILE WHILE YOU'RE AT IT
 def process_gani_files(files):
     Table = {'querry':[],'reference':[],'ani':[],'alignment_coverage':[]}
     for file in files:
@@ -885,11 +899,12 @@ def process_gani_files(files):
         Table['ani'].append(float(results['rq_ani'])/100)
         Table['alignment_coverage'].append(results['rq_coverage'])
 
-        # Add reverse results
+        # Add reverse results [they're the same]
         Table['reference'].append(results['querry'])
         Table['querry'].append(results['reference'])
         Table['ani'].append(float(results['qr_ani'])/100)
         Table['alignment_coverage'].append(results['qr_coverage'])
+
 
     # Add self comparisons
     for g in set(Table['reference']):
@@ -926,6 +941,15 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
                 prod_folder = prod_folder, **kwargs)
         return df
 
+    elif algorithm == 'mauve':
+        working_data_folder = data_folder + 'mauve_files/'
+        df = run_pairwise_mauve(bdb, working_data_folder, **kwargs)
+        return df
+
+    else:
+        print("{0} not supported".format(algorithm))
+        sys.exit()
+
 def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
     p = kwargs.get('processors',6)
     genomes = genome_list
@@ -960,6 +984,43 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
 
     return df
 
+def run_pairwise_mauve(bdb, data_folder, **kwargs):
+    p = kwargs.get('processors',6)
+
+    # Make folder
+    if not os.path.exists(data_folder):
+        os.makedirs(data_folder)
+
+    # Gen commands
+    cmds = []
+    files = []
+    for g1 in genomes:
+        for g2 in genomes:
+            '''
+            file_name = "{0}{1}_vs_{2}".format(ANIn_folder, \
+                        get_genome_name_from_fasta(g1),\
+                        get_genome_name_from_fasta(g2))
+            files.append(file_name)
+
+            # If the file doesn't already exist, add it to what needs to be run
+            if not os.path.isfile(file_name + '.delta'):
+                cmds.append(gen_nucmer_cmd(file_name,g1,g2))
+            '''
+
+    # Run commands
+    if len(cmds) > 0:
+        t#hread_nucmer_cmds_status(cmds,p,verbose=False)
+
+    # Parse output
+    '''
+    org_lengths = {get_genome_name_from_fasta(y):dm.fasta_length(x) \
+                    for x,y in zip(genomes,genomes)}
+    deltafiles = ["{0}.delta".format(file) for file in files]
+    df = process_deltafiles(deltafiles, org_lengths)
+    '''
+
+    return df
+
 def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     gANI_exe = kwargs.get('gANI_exe','ANIcalculator')
     p = kwargs.get('processors',6)
@@ -985,6 +1046,27 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
         print("Running prodigal...")
     dFilter.run_prodigal(bdb, prod_folder, verbose=verbose)
 
+    '''
+    # Gen gANI commands
+    if verbose:
+        print("Running gANI...")
+    cmds = []
+    files = []
+    for i, g1 in enumerate(genomes):
+        for j, g2 in enumerate(genomes):
+            if i > j:
+                name1= get_genome_name_from_fasta(g1)
+                name2= get_genome_name_from_fasta(g2)
+                file_name = "{0}{1}_vs_{2}.gANI".format(gANI_folder, \
+                            name1, name2)
+                files.append(file_name)
+
+                # If the file doesn't already exist, add it to what needs to be run
+                if not os.path.isfile(file_name):
+                    fna1 = "{0}{1}.fna".format(prod_folder,name1)
+                    fna2 = "{0}{1}.fna".format(prod_folder,name2)
+                    cmds.append(gen_gANI_cmd(file_name,fna1,fna2,gANI_folder,gANI_exe))
+    '''
     # Gen gANI commands
     if verbose:
         print("Running gANI...")
@@ -1005,7 +1087,6 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
                     fna2 = "{0}{1}.fna".format(prod_folder,name2)
                     cmds.append(gen_gANI_cmd(file_name,fna1,fna2,gANI_folder,gANI_exe))
 
-
     # Run commands
     if len(cmds) > 0:
         logging.info('Running gANI commands: {0}'.format('\n'.join([' '.join(x) for x in cmds])))
@@ -1017,14 +1098,17 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     # Parse output
     df = process_gani_files(files)
 
-    # Add self-comparisons in case of empty
-    if len(genomes) == 1:
-        Table = {'reference':[],'querry':[],'ani':[],'alignment_coverage':[]}
-        for genome in set(genomes):
-            name = get_genome_name_from_fasta(genome)
+    # Handle self-comparisons
+    #df['reference'] = [i.replace('.fna.GANI_','') for i in df['reference']]
+    #df['querry'] = [i.replace('.fna.GANI_','') for i in df['querry']]
+    #df = df.drop_duplicates()
 
-            Table['reference'].append(name)
-            Table['querry'].append(name)
+    # Add self-comparisons if these is only one genome
+    if len(genomes) == 1:
+        Table = {'querry':[],'reference':[],'ani':[],'alignment_coverage':[]}
+        for g in genomes:
+            Table['reference'].append(g)
+            Table['querry'].append(g)
             Table['ani'].append(1)
             Table['alignment_coverage'].append(1)
         d = pd.DataFrame(Table)

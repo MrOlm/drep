@@ -561,8 +561,9 @@ def plot_secondary_dendrograms(wd, plot_dir, **kwargs):
         kwargs['name2cluster'] = name2cluster
 
         # Get the highest self-comparison
-        if alg in Sdb:
-            kwargs['self_thresh'] = get_highest_self(Sdb[alg], names)
+        #if alg in Sdb:
+            #kwargs['self_thresh'] = get_highest_self(Sdb[alg], names)
+        kwargs['self_thresh'] = get_highest_self(wd.get_db('Ndb'), names)
 
         # Make the dendrogram
         _make_special_dendrogram(linkage,names,**kwargs)
@@ -1008,6 +1009,7 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
     plt.show()
     plt.close(fig)
 
+    '''
     # Make the MASH heatmap
     db['ani'] = db['similarity'] * 100
     d = db.pivot("genome1","genome2","ani")
@@ -1020,6 +1022,7 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         pp.savefig(fig)
     plt.show()
     plt.close(fig)
+    '''
 
     # Make a ANIn linkage for the dendrogram
     d = Wndb.copy()
@@ -1062,6 +1065,7 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
     plt.show()
     plt.close(fig)
 
+    '''
     # Make the ANIn heatmap
     dd = d.pivot("reference","querry","ani")
     _make_heatmap(dd)
@@ -1085,6 +1089,7 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         pp.savefig(fig)
     plt.show()
     plt.close(fig)
+    '''
 
     # Save the .pdf
     if save:
@@ -1095,14 +1100,13 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
 OTHER
 """
 
-def get_highest_self(db, genomes, min = 1.0e-7):
+def get_highest_self(db, genomes, min = 1.0e-4):
     d = db[db['reference'].isin(genomes)]
     self_thresh = 1 - d['ani'][d['reference'] == d['querry']].min()
 
     # Because 0s don't show up on the graph
     if self_thresh == float(0):
         self_thresh =  min
-
     return self_thresh
 
 def _make_piechart(labels,sizes):
@@ -1172,7 +1176,7 @@ def fancy_dendrogram(linkage,names,name2color=False,threshold=False,self_thresh=
     # Add the threshold
     if threshold:
         plt.axvline(x=threshold, c='k', linestyle='dotted')
-    if self_thresh:
+    if self_thresh != False:
         plt.axvline(x=self_thresh, c='red', linestyle='dotted', lw=1)
 
     g = plt.gcf()

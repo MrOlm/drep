@@ -61,7 +61,7 @@ def dereplicate_wrapper(wd,**kwargs):
     """
     logging.info(message)
     print(message)
-    drep.d_evaluate.d_evaluate_wrapper(wd, evaluate = 'a', **kwargs)
+    drep.d_evaluate.d_evaluate_wrapper(wd, evaluate = '23', **kwargs)
 
     message = """\
 ***************************************************

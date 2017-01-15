@@ -13,6 +13,7 @@ setup(name='drep',
       author='Matt Olm',
       author_email='mattolm@berkeley.edu',
       license='MIT',
+      package_data={'drep': ['VERSION']},
       packages=['drep'],
       scripts=['bin/dRep'],
       install_requires=[
