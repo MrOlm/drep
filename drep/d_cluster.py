@@ -215,7 +215,7 @@ def genome_hierarchical_clustering(Ndb, data_folder, comp_method, **kwargs):
 
     # Handle the case where there's only one genome
     if len(Ndb['reference'].unique()) == 1:
-        Table['genome'].append(Ndb['reference'].unique().tolist()[0])
+        Table['genome'].append(os.path.basename(Ndb['reference'].unique().tolist()[0]))
         Table['secondary_cluster'].append("{0}_0".format(cluster))
 
     else:

@@ -200,7 +200,7 @@ if __name__ == '__main__':
     \n*** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***")
 
     Bflags = parent_parser.add_argument_group('SYSTEM PARAMETERS')
-    Bflags.add_argument('-p','--processors',help='threads',default=6)
+    Bflags.add_argument('-p','--processors',help='threads',default=6,type=int)
     Bflags.add_argument('-d','--dry',help='dry run- dont do anything',default=False,
                         action= "store_true")
     Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
