@@ -119,7 +119,7 @@ def add_taxonomy(Bdb,Tdb):
 def gen_phylo_db(hits):
     Table = {'tax_confidence':[],'taxonomy':[],'tax_level':[],'tax_ID':[]}
 
-    skip = ['uncultured bacterium','Mus musculus', 'Vitis vinifera']
+    skip = ['uncultured bacterium','Mus musculus', 'Vitis vinifera', 'Homo sapiens']
 
     levels = ['leaf','subspecies','species','genus','family']
     total_ORFS = len(hits['gene'].unique())
