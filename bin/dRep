@@ -187,8 +187,7 @@ def printHelp():
     bonus           -> Other random operations (currently just determine taxonomy)
     analyze         -> Make figures realted to the above operations; test alternative clustering
     ''')
-
-if __name__ == '__main__':
+def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=SmartFormatter)
     subparsers = parser.add_subparsers(help='Desired operation',dest='operation')
 
@@ -436,12 +435,14 @@ if __name__ == '__main__':
     '''
 
     # Handle the situation where the user wants the raw help
-    args = None
+    #args = None
     if (len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv == '--help'):
         printHelp()
         sys.exit(0)
     else:
-        args = parser.parse_args()
+        return parser.parse_args(args)
 
+if __name__ == '__main__':
+    args = parse_args(sys.argv[1:])
     # do what you came here to do :)
     drep_wrapper(args)
