@@ -1,0 +1,87 @@
+01-21 18:23 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+01-21 18:23 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/log/logger.log***
+01-21 18:23 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+01-21 18:23 DEBUG    Namespace(Chdb=None, MASH_sketch=1000, N50_weight=0.5, P_ani=0.9, S_algorithm='ANIn', S_ani=0.99, SkipMash=False, SkipSecondary=False, cent_index=None, checkM_method='taxonomy_wf', clusterAlg='average', completeness=75, completeness_weight=1, contamination=25, contamination_weight=5, cov_thresh=0.1, dry=False, genomes=['/home/mattolm/Programs/drep/tests/genomes/Enterococcus_casseliflavus_EC20.fasta', '/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_T2.fna', '/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_TX0104.fa', '/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_YI6-1.fna', '/home/mattolm/Programs/drep/tests/genomes/Escherichia_coli_Sakai.fna'], length=500000, n_PRESET='normal', operation='dereplicate_wf', overwrite=False, processors=6, run_tax=False, size_weight=0, skipCheckM=False, strain_heterogeneity_weight=1, strain_htr=25, warn_aln=0.25, warn_dist=0.25, warn_sim=0.98, work_directory='/home/mattolm/Programs/drep/tests/../tests/test_backend/ecoli_wd')
+01-21 18:23 DEBUG    Starting the dereplicate_wf operation
+01-21 18:23 INFO     ***************************************************
+    ..:: dRep Step 1. Filter ::..
+***************************************************
+    
+01-21 18:23 DEBUG    Loading work directory in filter
+01-21 18:23 DEBUG    Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
+Datatables: []
+Cluster files: []
+Arguments: []
+01-21 18:23 DEBUG    Validating filter arguments
+01-21 18:23 INFO     Will filter the genome list
+01-21 18:23 DEBUG    Filtering genomes by size
+01-21 18:23 INFO     Running CheckM
+01-21 18:25 INFO     Running CheckM with command: ['/home/mattolm/.pyenv/shims/checkm', 'taxonomy_wf', 'domain', 'Bacteria', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/prodigal/', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir/', '-f', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir//results.tsv', '--tab_table', '-t', '6', '-g', '-x', 'faa']
+01-21 18:27 INFO     Running CheckM with command: ['/home/mattolm/.pyenv/shims/checkm', 'qa', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir/Bacteria.ms', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir/', '-f', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir/Chdb.tsv', '-t', '6', '--tab_table', '-o', '2']
+01-21 18:27 INFO     ***************************************************
+    ..:: dRep Step 2. Cluster ::..
+***************************************************
+    
+01-21 18:27 INFO     Loading work directory
+01-21 18:27 INFO     Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
+Datatables: ['Bdb', 'Chdb']
+Cluster files: []
+Arguments: []
+01-21 18:27 INFO     Step 1. Parse Arguments
+01-21 18:27 INFO     kwargs: {'processors': 6, 'dry': False, 'cov_thresh': 0.1, 'warn_sim': 0.98, 'contamination': 25, 'SkipMash': False, 'overwrite': False, 'S_ani': 0.99, 'length': 500000, 'clusterAlg': 'average', 'S_algorithm': 'ANIn', 'operation': 'dereplicate_wf', 'MASH_sketch': 1000, 'checkM_method': 'taxonomy_wf', 'cent_index': None, 'skipCheckM': False, 'contamination_weight': 5, 'strain_heterogeneity_weight': 1, 'mash_exe': '/opt/bin/bio/mash', 'n_noextend': False, 'work_directory': '/home/mattolm/Programs/drep/tests/../tests/test_backend/ecoli_wd', 'SkipSecondary': False, 'N50_weight': 0.5, 'n_PRESET': 'normal', 'completeness': 75, 'n_c': 65, 'n_maxgap': 90, 'strain_htr': 25, 'size_weight': 0, 'run_tax': False, 'warn_dist': 0.25, 'completeness_weight': 1, 'n_method': 'mum', 'P_ani': 0.9, 'warn_aln': 0.25}
+01-21 18:27 INFO     Step 2. Perform MASH (primary) clustering
+01-21 18:27 INFO     2a. Run pair-wise MASH clustering
+01-21 18:27 INFO     2b. Cluster pair-wise MASH clustering
+01-21 18:27 INFO     Clustering MASH database
+01-21 18:27 INFO     Saving primary_linkage pickle to /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/Clustering_files/
+01-21 18:27 INFO     3 primary clusters made
+01-21 18:27 INFO     Step 3. Perform secondary clustering
+01-21 18:27 INFO     clobbering /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/
+01-21 18:27 INFO     Clustering ANIn database
+01-21 18:27 INFO     Clustering ANIn database
+01-21 18:27 INFO     Saving secondary_linkage pickle secondary_linkage_cluster_1.pickle to /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/Clustering_files/
+01-21 18:27 INFO     Clustering ANIn database
+01-21 18:27 INFO     Step 4. Return output
+01-21 18:27 INFO     Main program run complete- saving output to /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data_tables/
+01-21 18:27 INFO     ***************************************************
+    ..:: dRep Step 3. Choose ::..
+***************************************************
+    
+01-21 18:27 INFO     Loading work directory
+01-21 18:27 INFO     Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
+Datatables: ['Bdb', 'Chdb', 'Ndb', 'Cdb', 'Mdb']
+Cluster files: ['secondary_linkage_cluster_1', 'primary_linkage']
+Arguments: ['cluster']
+01-21 18:27 INFO     CheckM db found- will use
+01-21 18:27 INFO     Sdb finished
+01-21 18:27 INFO     Wdb finished
+01-21 18:27 INFO     saving dereplicated genomes
+01-21 18:27 INFO     /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/dereplicated_genomes/ already exists: removing and remaking
+01-21 18:27 INFO     ***************************************************
+    ..:: dRep Step 4. Bonus ::..
+***************************************************
+    
+01-21 18:27 INFO     Loading work directory
+01-21 18:27 INFO     Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
+Datatables: ['Wdb', 'Bdb', 'Ndb', 'Cdb', 'Mdb', 'Sdb', 'Chdb']
+Cluster files: ['secondary_linkage_cluster_1', 'primary_linkage']
+Arguments: ['cluster']
+01-21 18:27 INFO     ***************************************************
+    ..:: dRep Step 5. Evaluate ::..
+***************************************************
+    
+01-21 18:27 INFO     Loading work directory
+01-21 18:27 INFO     Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
+Datatables: ['Wdb', 'Bdb', 'Ndb', 'Cdb', 'Mdb', 'Sdb', 'Chdb']
+Cluster files: ['secondary_linkage_cluster_1', 'primary_linkage']
+Arguments: ['cluster']
+01-21 18:27 INFO     evaluating ['2', '3']
+01-21 18:27 INFO     will provide warnings about clusters
+01-21 18:27 INFO     will produce Widb (winner information db)
+01-21 18:27 INFO     ***************************************************
+    ..:: dRep Step 6. Analyze ::..
+***************************************************
+    
+01-21 18:27 INFO     calling cluster_vis_wrapper
+01-21 18:27 INFO     making plots ['1', '2', '3', '4', '5', '6']

@@ -21,7 +21,7 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    print(message)
+
     # Pop these arguments they're not there for future operations
     genomes = kwargs.pop('genomes',None)
     Chdb = kwargs.pop('Chdb',None)
@@ -33,7 +33,6 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    print(message)
     drep.d_cluster.d_cluster_wrapper(wd, **kwargs)
 
     message = """\
@@ -42,7 +41,6 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    print(message)
     drep.d_choose.d_choose_wrapper(wd, **kwargs)
 
     message = """\
@@ -51,7 +49,6 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    print(message)
     drep.d_bonus.d_bonus_wrapper(wd, **kwargs)
 
     message = """\
@@ -60,7 +57,6 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    print(message)
     drep.d_evaluate.d_evaluate_wrapper(wd, evaluate = '23', **kwargs)
 
     message = """\
@@ -69,7 +65,6 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    print(message)
     drep.d_analyze.d_analyze_wrapper(wd, plots = 'a', **kwargs)
 
     loc = drep.WorkDirectory.WorkDirectory(wd).location
@@ -88,7 +83,6 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     """.format(loc + '/dereplicated_genomes/', loc + '/figures/', \
                 loc + '/data_tables/Widb.csv', loc + '/log/warnings.txt')
     logging.info(message)
-    print(message)
 
 def compare_wrapper(wd,**kwargs):
     validate_compare(wd, **kwargs)

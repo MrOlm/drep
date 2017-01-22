@@ -990,80 +990,67 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
     plt.show()
     plt.close(fig)
 
-    # Make a MASH linkage for the dendrogram
-    db = Wmdb.copy()
-    db['dist'] = 1 - db['similarity']
-    linkage_db = db.pivot("genome1","genome2","dist")
-    names = list(linkage_db.columns)
-    Cdb, linkage = dClust.cluster_hierarchical(linkage_db, linkage_method= 'average', \
-                                linkage_cutoff= 0)
+    if Wmdb is not None:
+        # Make a MASH linkage for the dendrogram
+        db = Wmdb.copy()
+        db['dist'] = 1 - db['similarity']
+        linkage_db = db.pivot("genome1","genome2","dist")
+        names = list(linkage_db.columns)
+        Cdb, linkage = dClust.cluster_hierarchical(linkage_db, linkage_method= 'average', \
+                                    linkage_cutoff= 0)
 
-    # Make the MASH dendrogram
-    _make_dendrogram(linkage,names)
-    plt.title('MASH dendrogram')
+        # Make the MASH dendrogram
+        _make_dendrogram(linkage,names)
+        plt.title('MASH dendrogram')
 
-    # Save this page
-    if save == True:
-        fig = plt.gcf()
-        pp.savefig(fig)
-    plt.show()
-    plt.close(fig)
+        # Save this page
+        if save == True:
+            fig = plt.gcf()
+            pp.savefig(fig)
+        plt.show()
+        plt.close(fig)
 
-    '''
-    # Make the MASH heatmap
-    db['ani'] = db['similarity'] * 100
-    d = db.pivot("genome1","genome2","ani")
-    _make_heatmap(d)
-    plt.title("MASH heatmap")
+    if Wndb is not None:
+        # Make a ANIn linkage for the dendrogram
+        d = Wndb.copy()
+        d['av_ani'] = d.apply(lambda row: dClust.average_ani (row,d),axis=1)
+        d['dist'] = 1 - d['av_ani']
+        db = d.pivot("reference", "querry", "dist")
+        names = list(db.columns)
+        Cdb, linkage = dClust.cluster_hierarchical(db, linkage_method= 'average', \
+                                    linkage_cutoff= 0)
 
-    # Save this page
-    if save == True:
-        fig = plt.gcf()
-        pp.savefig(fig)
-    plt.show()
-    plt.close(fig)
-    '''
+        # Make the ANIn dendrogram
+        _make_dendrogram(linkage,names)
+        plt.title('ANIn dendrogram (NOT filtered for alignment length)')
 
-    # Make a ANIn linkage for the dendrogram
-    d = Wndb.copy()
-    d['av_ani'] = d.apply(lambda row: dClust.average_ani (row,d),axis=1)
-    d['dist'] = 1 - d['av_ani']
-    db = d.pivot("reference", "querry", "dist")
-    names = list(db.columns)
-    Cdb, linkage = dClust.cluster_hierarchical(db, linkage_method= 'average', \
-                                linkage_cutoff= 0)
+        # Save this page
+        if save == True:
+            fig = plt.gcf()
+            pp.savefig(fig)
+        plt.show()
+        plt.close(fig)
 
-    # Make the ANIn dendrogram
-    _make_dendrogram(linkage,names)
-    plt.title('ANIn dendrogram (NOT filtered for alignment length)')
+        # Make a ANIn linkage for the filtered dendrogram
+        d = Wndb.copy()
+        d.loc[d['alignment_coverage'] <= 0.1, 'ani'] = 0
+        d['av_ani'] = d.apply(lambda row: dClust.average_ani (row,d),axis=1)
+        d['dist'] = 1 - d['av_ani']
+        db = d.pivot("reference", "querry", "dist")
+        names = list(db.columns)
+        Cdb, linkage = dClust.cluster_hierarchical(db, linkage_method= 'average', \
+                                    linkage_cutoff= 0)
 
-    # Save this page
-    if save == True:
-        fig = plt.gcf()
-        pp.savefig(fig)
-    plt.show()
-    plt.close(fig)
+        # Make the ANIn dendrogram
+        _make_dendrogram(linkage,names)
+        plt.title('ANIn dendrogram (filtered for 10% alignment)')
 
-    # Make a ANIn linkage for the filtered dendrogram
-    d = Wndb.copy()
-    d.loc[d['alignment_coverage'] <= 0.1, 'ani'] = 0
-    d['av_ani'] = d.apply(lambda row: dClust.average_ani (row,d),axis=1)
-    d['dist'] = 1 - d['av_ani']
-    db = d.pivot("reference", "querry", "dist")
-    names = list(db.columns)
-    Cdb, linkage = dClust.cluster_hierarchical(db, linkage_method= 'average', \
-                                linkage_cutoff= 0)
-
-    # Make the ANIn dendrogram
-    _make_dendrogram(linkage,names)
-    plt.title('ANIn dendrogram (filtered for 10% alignment)')
-
-    # Save this page
-    if save == True:
-        fig = plt.gcf()
-        pp.savefig(fig)
-    plt.show()
-    plt.close(fig)
+        # Save this page
+        if save == True:
+            fig = plt.gcf()
+            pp.savefig(fig)
+        plt.show()
+        plt.close(fig)
 
     '''
     # Make the ANIn heatmap

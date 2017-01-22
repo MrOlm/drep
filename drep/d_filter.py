@@ -41,14 +41,16 @@ Chdb = already done Chdb
 def d_filter_wrapper(wd,**kwargs):
 
     # Load the WorkDirectory.
-    logging.info("Loading work directory")
+    logging.debug("Loading work directory in filter")
     workDirectory = drep.WorkDirectory.WorkDirectory(wd)
-    logging.info(str(workDirectory))
+    logging.debug(str(workDirectory))
 
     # Validate arguments; figure out what you're going to filter
+    logging.debug("Validating filter arguments")
     bdb, saveAs = validate_arguments(workDirectory, **kwargs)
 
     # Filter by size
+    logging.debug("Filtering genomes by size")
     if kwargs.get('length', 0) > 1:
         bdb = filter_bdb_length(bdb, kwargs['length'], verbose=True)
 
@@ -57,16 +59,17 @@ def d_filter_wrapper(wd,**kwargs):
 
         # Run checkM
         if kwargs.get('Chdb',None) != None:
-            print("Loading provided CheckM data...")
+            logging.info("Loading provided CheckM data...")
             Chdb = kwargs.get('Chdb')
             validate_chdb(Chdb, bdb)
 
         elif workDirectory.hasDb('Chdb'):
-            print("Loading CheckM data from work directory...")
+            logging.info("Loading CheckM data from work directory...")
             Chdb = workDirectory.get_db('Chdb')
             validate_chdb(Chdb, bdb)
 
         else:
+            logging.info("Running CheckM")
             Chdb = run_checkM_wrapper(bdb, workDirectory, **kwargs)
 
         # Filter bdb
@@ -141,24 +144,26 @@ def validate_arguments(wd,**kwargs):
 
     # Figure out what you're going to filter, and return that db
     if wd.hasDb('Wdb'):
-        print("NOTE: Wdb already exists! This will not be filtered! Be sure you know what you're doing")
+        logging.warning("NOTE: Wdb already exists! This will not be filtered! Be sure you know what you're doing")
         #sys.exit()
         #return bdb_from_wdb(wd.get_db('Wdb')), 'Wdb'
+
     if wd.hasDb('Bdb'):
         if kwargs.get('genomes',None) != None:
-            print("Both Bdb and a genome list are found- either don't include "\
+            logging.error("Both Bdb and a genome list are found- either don't include "\
                     + "a genome list or start a new work directory!")
             sys.exit()
         if wd.hasDb('Cdb'):
-            print("NOTE: Clustering already exists! This will not be filtered! Be sure you know what you're doing")
+            logging.warning("NOTE: Clustering already exists! This will not be filtered! Be sure you know what you're doing")
             #sys.exit()
-        print("Will filter Bdb")
+        logging.info("Will filter Bdb")
         return wd.get_db('Bdb'), 'Bdb'
+
     else:
         if kwargs.get('genomes',None) == None:
-            print("I don't have anything to filter! Give me a genome list")
+            logging.error("I don't have anything to filter! Give me a genome list")
             sys.exit()
-        print("Will filter the genome list")
+        logging.info("Will filter the genome list")
         bdb = drep.d_cluster.load_genomes(kwargs['genomes'])
         return bdb, 'Bdb'
 

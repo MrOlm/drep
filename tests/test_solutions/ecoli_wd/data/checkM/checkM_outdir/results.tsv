@@ -1,0 +1,6 @@
+Bin Id	Marker lineage	# genomes	# markers	# marker sets	0	1	2	3	4	5+	Completeness	Contamination	Strain heterogeneity
+Enterococcus_casseliflavus_EC20.fasta	Bacteria	5449	104	58	1	103	0	0	0	0	98.28	0.00	0.00
+Enterococcus_faecalis_T2.fna	Bacteria	5449	104	58	1	103	0	0	0	0	98.28	0.00	0.00
+Enterococcus_faecalis_TX0104.fa	Bacteria	5449	104	58	2	102	0	0	0	0	96.55	0.00	0.00
+Enterococcus_faecalis_YI6-1.fna	Bacteria	5449	104	58	1	103	0	0	0	0	98.28	0.00	0.00
+Escherichia_coli_Sakai.fna	Bacteria	5449	104	58	0	104	0	0	0	0	100.00	0.00	0.00

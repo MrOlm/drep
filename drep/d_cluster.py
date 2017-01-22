@@ -1302,7 +1302,7 @@ def load_genomes(genome_list):
     Table = {'genome':[],'location':[]}
 
     for genome in genome_list:
-        assert os.path.isfile(genome)
+        assert os.path.isfile(genome), "{0} is not a file".format(genome)
         Table['genome'].append(os.path.basename(genome))
         Table['location'].append(os.path.abspath(genome))
 

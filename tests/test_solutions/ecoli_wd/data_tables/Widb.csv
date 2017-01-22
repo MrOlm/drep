@@ -1,0 +1,5 @@
+N50,closest_cluster_member,cluster,cluster_members,completeness,completeness_metric,contamination,contamination_metric,furthest_cluster_member,genome,score,size,strain_heterogeneity,tax_confidence,taxonomy
+3427276,NA,2_0,1,98.28,near,0.0,none,NA,Enterococcus_casseliflavus_EC20.fasta,101.54747453987915,3427276,0.0,NA,NA
+328325,99.92,1_1,2,98.28,near,0.0,none,99.92,Enterococcus_faecalis_YI6-1.fna,101.03815197646774,3030328,0.0,NA,NA
+425,NA,1_2,1,96.55,near,0.0,none,NA,Enterococcus_faecalis_TX0104.fa,97.86419446502516,3156478,0.0,NA,NA
+5498450,NA,3_0,1,100.0,perfect,0.0,none,NA,Escherichia_coli_Sakai.fna,103.37012014008181,5498450,0.0,NA,NA

@@ -43,9 +43,23 @@ Bdb = sequence names and sequence locations
 
 """
 
-class WorkDirectory:
+class WorkDirectory(object):
+
+    firstLevels = ['data','figures','data_tables','dereplicated_genomes','log']
+
+    '''
+    # Make this is Singleton object
+    def __new__(cls, loc):
+        if not hasattr(cls,'instance'):
+            cls.instance = super(WorkDirectory, cls).__new__(cls)
+            cls.instance.__initialized = False
+        return cls.instance
+    '''
 
     def __init__(self, location):
+        #if(self.__initialized): return
+        #self.__initialized = True
+
         self.location = os.path.abspath(location)
         self.data_tables = {}
         self.clusters = {}
@@ -53,6 +67,28 @@ class WorkDirectory:
         self.overwrite = False
         self.name = None
 
+        self.make_fileStructure()
+        self.load_cached()
+
+    def __str__(self):
+        string = "Located: {0}\nDatatables: {1}\nCluster files: {2}\nArguments: {3}".format(\
+                    self.location,list(self.data_tables.keys()),list(self.clusters.keys()),\
+                    list(self.arguments.keys()))
+
+        return string
+
+    def make_fileStructure(self):
+        location = self.location
+
+        if not os.path.exists(location):
+            os.makedirs(location)
+
+        for l in WorkDirectory.firstLevels:
+            loc = location + '/' + l
+            if not os.path.exists(loc):
+                os.makedirs(loc)
+
+    def load_cached(self):
         # Import data_tables
         loc = self.location + '/data_tables/'
         if not os.path.exists(loc):
@@ -70,13 +106,6 @@ class WorkDirectory:
         if not os.path.exists(loc):
             os.makedirs(loc)
         self.import_arguments(loc)
-
-    def __str__(self):
-        string = "Located: {0}\nDatatables: {1}\nCluster files: {2}\nArguments: {3}".format(\
-                    self.location,list(self.data_tables.keys()),list(self.clusters.keys()),\
-                    list(self.arguments.keys()))
-
-        return string
 
     def import_data_tables(self,loc):
         tables = [os.path.join(loc, t) for t in os.listdir(loc) if os.path.isfile(os.path.join(loc, t))]
@@ -183,3 +212,7 @@ class WorkDirectory:
             os.makedirs(d)
 
         return d
+
+    def get_loc(self, what):
+        if what == 'log':
+            return self.location + '/log/logger.log'
