@@ -121,3 +121,9 @@ workDirectory
 ./log  
 ...../logger.log  
 ...../cluster_arguments.json  
+
+# Known bugs
+
+* gANI cannot handle comparisons where scaffolds have the same names. Be sure that 
+all scaffold names in all genomes are unique BEFORE the first non-fasta character
+(space, colon, etc.)
