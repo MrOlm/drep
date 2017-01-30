@@ -1,16 +1,8 @@
 # dRep
 De-replication of microbial genomes.
 
-When time-series metagenomes are available,
-often scientists do a co-assembly of all time-points together and then
-bin those genomes using the time-series signal. Due to strain variation,
-however, often a genome will assemble better in an individual sample than the
-co-assembly. Often in the end what scientists want is a single set of genomes,
-and so assembling each time-point seperately creates the problem of having to
-"de-replicate" the genomes assembled at each time-point to the single, best
-genome available from all assemblies. Drep can help the user identity cases
-where the same genotype was assembled multiple times, and choose the best
-genome for downstream analysis.
+Genome-resolved metagenomic studies often target groups of samples from the same environment to resolve ecosystem processes and to provide constraints for series-based binning. Many studies co-assemble reads from all samples to avoid redundancies that arise because the same genome is reconstructed from multiple samples. Here we present dRep, a program that identifies redundancies and selects the highest quality genome from the redundant set. By sequentially applying a fast inaccurate estimation of genome distance and a slow but accurate measure of average nucleotide identity, the program reduces the computational time for de-replication by several orders of magnitude. The assembly of data from individual samples followed by de-replication increases the number of high-quality genomes reconstructed and decreases their fragmentation relative to co-assembly. dRep is an open-source python program freely available under a BSD license.
+
 
 # Installation
 
@@ -28,12 +20,12 @@ cd drep
 pip install .
 ```
 
-# Dependencies
+## Dependencies
 
 Not all dependencies are required for all operations. Excecutable must be in the
 system path.
 
-MASH - https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x
+Mash - https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x
 
 Nucmer - http://mummer.sourceforge.net/
 
@@ -43,7 +35,33 @@ gANI - https://ani.jgi-psf.org/html/download.php?
 
 centrifuge (bonus) - https://omictools.com/centrifuge-tool
 
-# Normal use case
+## Testing
+
+To make sure everything is installed correctly you can run the dRep test suite using py.test
+
+```
+mattolm@biotite ~/Programs/drep $ cd drep/tests
+
+mattolm@biotite ~/Programs/drep/tests $ py.test
+
+=== test session starts ===
+platform linux -- Python 3.5.1, pytest-3.0.5, py-1.4.32, pluggy-0.4.0
+rootdir: /home/mattolm/Programs/drep, inifile:
+collected 3 items
+
+test_suite.py ...
+
+=== 3 passed in 506.46 seconds ===
+
+```
+
+# Basic use
+
+There are several steps that dRep uses in order to de-replicate a genome set:
+
+* Filter
+
+* Cluster
 
 ```
 dRep dereplicate_wf workD -g genomelist

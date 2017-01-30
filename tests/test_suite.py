@@ -22,6 +22,35 @@ def load_test_wd_loc():
     loc = os.path.join(str(os.getcwd()),'../tests/test_backend/ecoli_wd')
     return loc
 
+def load_solutions_wd():
+    loc = os.path.join(str(os.getcwd()),'../tests/test_solutions/ecoli_wd')
+    return loc
+
+def ensure_identicle(Swd, wd):
+    # Compare datatables
+    for d in Swd.data_tables:
+        db1 = Swd.get_db(d)
+        db2 =  wd.get_db(d)
+
+        assert db1.equals(db2), "{0} is not the same!".format(d)
+
+        # TO DO: http://stackoverflow.com/questions/17095101/outputting-difference-in-two-pandas-dataframes-side-by-side-highlighting-the-d
+
+    # Compare the clustering files
+    pass
+
+    # Compare the graphs
+    pass
+
+def sanity_check(Swd):
+    f = open(Swd.location + '/log/amiinsane.txt')
+    l = f.readlines()[0].strip()
+    f.close()
+
+    assert l == "No, you're not", l
+
+    return
+
 class VerifyDereplicateWf():
     def __init__(self):
         pass
@@ -32,16 +61,27 @@ class VerifyDereplicateWf():
         self.tearDown()
 
     def functional_test_1(self):
-        genomes = self.genomes
-        wd_loc  = self.wd_loc
+        genomes  = self.genomes
+        wd_loc   = self.wd_loc
+        s_wd_loc = self.s_wd_loc
 
         args = argumentParser.parse_args(['dereplicate_wf',wd_loc,'-g'] + genomes)
         controller = Controller()
         controller.parseArguments(args)
 
+        # Verify
+        s_wd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+        ensure_identicle(s_wd, wd)
+
+        # Perform sanity check to make sure solutions directiory isn't
+        # being overwritten
+        sanity_check(s_wd)
+
     def setUp(self):
         self.genomes = load_test_genomes()
         self.wd_loc = load_test_wd_loc()
+        self.s_wd_loc = load_solutions_wd()
 
         logging.shutdown()
         if os.path.isdir(self.wd_loc):
@@ -144,5 +184,6 @@ def test_dereplicate_wf():
     verifyDereplicateWf.run()
 
 if __name__ == '__main__':
-    #test_ecoli()
-    print("Run with py.test")
+    test_dereplicate_wf()
+    print("Everything seems to be working swimmingly!")
+    #print("Run with py.test")
