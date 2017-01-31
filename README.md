@@ -3,6 +3,8 @@ De-replication of microbial genomes.
 
 Genome-resolved metagenomic studies often target groups of samples from the same environment to resolve ecosystem processes and to provide constraints for series-based binning. Many studies co-assemble reads from all samples to avoid redundancies that arise because the same genome is reconstructed from multiple samples. Here we present dRep, a program that identifies redundancies and selects the highest quality genome from the redundant set. By sequentially applying a fast inaccurate estimation of genome distance and a slow but accurate measure of average nucleotide identity, the program reduces the computational time for de-replication by several orders of magnitude. The assembly of data from individual samples followed by de-replication increases the number of high-quality genomes reconstructed and decreases their fragmentation relative to co-assembly. dRep is an open-source python program freely available under a BSD license.
 
+Pre-print publication available at bioRxiv:
+[link to publication](https://www.youtube.com/watch?v=dQw4w9WgXcQ)
 
 # Installation
 
@@ -55,21 +57,91 @@ test_suite.py ...
 
 ```
 
+## pyenv
+
+Because dRep is written in python3 and CheckM is written in python2, you may need to use [pyenv](https://github.com/yyuu/pyenv) to be able to call both.
+
+With CheckM installed in a python2 installation of pyenv, and dRep installed in the python3 version, the following command should set allow both python2 and python3 commands to be called:
+
+```
+pyenv global anaconda3-4.1.0 anaconda2-4.1.0
+```
+
+# Quick start
+
+There are several steps that dRep uses in order to de-replicate a genome set. The user can perform each step individually (see Advanced use), or run a "workflow" to run multiple steps together with one command. For a list of possible commands, run the help:
+
+```
+mattolm@biotite /home $ dRep -h
+
+                ...::: dRep v0.3.0 :::...
+
+  Choose one of the operations below for more detailed help.
+  Example: dRep dereplicate_wf -h
+
+  Workflows:
+    dereplicate_wf  -> Combine several of the operations below to de-replicate a genome list
+    compare_wf      -> Simply compare a list of genomes
+
+  Single opterations:
+    filter          -> Filter a genome list based on size, completeness, and/or contamination
+    cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
+    adjust          -> Adjust genome clusters
+    choose          -> Choose the best genome from each genome cluster
+    evaluate        -> Evaluate genome de-replication
+    bonus           -> Other random operations (currently just determine taxonomy)
+    analyze         -> Make figures realted to the above operations; test alternative clustering
+```
+
+## Genome De-replication
+
+To de-replicate a list of genomes using default settings, use dereplicate_wf:
+
+```
+dRep dereplicate_wf test_output -g path/to/genomes/*.fasta
+```
+
+To see the list of parameters, run:
+
+```
+dRep dereplicate_wf -h
+```
+
+## Comparing genomes without de-replication
+
+To simply compare a list of genomes using Mash and a secondary algorithm, use compare_wf:
+
+```
+dRep compare_wf test_output -g path/to/genomes/*.fasta
+```
+
 # Basic use
 
-There are several steps that dRep uses in order to de-replicate a genome set:
+## Steps of de-replication
 
-* Filter
+There are several steps that dRep uses in order to de-replicate a genome set. The user can perform each step individually, or run a "workflow" to run multiple steps together with one command (see Quick Start).
 
-* Cluster
+- **filter**: Filter the genome list based on size, completeness, and/or contamination
 
-```
-dRep dereplicate_wf workD -g genomelist
-```
+- **cluster**: Compare and cluster the genome list based on both Mash and a secondary algorithm (ANIm / gANI)
 
-# DataTables
+- **choose**: Choose the best genome from each cluster based on CheckM
 
-## The following datatables will be available in the work directory in the folder "data_tables" upon completion of a run
+- **analyze**: Make figures based on the de-replication process above
+
+There are  all additional steps that can be performed in addition to those listed above, including determining taxonomy of bins (**bonus**), evaluating genome de-replication (**evaluate**), and adjusting the thresholds for specific clusters (**adjust**).
+
+## The work directory
+
+This is a little bit of information about the work directory
+
+## Interpreting output
+
+This is the basics of what the output is and how to interpret it
+
+### DataTables
+
+The following datatables will be available in the work directory in the folder "data_tables" upon completion of a run
 
 Bdb
 
@@ -95,7 +167,7 @@ Cdb
 
 :   cluster_method, comparison_algorithm, genome, primary_cluster, secondary_cluster, threshold
 
-# Other user-facing data
+### Other user-facing data
 
 ./figures
 
