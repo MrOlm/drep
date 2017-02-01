@@ -8,6 +8,10 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ### Changed
 - READme updated
 
+### Added
+- Documentation
+
+
 ## [0.3.0] - 2017-01-30
 ### Added
 - Basic functional testing
