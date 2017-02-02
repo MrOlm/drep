@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Start &mdash; drep 3.0.0 documentation</title>
+  <title>Module Descriptions &mdash; drep 3.0.0 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="drep 3.0.0 documentation" href="index.html"/>
-        <link rel="next" title="Interpreting Output" href="interpreting_output.html"/>
-        <link rel="prev" title="Installation" href="installation.html"/> 
+        <link rel="next" title="Choosing parameters" href="choosing_parameters.html"/>
+        <link rel="prev" title="Interpreting Output" href="interpreting_output.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -70,9 +70,9 @@
 <li class="toctree-l2"><a class="reference internal" href="installation.html#pyenv">pyenv</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Quick Start</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#de-replication">De-replication</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#genome-comparison">Genome comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#de-replication">De-replication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#genome-comparison">Genome comparison</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="interpreting_output.html">Interpreting Output</a><ul>
@@ -81,12 +81,12 @@
 <li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#raw-data">Raw data</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="module_descriptions.html">Module Descriptions</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#work-directory">Work Directory</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#filter">Filter</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#cluster">Cluster</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#choose">Choose</a></li>
-<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#analyze">Analyze</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Module Descriptions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#work-directory">Work Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#filter">Filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#cluster">Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#choose">Choose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#analyze">Analyze</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
@@ -120,10 +120,10 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Quick Start</li>
+    <li>Module Descriptions</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/quick_start.txt" rel="nofollow"> View page source</a>
+          <a href="_sources/module_descriptions.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -131,48 +131,30 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="quick-start">
-<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
-<p>dRep is a python program which performs rapid pair-wise comparison of genome sets (with other bells and whistles)</p>
-<p>The functionality of dRep is broken up into modules. The user can run the modules separately (see <a class="reference internal" href="module_descriptions.html"><em>Module Descriptions</em></a>), or together in workflows. To see a list of the available modules, check the help:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ dRep -h
-
-               ...::: dRep v0.3.0 :::...
-
- Choose one of the operations below for more detailed help.
- Example: dRep dereplicate_wf -h
-
- Workflows:
-   dereplicate_wf  -&gt; Combine several of the operations below to de-replicate a genome list
-   compare_wf      -&gt; Simply compare a list of genomes
-
- Single opterations:
-   filter          -&gt; Filter a genome list based on size, completeness, and/or contamination
-   cluster         -&gt; Compare and cluster a genome list based on MASH and ANIn/gANI
-   adjust          -&gt; Adjust genome clusters
-   choose          -&gt; Choose the best genome from each genome cluster
-   evaluate        -&gt; Evaluate genome de-replication
-   bonus           -&gt; Other random operations (currently just determine taxonomy)
-   analyze         -&gt; Make figures realted to the above operations; test alternative clustering
-</pre></div>
+  <div class="section" id="module-descriptions">
+<h1>Module Descriptions<a class="headerlink" href="#module-descriptions" title="Permalink to this headline">¶</a></h1>
+<p>The functionality of dRep is broken up into modules. The user can run the modules separately, or together in workflows.</p>
+<div class="section" id="work-directory">
+<h2>Work Directory<a class="headerlink" href="#work-directory" title="Permalink to this headline">¶</a></h2>
+<p>The work directory is where all of the program&#8217;s internal workings, log files, cached data, and output is stored. When running dRep modules multiple times on the same dataset, <a href="#id1"><span class="problematic" id="id2">**</span></a>t is essential* that you use the same work directory so the program can find the results of previous runs.</p>
+<p>For help finding where the output from your run is located in the work directory, see <a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></p>
+<p>For access to the raw internal data (which can be very useful), see <a class="reference internal" href="advanced_use.html"><em>Advanced Use</em></a></p>
 </div>
-<div class="section" id="de-replication">
-<h2>De-replication<a class="headerlink" href="#de-replication" title="Permalink to this headline">¶</a></h2>
-<p>De-replication is the process of identifying groups of genomes that are the &#8220;same&#8221; in a genome set, and removing all but the &#8220;best&#8221; genome from each redundant set. How similar genomes need to be to be considered &#8220;same&#8221;, how the &#8220;best&#8221; genome is chosen,  and other options can be adjusted (see <a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a>)</p>
-<p>To de-replicate a set of genomes, run the following command:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
-</pre></div>
+<div class="section" id="filter">
+<h2>Filter<a class="headerlink" href="#filter" title="Permalink to this headline">¶</a></h2>
+<p>Coming soon</p>
 </div>
-<p>For help understanding the output, see <a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></p>
+<div class="section" id="cluster">
+<h2>Cluster<a class="headerlink" href="#cluster" title="Permalink to this headline">¶</a></h2>
+<p>Coming soon</p>
 </div>
-<div class="section" id="genome-comparison">
-<h2>Genome comparison<a class="headerlink" href="#genome-comparison" title="Permalink to this headline">¶</a></h2>
-<p>dRep is able to perform rapid genome comparisons for a group of genomes and visualize their relatedness. For example:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ dRep comparison_wf output_directory -g path/to/genomes/*.fasta
-</pre></div>
+<div class="section" id="choose">
+<h2>Choose<a class="headerlink" href="#choose" title="Permalink to this headline">¶</a></h2>
+<p>Coming soon</p>
 </div>
-<p>For help understanding the output, see <a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></p>
-<p>To change the comparison parameters, see <a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a></p>
+<div class="section" id="analyze">
+<h2>Analyze<a class="headerlink" href="#analyze" title="Permalink to this headline">¶</a></h2>
+<p>Coming soon</p>
 </div>
 </div>
 
@@ -182,10 +164,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="interpreting_output.html" class="btn btn-neutral float-right" title="Interpreting Output">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="choosing_parameters.html" class="btn btn-neutral float-right" title="Choosing parameters">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="interpreting_output.html" class="btn btn-neutral" title="Interpreting Output"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   

@@ -1,8 +1,48 @@
 Quick Start
 ===========
 
-There are several steps that dRep uses in order to de-replicate a genome set:
+dRep is a python program which performs rapid pair-wise comparison of genome sets (with other bells and whistles)
 
-* Filter
+The functionality of dRep is broken up into modules. The user can run the modules separately (see :doc:`module_descriptions`), or together in workflows. To see a list of the available modules, check the help::
 
-* Cluster
+ $ dRep -h
+
+                ...::: dRep v0.3.0 :::...
+
+  Choose one of the operations below for more detailed help.
+  Example: dRep dereplicate_wf -h
+
+  Workflows:
+    dereplicate_wf  -> Combine several of the operations below to de-replicate a genome list
+    compare_wf      -> Simply compare a list of genomes
+
+  Single opterations:
+    filter          -> Filter a genome list based on size, completeness, and/or contamination
+    cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
+    adjust          -> Adjust genome clusters
+    choose          -> Choose the best genome from each genome cluster
+    evaluate        -> Evaluate genome de-replication
+    bonus           -> Other random operations (currently just determine taxonomy)
+    analyze         -> Make figures realted to the above operations; test alternative clustering
+
+De-replication
+---------------
+
+De-replication is the process of identifying groups of genomes that are the "same" in a genome set, and removing all but the "best" genome from each redundant set. How similar genomes need to be to be considered "same", how the "best" genome is chosen,  and other options can be adjusted (see :doc:`choosing_parameters`)
+
+To de-replicate a set of genomes, run the following command::
+
+ $ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
+
+For help understanding the output, see :doc:`interpreting_output`
+
+Genome comparison
+-----------------
+
+dRep is able to perform rapid genome comparisons for a group of genomes and visualize their relatedness. For example::
+
+ $ dRep comparison_wf output_directory -g path/to/genomes/*.fasta
+
+For help understanding the output, see :doc:`interpreting_output`
+
+To change the comparison parameters, see :doc:`choosing_parameters`

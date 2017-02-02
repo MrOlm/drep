@@ -7,7 +7,7 @@
   <meta charset="utf-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
-  <title>Quick Start &mdash; drep 3.0.0 documentation</title>
+  <title>Interpreting Output &mdash; drep 3.0.0 documentation</title>
   
 
   
@@ -31,8 +31,8 @@
 
   
     <link rel="top" title="drep 3.0.0 documentation" href="index.html"/>
-        <link rel="next" title="Interpreting Output" href="interpreting_output.html"/>
-        <link rel="prev" title="Installation" href="installation.html"/> 
+        <link rel="next" title="Module Descriptions" href="module_descriptions.html"/>
+        <link rel="prev" title="Quick Start" href="quick_start.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -70,15 +70,15 @@
 <li class="toctree-l2"><a class="reference internal" href="installation.html#pyenv">pyenv</a></li>
 </ul>
 </li>
-<li class="toctree-l1 current"><a class="current reference internal" href="">Quick Start</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="#de-replication">De-replication</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#genome-comparison">Genome comparison</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#de-replication">De-replication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#genome-comparison">Genome comparison</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="interpreting_output.html">Interpreting Output</a><ul>
-<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#figures">Figures</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#warnings">Warnings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#raw-data">Raw data</a></li>
+<li class="toctree-l1 current"><a class="current reference internal" href="">Interpreting Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#figures">Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#warnings">Warnings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#raw-data">Raw data</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_descriptions.html">Module Descriptions</a><ul>
@@ -120,10 +120,10 @@
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
-    <li>Quick Start</li>
+    <li>Interpreting Output</li>
       <li class="wy-breadcrumbs-aside">
         
-          <a href="_sources/quick_start.txt" rel="nofollow"> View page source</a>
+          <a href="_sources/interpreting_output.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
@@ -131,48 +131,20 @@
 </div>
           <div role="main" class="document">
             
-  <div class="section" id="quick-start">
-<h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
-<p>dRep is a python program which performs rapid pair-wise comparison of genome sets (with other bells and whistles)</p>
-<p>The functionality of dRep is broken up into modules. The user can run the modules separately (see <a class="reference internal" href="module_descriptions.html"><em>Module Descriptions</em></a>), or together in workflows. To see a list of the available modules, check the help:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ dRep -h
-
-               ...::: dRep v0.3.0 :::...
-
- Choose one of the operations below for more detailed help.
- Example: dRep dereplicate_wf -h
-
- Workflows:
-   dereplicate_wf  -&gt; Combine several of the operations below to de-replicate a genome list
-   compare_wf      -&gt; Simply compare a list of genomes
-
- Single opterations:
-   filter          -&gt; Filter a genome list based on size, completeness, and/or contamination
-   cluster         -&gt; Compare and cluster a genome list based on MASH and ANIn/gANI
-   adjust          -&gt; Adjust genome clusters
-   choose          -&gt; Choose the best genome from each genome cluster
-   evaluate        -&gt; Evaluate genome de-replication
-   bonus           -&gt; Other random operations (currently just determine taxonomy)
-   analyze         -&gt; Make figures realted to the above operations; test alternative clustering
-</pre></div>
+  <div class="section" id="interpreting-output">
+<h1>Interpreting Output<a class="headerlink" href="#interpreting-output" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="figures">
+<h2>Figures<a class="headerlink" href="#figures" title="Permalink to this headline">¶</a></h2>
+<p>Coming soon</p>
 </div>
-<div class="section" id="de-replication">
-<h2>De-replication<a class="headerlink" href="#de-replication" title="Permalink to this headline">¶</a></h2>
-<p>De-replication is the process of identifying groups of genomes that are the &#8220;same&#8221; in a genome set, and removing all but the &#8220;best&#8221; genome from each redundant set. How similar genomes need to be to be considered &#8220;same&#8221;, how the &#8220;best&#8221; genome is chosen,  and other options can be adjusted (see <a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a>)</p>
-<p>To de-replicate a set of genomes, run the following command:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
-</pre></div>
+<div class="section" id="warnings">
+<h2>Warnings<a class="headerlink" href="#warnings" title="Permalink to this headline">¶</a></h2>
+<p>Coming soon</p>
 </div>
-<p>For help understanding the output, see <a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></p>
-</div>
-<div class="section" id="genome-comparison">
-<h2>Genome comparison<a class="headerlink" href="#genome-comparison" title="Permalink to this headline">¶</a></h2>
-<p>dRep is able to perform rapid genome comparisons for a group of genomes and visualize their relatedness. For example:</p>
-<div class="highlight-python"><div class="highlight"><pre>$ dRep comparison_wf output_directory -g path/to/genomes/*.fasta
-</pre></div>
-</div>
-<p>For help understanding the output, see <a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></p>
-<p>To change the comparison parameters, see <a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a></p>
+<div class="section" id="raw-data">
+<h2>Raw data<a class="headerlink" href="#raw-data" title="Permalink to this headline">¶</a></h2>
+<p>Almost data that dRep generates at any point is able to be accessed by the user. This includes the full checkM results of each genome, the value of all genome comparisons, the raw hierarchical clustering files, the primary and secondary cluster identity of each genome, etc.</p>
+<p>For information on where all of this is hidden, see <code class="xref doc docutils literal"><span class="pre">advanced</span> <span class="pre">use</span></code></p>
 </div>
 </div>
 
@@ -182,10 +154,10 @@
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="interpreting_output.html" class="btn btn-neutral float-right" title="Interpreting Output">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="module_descriptions.html" class="btn btn-neutral float-right" title="Module Descriptions">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="installation.html" class="btn btn-neutral" title="Installation"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="quick_start.html" class="btn btn-neutral" title="Quick Start"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
