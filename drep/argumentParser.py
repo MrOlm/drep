@@ -306,7 +306,7 @@ def parse_args(args):
     # Handle the situation where the user wants the raw help
     #args = None
     #if (len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv == '--help'):
-    if (len(args) == 1 or args[1] == '-h' or args[1] == '--help'):
+    if (len(args) == 0 or args[0] == '-h' or args[0] == '--help'):
         printHelp()
         sys.exit(0)
     else:

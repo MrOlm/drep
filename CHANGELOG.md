@@ -11,6 +11,8 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ### Added
 - Documentation
 
+### Fixed
+- A bug where '-h' wasn't working properly
 
 ## [0.3.0] - 2017-01-30
 ### Added
