@@ -96,7 +96,7 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
         kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
         = nucmer_preset(kwargs['n_PRESET'])
 
-    logging.info("kwargs: {0}".format(kwargs))
+    logging.debug("kwargs: {0}".format(kwargs))
 
     logging.info(
     "Step 2. Perform MASH (primary) clustering")
@@ -185,7 +185,7 @@ def run_secondary_clustering(Bdb, Cdb, data_folder, **kwargs):
     c_folder = data_folder + 'Clustering_files/'
     if not os.path.exists(data_folder):
         os.makedirs(data_folder)
-    logging.info('clobbering {0}'.format(data_folder))
+    logging.debug('clobbering {0}'.format(data_folder))
     if kwargs.get('overwrite',False):
         for fn in glob.glob(data_folder + 'secondary_linkage_cluster*'):
             os.remove(fn)
@@ -204,7 +204,7 @@ def run_secondary_clustering(Bdb, Cdb, data_folder, **kwargs):
 Description
 '''
 def genome_hierarchical_clustering(Ndb, data_folder, comp_method, **kwargs):
-    logging.info('Clustering ANIn database')
+    logging.debug('Clustering ANIn database')
     S_Lmethod = kwargs.get('clusterAlg', 'single')
     S_Lcutoff = 1 - kwargs.get('S_ani', .99)
     cov_thresh = float(kwargs.get('cov_thresh',0.5))
@@ -237,7 +237,7 @@ def genome_hierarchical_clustering(Ndb, data_folder, comp_method, **kwargs):
         arguments = {'linkage_method':S_Lmethod,'linkage_cutoff':S_Lcutoff,\
                     'comparison_algorithm':comp_method,'minimum_coverage':cov_thresh}
         pickle_name = "secondary_linkage_cluster_{0}.pickle".format(cluster)
-        logging.info('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
+        logging.debug('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
                                                             pickle_name))
         with open(data_folder + pickle_name, 'wb') as handle:
             pickle.dump(linkage, handle)
@@ -302,9 +302,9 @@ def estimate_time(comps, alg):
 def d_cluster_wrapper(workDirectory, **kwargs):
 
     # Load the WorkDirectory.
-    logging.info("Loading work directory")
+    logging.debug("Loading work directory")
     workDirectory = drep.WorkDirectory.WorkDirectory(workDirectory)
-    logging.info(str(workDirectory))
+    logging.debug(str(workDirectory))
 
     # Parse arguments
     Bdb, data_folder, kwargs = parse_arguments(workDirectory, **kwargs)
@@ -320,7 +320,7 @@ def d_cluster_wrapper(workDirectory, **kwargs):
     if not os.path.exists(data_dir):
         os.makedirs(data_dir)
 
-    logging.info("Main program run complete- saving output to {0}".format(data_dir))
+    logging.debug("Main program run complete- saving output to {0}".format(data_dir))
 
     Cdb.to_csv(os.path.join(data_dir,'Cdb.csv'),index=False)
     Mdb.to_csv(os.path.join(data_dir,'Mdb.csv'),index=False)
@@ -360,7 +360,7 @@ def parse_arguments(workDirectory, **kwargs):
             if not overwrite:
                 print("clustering already exists; run with --overwrite to continue")
                 sys.exit()
-            logging.info("THIS WILL OVERWRITE {0}".format(db))
+            logging.debug("THIS WILL OVERWRITE {0}".format(db))
 
 
     # Make data_folder
@@ -406,7 +406,7 @@ def gen_cdb_from_fclust(fclust,names):
 
 def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
 
-    logging.info('Clustering ANIn database')
+    logging.debug('Clustering ANIn database')
 
     cov_thresh = float(kwargs.get('cov_thresh',0.5))
     S_Lmethod = kwargs.get('clusterAlg', 'single')
@@ -420,7 +420,7 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
             os.makedirs(data_folder)
 
         # Delete all existing pickles
-        logging.info('clobbering {0}'.format(data_folder))
+        logging.debug('clobbering {0}'.format(data_folder))
         if kwargs.get('overwrite',False):
             for fn in glob.glob(data_folder + 'secondary_linkage_cluster*'):
                 os.remove(fn)
@@ -467,7 +467,7 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
             arguments = {'linkage_method':S_Lmethod,'linkage_cutoff':S_Lcutoff,\
                         'comparison_algorithm':'ANIn','minimum_coverage':cov_thresh}
             pickle_name = "secondary_linkage_cluster_{0}.pickle".format(cluster)
-            logging.info('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
+            logging.debug('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
                                                                 pickle_name))
             with open(data_folder + pickle_name, 'wb') as handle:
                 pickle.dump(linkage, handle)
@@ -674,7 +674,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
 
 def cluster_mash_database(db, data_folder= False, **kwargs):
 
-    logging.info('Clustering MASH database')
+    logging.debug('Clustering MASH database')
 
     P_Lmethod = kwargs.get('clusterAlg','single')
     P_Lcutoff = 1 - kwargs.get('P_ani',.9)
@@ -695,7 +695,7 @@ def cluster_mash_database(db, data_folder= False, **kwargs):
     if (data_folder != False):
         arguments = {'linkage_method':P_Lmethod,'linkage_cutoff':P_Lcutoff,\
                         'comparison_algorithm':'MASH'}
-        logging.info('Saving primary_linkage pickle to {0}'.format(data_folder))
+        logging.debug('Saving primary_linkage pickle to {0}'.format(data_folder))
         with open(data_folder + 'primary_linkage.pickle', 'wb') as handle:
             pickle.dump(linkage, handle)
             pickle.dump(linkage_db, handle)
@@ -1035,7 +1035,7 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     crap_folders = glob.glob(gANI_folder + '*.gANITEMP')
     for crap_folder in crap_folders:
         if os.path.exists(crap_folder):
-            logging.info("CRAP FOLDER EXISTS FOR gANI- removing {0}".format(crap_folder))
+            logging.debug("CRAP FOLDER EXISTS FOR gANI- removing {0}".format(crap_folder))
             shutil.rmtree(crap_folder)
 
     if not os.path.exists(prod_folder):
@@ -1089,7 +1089,7 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
 
     # Run commands
     if len(cmds) > 0:
-        logging.info('Running gANI commands: {0}'.format('\n'.join([' '.join(x) for x in cmds])))
+        logging.debug('Running gANI commands: {0}'.format('\n'.join([' '.join(x) for x in cmds])))
         thread_mash_cmds_status(cmds,p)
     else:
         if verbose:
