@@ -5,6 +5,8 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
 ## [Unrealeased]
+
+## [0.3.1]
 ### Changed
 - READme updated
 
@@ -13,6 +15,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 
 ### Fixed
 - A bug where '-h' wasn't working properly
+- Some messages in cluster that should be going to log
 
 ## [0.3.0] - 2017-01-30
 ### Added
