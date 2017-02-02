@@ -5,7 +5,6 @@
 <!--[if gt IE 8]><!--> <html class="no-js" lang="en" > <!--<![endif]-->
 <head>
   <meta charset="utf-8">
-  
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   
   <title>Installation &mdash; drep 3.0.0 documentation</title>
@@ -15,6 +14,7 @@
   
 
   
+  <link href='https://fonts.googleapis.com/css?family=Lato:400,700,400italic,700italic|Roboto+Slab:400,700|Inconsolata:400,700&subset=latin,cyrillic' rel='stylesheet' type='text/css'>
 
   
   
@@ -32,10 +32,10 @@
   
     <link rel="top" title="drep 3.0.0 documentation" href="index.html"/>
         <link rel="next" title="Quick Start" href="quick_start.html"/>
-        <link rel="prev" title="Welcome to drep’s documentation!" href="index.html"/> 
+        <link rel="prev" title="dRep" href="index.html"/> 
 
   
-  <script src="_static/js/modernizr.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
 
 </head>
 
@@ -45,27 +45,11 @@
 
     
     <nav data-toggle="wy-nav-shift" class="wy-nav-side">
-      <div class="wy-side-scroll">
-        <div class="wy-side-nav-search">
-          
-
-          
-            <a href="index.html" class="icon icon-home"> drep
-          
-
-          
-          </a>
-
-          
-            
-            
-              <div class="version">
-                3.0
-              </div>
-            
-          
-
-          
+      <div class="wy-side-nav-search">
+        
+          <a href="index.html" class="fa fa-home"> drep</a>
+        
+        
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="search.html" method="get">
     <input type="text" name="q" placeholder="Search docs" />
@@ -73,23 +57,26 @@
     <input type="hidden" name="area" value="default" />
   </form>
 </div>
+      </div>
 
+      <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
+        
           
-        </div>
-
-        <div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="main navigation">
           
-            
-            
-                <ul class="current">
-<li class="toctree-l1 current"><a class="current reference internal" href="#">Installation</a></li>
+              <ul class="current">
+<li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#pyenv">pyenv</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
 </ul>
 
-            
           
-        </div>
+        
       </div>
+      &nbsp;
     </nav>
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap">
@@ -104,56 +91,85 @@
       
       <div class="wy-nav-content">
         <div class="rst-content">
-          
-
- 
-
-
-
-<div role="navigation" aria-label="breadcrumbs navigation">
+          <div role="navigation" aria-label="breadcrumbs navigation">
   <ul class="wy-breadcrumbs">
     <li><a href="index.html">Docs</a> &raquo;</li>
       
     <li>Installation</li>
       <li class="wy-breadcrumbs-aside">
         
-          
-            <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
-          
+          <a href="_sources/installation.txt" rel="nofollow"> View page source</a>
         
       </li>
   </ul>
   <hr/>
 </div>
-          <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
-           <div itemprop="articleBody">
+          <div role="main" class="document">
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
 <p>To install dRep, simply run</p>
-<div class="highlight-default"><div class="highlight"><pre><span></span>$ pip install drep
+<div class="highlight-python"><div class="highlight"><pre>$ pip install drep
 </pre></div>
 </div>
 <p>OR</p>
-<p>&#8216;&#8217;&#8217;
-git clone <a class="reference external" href="mailto:git&#37;&#52;&#48;github&#46;com">git<span>&#64;</span>github<span>&#46;</span>com</a>:MrOlm/drep.git</p>
-<p>cd drep</p>
-<p>pip install .
-&#8216;&#8217;&#8216;</p>
+<div class="highlight-python"><div class="highlight"><pre>$ git clone git@github.com:MrOlm/drep.git
+
+$ cd drep
+
+$ pip install .
+</pre></div>
+</div>
 <p>That&#8217;s it!</p>
+<div class="section" id="dependencies">
+<h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
+<p>dRep requires many other great programs to run. Not all dependencies are needed for all operations</p>
+<ul class="simple">
+<li><a class="reference external" href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x">Mash</a></li>
+<li><a class="reference external" href="http://mummer.sourceforge.net/">Nucmer</a></li>
+<li><a class="reference external" href="http://ecogenomics.github.io/CheckM/">CheckM</a></li>
+<li><a class="reference external" href="https://ani.jgi-psf.org/html/download.php?">gANI (aka CalculateANI)</a></li>
+<li><a class="reference external" href="https://omictools.com/centrifuge-tool">Centrifuge</a></li>
+</ul>
+</div>
+<div class="section" id="testing">
+<h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
+<p>To make sure everything is installed correctly you can run the dRep test suite using py.test:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@biotite ~/Programs/drep $ cd drep/tests
+
+mattolm@biotite ~/Programs/drep/tests $ py.test
+
+=== test session starts ===
+platform linux -- Python 3.5.1, pytest-3.0.5, py-1.4.32, pluggy-0.4.0
+rootdir: /home/mattolm/Programs/drep, inifile:
+collected 3 items
+
+test_suite.py ...
+
+=== 3 passed in 506.46 seconds ===
+</pre></div>
+</div>
+</div>
+<div class="section" id="pyenv">
+<h2>pyenv<a class="headerlink" href="#pyenv" title="Permalink to this headline">¶</a></h2>
+<p>Because dRep is written in python3 and CheckM is written in python2, you may need to use <a class="reference external" href="https://github.com/yyuu/pyenv">pyenv</a> to be able to call both.</p>
+<p>With CheckM installed in a python2 installation of pyenv, and dRep installed in the python3 version, the following command should set allow both python2 and python3 commands to be called:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ pyenv global anaconda3-4.1.0 anaconda2-4.1.0
+</pre></div>
+</div>
+</div>
 </div>
 
 
-           </div>
           </div>
           <footer>
   
     <div class="rst-footer-buttons" role="navigation" aria-label="footer navigation">
       
-        <a href="quick_start.html" class="btn btn-neutral float-right" title="Quick Start" accesskey="n">Next <span class="fa fa-arrow-circle-right"></span></a>
+        <a href="quick_start.html" class="btn btn-neutral float-right" title="Quick Start">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="Welcome to drep’s documentation!" accesskey="p"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="index.html" class="btn btn-neutral" title="dRep"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -163,13 +179,12 @@ git clone <a class="reference external" href="mailto:git&#37;&#52;&#48;github&#4
   <div role="contentinfo">
     <p>
         &copy; Copyright 2017, Matt Olm.
-
     </p>
   </div>
-  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>. 
 
+  Built with <a href="http://sphinx-doc.org/">Sphinx</a> using a <a href="https://github.com/snide/sphinx_rtd_theme">theme</a> provided by <a href="https://readthedocs.org">Read the Docs</a>.
+  
 </footer>
-
         </div>
       </div>
 
