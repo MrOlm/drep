@@ -64,7 +64,13 @@
           
           
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#genome-de-replication">Genome de-replication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#genome-comparison">Genome comparison</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-pip">Using pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#testing">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#pyenv">pyenv</a></li>
@@ -78,7 +84,7 @@
 <li class="toctree-l1 current"><a class="current reference internal" href="">Interpreting Output</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="#figures">Figures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#warnings">Warnings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="#raw-data">Raw data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other-data">Other data</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_descriptions.html">Module Descriptions</a><ul>
@@ -87,6 +93,8 @@
 <li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#cluster">Cluster</a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#choose">Choose</a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#analyze">Analyze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#evaluate">Evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#other">Other</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
@@ -95,7 +103,12 @@
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest-of-the-parameters">The rest of the parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#accessing-internal-information">Accessing Internal Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#caching">Caching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#api">API</a></li>
+</ul>
+</li>
 </ul>
 
           
@@ -133,18 +146,92 @@
             
   <div class="section" id="interpreting-output">
 <h1>Interpreting Output<a class="headerlink" href="#interpreting-output" title="Permalink to this headline">¶</a></h1>
+<p>dRep produces a variety of output in the work directory depending on which operations are run.</p>
+<p>To explain the figures below, dRep <code class="docutils literal"><span class="pre">dereplicate_wf</span></code> was run on a set of 5 randomly chosen <em>Klebsiella oxytoca</em> isolate genomes as follows:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@biotite /data8/testing_Datasets/Klebsiella_oxytoca $ dRep dereplicate_wf complete_only -g *.fna --S_algorithm gANI
+</pre></div>
+</div>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="overview.html"><em>Overview</em></a></dt>
+<dd>for general information on the program</dd>
+<dt><a class="reference internal" href="quick_start.html"><em>Quick Start</em></a></dt>
+<dd>for more information on dereplicate_wf</dd>
+<dt><a class="reference internal" href="module_descriptions.html"><em>Module Descriptions</em></a></dt>
+<dd>for a more detailed description of what the modules do</dd>
+</dl>
+</div>
 <div class="section" id="figures">
 <h2>Figures<a class="headerlink" href="#figures" title="Permalink to this headline">¶</a></h2>
-<p>Coming soon</p>
+<p>Figures are located within the work directory, in the folder <code class="docutils literal"><span class="pre">figures</span></code>:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@biotite /data8/Human/NIH_4/testing_Datasets/Klebsiella_ox $ ls complete_only/figures/
+Clustering_scatterplots.pdf
+Cluster_scoring.pdf
+Primary_clustering_dendrogram.pdf
+Secondary_clustering_dendrograms.pdf
+Winning_genomes.pdf
+</pre></div>
+</div>
+<div class="section" id="primary-clustering-dendrogram">
+<h3>Primary_clustering_dendrogram<a class="headerlink" href="#primary-clustering-dendrogram" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/Primary_clustering_dendrogramK.png" src="_images/Primary_clustering_dendrogramK.png" />
+<p>The primary clustering dendrogram summarizes the pair-wise Mash distance between all genomes in the genome list.</p>
+<p>The dotted line provides a visualization of the <strong>primary ANI</strong> -  the value which determines the creation of primary clusters. It is drawn in the above figure at 90% ANI (the default value). Based on the above figure you can see that two primary clusters were formed- one with genomes colored blue, and one red.</p>
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p class="last">Genomes in the same primary cluster will be compared to each other using a more sensitive algorithm (gANI or ANIm) in order to form secondary clusters. Genomes which are not in the same primary cluster will never be compared again.</p>
+</div>
+</div>
+<div class="section" id="secondary-clustering-dendrograms">
+<h3>Secondary_clustering_dendrograms<a class="headerlink" href="#secondary-clustering-dendrograms" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/Secondary_clustering_dendrogramsK.png" src="_images/Secondary_clustering_dendrogramsK.png" />
+<p>Each primary cluster with more than one member will have a page in the Secondary clustering dendrograms file. In this example, there is only one primary cluster with &gt; 1 member.</p>
+<p>This dendrogram summarizes the pair-wise distance between all organisms in each primary cluster, as determined by the secondary algorithm (gANI / ANIm). At the very top the primary cluster identity is shown, and information on the secondary clustering algorithm parameters are shown above the dendrogram itself. You can see in the above figure that this secondary clustering was performed with gANI, the minimum alignment coverage is 10%, and the hierarchical clustering method is average.</p>
+<p>The black dotted line shows the <strong>secondary clustering ANI</strong> (in this case 99%). This value determines which genomes end up in the same secondary cluster, <strong>and thus are considered to be the &#8220;same&#8221;</strong>. In the above figure, two secondary cluster are formed. The &#8220;best&#8221; genome of each secondary cluster is marked with as asterisk.</p>
+<p>The red line shows the lowest ANI for a &#8220;self-vs-self&#8221; comparison of all genomes in the genome list. That is, when each genome in this primary cluster is compared to itself, the red line is the lowest ANI you get. This represents a &#8220;limit of detection&#8221; of sorts. gANI always results in 100% ANI when self-vs-self comparisons are performed, but ANIm does not (as shown in the figure below). Note also that the secondary algorithm information above the dendrogram is changed in the figure below as well.</p>
+<img alt="_images/Primary_cluster_1_average.png" src="_images/Primary_cluster_1_average.png" />
+<div class="admonition note">
+<p class="first admonition-title">Note</p>
+<p>The above figure was made with the command:</p>
+<div class="last highlight-python"><div class="highlight"><pre>mattolm@biotite /data8/Human/NIH_4/testing_Datasets/Klebsiella_oxytoca $ dRep analyze complete_only/ -c 1
+</pre></div>
+</div>
+</div>
+</div>
+<div class="section" id="cluster-scoring">
+<h3>Cluster_scoring<a class="headerlink" href="#cluster-scoring" title="Permalink to this headline">¶</a></h3>
+<img alt="_images/Cluster_scoringK1.png" src="_images/Cluster_scoringK1.png" />
+<img alt="_images/Cluster_scoringK2.png" src="_images/Cluster_scoringK2.png" />
+<img alt="_images/Cluster_scoringK3.png" src="_images/Cluster_scoringK3.png" />
+<p>Each secondary cluster will have its own page in the Cluster scoring figure. There are three secondary clusters in this example- 2 of which came from primary cluster 1, and 1 of which is the only member of primary cluster 2.</p>
+<p>These figures show the score of each genome, as well as all metrics that can go into determining the score. This helps the user visualize the quality of all genomes, and ensure that they agree with the genome chosen as &#8220;best&#8221;. The &#8220;best&#8221; genome is marked with an asterisk, and will always be the genome with the highest score.</p>
+<p>One genome will be selected from each secondary cluster to be included in the de-replicated genome set. So in the above example, we will have 3 genomes in the de-replicated genome set. This is because the algorithm decided that all genomes in cluster 1_1 were the &#8220;same&#8221;, and chose GCA_900083945 as the &#8220;best&#8221;.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p class="last">See <a class="reference internal" href="module_descriptions.html"><em>Module Descriptions</em></a> for information on how scoring is done and how to change it</p>
+</div>
+</div>
+<div class="section" id="other-figures">
+<h3>Other figures<a class="headerlink" href="#other-figures" title="Permalink to this headline">¶</a></h3>
+<p><strong>Clustering scatterplots</strong> provides some information about genome alignment statistics, and <strong>Winning genomes</strong> provides some information about only the &#8220;best&#8221; genomes of each replicate set, as well as a couple quick overall statistics.</p>
+<p>Using the <code class="docutils literal"><span class="pre">analyze</span></code> operation to test out alternative clusterings will be within this <code class="docutils literal"><span class="pre">figures</span></code> folder. See <a class="reference internal" href="module_descriptions.html"><em>Module Descriptions</em></a> for more information on that.</p>
+</div>
 </div>
 <div class="section" id="warnings">
 <h2>Warnings<a class="headerlink" href="#warnings" title="Permalink to this headline">¶</a></h2>
-<p>Coming soon</p>
+<p>Warnings look for two things: <strong>de-replicated genome similarity</strong> and <strong>secondary clusters that were almost different</strong>. <strong>All warnings are located in the log directory within the work directory, in a file titled warnings.txt</strong></p>
+<p><strong>de-replicated genome similarity</strong> warns when de-replicated genomes are similar to each other. This is to try and catch cases where similar genomes were split into different primary clusters, and thus failed to be de-replicated.</p>
+<p><strong>secondary clusters that were almost different</strong> alerts the user to cases where genomes are on the edge between being considered &#8220;same&#8221; or &#8220;different&#8221;. That is, if a genome is close to one of the differentiating lines in the Primary and Secondary Clustering Dendrograms shown above.</p>
 </div>
-<div class="section" id="raw-data">
-<h2>Raw data<a class="headerlink" href="#raw-data" title="Permalink to this headline">¶</a></h2>
-<p>Almost data that dRep generates at any point is able to be accessed by the user. This includes the full checkM results of each genome, the value of all genome comparisons, the raw hierarchical clustering files, the primary and secondary cluster identity of each genome, etc.</p>
-<p>For information on where all of this is hidden, see <code class="xref doc docutils literal"><span class="pre">advanced</span> <span class="pre">use</span></code></p>
+<div class="section" id="other-data">
+<h2>Other data<a class="headerlink" href="#other-data" title="Permalink to this headline">¶</a></h2>
+<p>The folder <code class="docutils literal"><span class="pre">dereplicated_genomes</span></code> holds a copy of the &#8220;best&#8221; genome of each secondary cluster</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<p>Almost all data that dRep generates at any point is able to be accessed by the user. This includes the full checkM results of each genome, the value of all genome comparisons, the raw hierarchical clustering files, the primary and secondary cluster identity of each genome, etc.</p>
+<p class="last">For information on where all of this is hidden, see <a class="reference internal" href="advanced_use.html"><em>Advanced Use</em></a></p>
+</div>
 </div>
 </div>
 
@@ -196,6 +283,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

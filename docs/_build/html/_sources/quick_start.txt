@@ -1,9 +1,7 @@
 Quick Start
 ===========
 
-dRep is a python program which performs rapid pair-wise comparison of genome sets (with other bells and whistles)
-
-The functionality of dRep is broken up into modules. The user can run the modules separately (see :doc:`module_descriptions`), or together in workflows. To see a list of the available modules, check the help::
+The functionality of dRep is broken up into modules. The modules can be run separately (see :doc:`module_descriptions`), or together in workflows. To see a list of the available modules, check the help::
 
  $ dRep -h
 
@@ -34,7 +32,14 @@ To de-replicate a set of genomes, run the following command::
 
  $ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
 
-For help understanding the output, see :doc:`interpreting_output`
+This will automatically de-replicate the genome list and produce lots of information about it.
+
+.. seealso::
+  :doc:`interpreting_output`
+    to view example output
+  :doc:`choosing_parameters`
+    for guidance changing parameters
+
 
 Genome comparison
 -----------------
@@ -46,3 +51,9 @@ dRep is able to perform rapid genome comparisons for a group of genomes and visu
 For help understanding the output, see :doc:`interpreting_output`
 
 To change the comparison parameters, see :doc:`choosing_parameters`
+
+.. seealso::
+  :doc:`interpreting_output`
+    to view example output
+  :doc:`choosing_parameters`
+    for guidance changing parameters

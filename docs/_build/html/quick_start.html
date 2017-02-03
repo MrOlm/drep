@@ -64,7 +64,13 @@
           
           
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#genome-de-replication">Genome de-replication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#genome-comparison">Genome comparison</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-pip">Using pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#testing">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#pyenv">pyenv</a></li>
@@ -78,7 +84,7 @@
 <li class="toctree-l1"><a class="reference internal" href="interpreting_output.html">Interpreting Output</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#figures">Figures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#warnings">Warnings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#raw-data">Raw data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#other-data">Other data</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="module_descriptions.html">Module Descriptions</a><ul>
@@ -87,6 +93,8 @@
 <li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#cluster">Cluster</a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#choose">Choose</a></li>
 <li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#analyze">Analyze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#evaluate">Evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#other">Other</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
@@ -95,7 +103,12 @@
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest-of-the-parameters">The rest of the parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#accessing-internal-information">Accessing Internal Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#caching">Caching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#api">API</a></li>
+</ul>
+</li>
 </ul>
 
           
@@ -133,8 +146,7 @@
             
   <div class="section" id="quick-start">
 <h1>Quick Start<a class="headerlink" href="#quick-start" title="Permalink to this headline">¶</a></h1>
-<p>dRep is a python program which performs rapid pair-wise comparison of genome sets (with other bells and whistles)</p>
-<p>The functionality of dRep is broken up into modules. The user can run the modules separately (see <a class="reference internal" href="module_descriptions.html"><em>Module Descriptions</em></a>), or together in workflows. To see a list of the available modules, check the help:</p>
+<p>The functionality of dRep is broken up into modules. The modules can be run separately (see <a class="reference internal" href="module_descriptions.html"><em>Module Descriptions</em></a>), or together in workflows. To see a list of the available modules, check the help:</p>
 <div class="highlight-python"><div class="highlight"><pre>$ dRep -h
 
                ...::: dRep v0.3.0 :::...
@@ -163,7 +175,16 @@
 <div class="highlight-python"><div class="highlight"><pre>$ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
 </pre></div>
 </div>
-<p>For help understanding the output, see <a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></p>
+<p>This will automatically de-replicate the genome list and produce lots of information about it.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></dt>
+<dd>to view example output</dd>
+<dt><a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a></dt>
+<dd>for guidance changing parameters</dd>
+</dl>
+</div>
 </div>
 <div class="section" id="genome-comparison">
 <h2>Genome comparison<a class="headerlink" href="#genome-comparison" title="Permalink to this headline">¶</a></h2>
@@ -173,6 +194,15 @@
 </div>
 <p>For help understanding the output, see <a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></p>
 <p>To change the comparison parameters, see <a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a></p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></dt>
+<dd>to view example output</dd>
+<dt><a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a></dt>
+<dd>for guidance changing parameters</dd>
+</dl>
+</div>
 </div>
 </div>
 
@@ -224,6 +254,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

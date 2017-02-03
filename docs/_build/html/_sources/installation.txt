@@ -1,6 +1,9 @@
 Installation
 ============
 
+Using pip
+---------
+
 To install dRep, simply run ::
 
 $ pip install drep
@@ -26,6 +29,8 @@ dRep requires many other great programs to run. Not all dependencies are needed 
 * `gANI (aka CalculateANI) <https://ani.jgi-psf.org/html/download.php?>`_
 * `Centrifuge <https://omictools.com/centrifuge-tool>`_
 
+Programs need to be installed to the system path, so that you can call them from anywhere on your computer.
+
 Testing
 -------
 
@@ -44,6 +49,9 @@ To make sure everything is installed correctly you can run the dRep test suite u
 
  === 3 passed in 506.46 seconds ===
 
+Or just run the large integrative test::
+  mattolm@biotite ~/Programs/drep/tests $ python test_suite.py
+
 pyenv
 -----
 
@@ -52,3 +60,5 @@ Because dRep is written in python3 and CheckM is written in python2, you may nee
 With CheckM installed in a python2 installation of pyenv, and dRep installed in the python3 version, the following command should set allow both python2 and python3 commands to be called::
 
  $ pyenv global anaconda3-4.1.0 anaconda2-4.1.0
+
+Alternatively, you could add python2 to your CheckM shebang line (though I have not confirmed that this works)

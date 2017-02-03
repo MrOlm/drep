@@ -64,7 +64,13 @@
           
           
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#genome-de-replication">Genome de-replication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#genome-comparison">Genome comparison</a></li>
+</ul>
+</li>
 <li class="toctree-l1"><a class="reference internal" href="installation.html">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="installation.html#using-pip">Using pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#testing">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="installation.html#pyenv">pyenv</a></li>
@@ -78,7 +84,7 @@
 <li class="toctree-l1"><a class="reference internal" href="interpreting_output.html">Interpreting Output</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#figures">Figures</a></li>
 <li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#warnings">Warnings</a></li>
-<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#raw-data">Raw data</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#other-data">Other data</a></li>
 </ul>
 </li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Module Descriptions</a><ul>
@@ -87,6 +93,8 @@
 <li class="toctree-l2"><a class="reference internal" href="#cluster">Cluster</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#choose">Choose</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#analyze">Analyze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#evaluate">Evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="#other">Other</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
@@ -95,7 +103,12 @@
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest-of-the-parameters">The rest of the parameters</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a></li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#accessing-internal-information">Accessing Internal Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#caching">Caching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#api">API</a></li>
+</ul>
+</li>
 </ul>
 
           
@@ -133,28 +146,322 @@
             
   <div class="section" id="module-descriptions">
 <h1>Module Descriptions<a class="headerlink" href="#module-descriptions" title="Permalink to this headline">¶</a></h1>
-<p>The functionality of dRep is broken up into modules. The user can run the modules separately, or together in workflows.</p>
+<p>The functionality of dRep is broken up into modules. The user can run the modules separately, or together in workflows. For example, you could run:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ dRep filter example_workD -g path/to/genomes*.fasta
+
+$ dRep cluster example_workD
+
+$ dRep analyze example_workD -pl a
+</pre></div>
+</div>
+<p>OR:</p>
+<div class="highlight-python"><div class="highlight"><pre>$ dRep comparison_wf example_workD -g path/to/genomes*.fasta
+</pre></div>
+</div>
+<p>They are two ways of doing the same thing. To see a list of available modules, check the help:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep -h
+
+                ...::: dRep v0.2.0 :::...
+
+  Choose one of the operations below for more detailed help.
+  Example: dRep dereplicate_wf -h
+
+  Workflows:
+    dereplicate_wf  -&gt; Combine several of the operations below to de-replicate a genome list
+    compare_wf      -&gt; Simply compare a list of genomes
+
+  Single opterations:
+    filter          -&gt; Filter a genome list based on size, completeness, and/or contamination
+    cluster         -&gt; Compare and cluster a genome list based on MASH and ANIn/gANI
+    adjust          -&gt; Adjust genome clusters
+    choose          -&gt; Choose the best genome from each genome cluster
+    evaluate        -&gt; Evaluate genome de-replication
+    bonus           -&gt; Other random operations (currently just determine taxonomy)
+    analyze         -&gt; Make figures realted to the above operations; test alternative clustering
+</pre></div>
+</div>
 <div class="section" id="work-directory">
 <h2>Work Directory<a class="headerlink" href="#work-directory" title="Permalink to this headline">¶</a></h2>
-<p>The work directory is where all of the program&#8217;s internal workings, log files, cached data, and output is stored. When running dRep modules multiple times on the same dataset, <a href="#id1"><span class="problematic" id="id2">**</span></a>t is essential* that you use the same work directory so the program can find the results of previous runs.</p>
-<p>For help finding where the output from your run is located in the work directory, see <a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></p>
-<p>For access to the raw internal data (which can be very useful), see <a class="reference internal" href="advanced_use.html"><em>Advanced Use</em></a></p>
+<p>The work directory is where all of the program&#8217;s internal workings, log files, cached data, and output is stored. When running dRep modules multiple times on the same dataset, <strong>it is essential</strong> that you use the same work directory so the program can find the results of previous runs.</p>
+<div class="admonition seealso">
+<p class="first admonition-title">See also</p>
+<dl class="last docutils">
+<dt><a class="reference internal" href="interpreting_output.html"><em>Interpreting Output</em></a></dt>
+<dd>for help finding where the output from your run is located in the work directory</dd>
+<dt><a class="reference internal" href="advanced_use.html"><em>Advanced Use</em></a></dt>
+<dd>for access to the raw internal data (which can be very useful)</dd>
+</dl>
+</div>
 </div>
 <div class="section" id="filter">
 <h2>Filter<a class="headerlink" href="#filter" title="Permalink to this headline">¶</a></h2>
-<p>Coming soon</p>
+<p>Filter is used filter the genome set (for why this is necessary, see <a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a>). This is done using checkM. All genomes which don&#8217;t pass the length threshold are filtered first to avoid running checkM unnecessarily. All genomes which don&#8217;t pass checkM thresholds are filtered before comparisons are run to avoid running comparisons unnecessarily.</p>
+<div class="admonition warning">
+<p class="first admonition-title">Warning</p>
+<p class="last">Due to a bug in checkM, all genomes must have at least one ORF called or else checkM will stall. So a length minimum of at least 10,000bp is recommended.</p>
+</div>
+<p>To see the command-line options, check the help:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep filter -h
+usage: dRep filter [-p PROCESSORS] [-d] [-o] [-h] [-l LENGTH]
+                   [-comp COMPLETENESS] [-con CONTAMINATION] [-str STRAIN_HTR]
+                   [--skipCheckM] [-g [GENOMES [GENOMES ...]]] [--Chdb CHDB]
+                   [--checkM_method {lineage_wf,taxonomy_wf}]
+                   work_directory
+
+positional arguments:
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+
+SYSTEM PARAMETERS:
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --dry             dry run- dont do anything (default: False)
+  -o, --overwrite       overwrite existing data in work folder (default:
+                        False)
+  -h, --help            show this help message and exit
+
+FILTERING OPTIONS:
+  -l LENGTH, --length LENGTH
+                        Minimum genome length (default: 500000)
+  -comp COMPLETENESS, --completeness COMPLETENESS
+                        Minumum genome completeness (default: 75)
+  -con CONTAMINATION, --contamination CONTAMINATION
+                        Maximum genome contamination (default: 25)
+  -str STRAIN_HTR, --strain_htr STRAIN_HTR
+                        Maximum strain heterogeneity (default: 25)
+  --skipCheckM          Don&#39;t run checkM- will ignore con and comp settings
+                        (default: False)
+
+I/O PARAMETERS:
+  -g [GENOMES [GENOMES ...]], --genomes [GENOMES [GENOMES ...]]
+                        genomes to filter in .fasta format. Not necessary if
+                        Bdb or Wdb already exist (default: None)
+  --Chdb CHDB           checkM run already completed. Must be in --tab_table
+                        format. (default: None)
+  --checkM_method {lineage_wf,taxonomy_wf}
+                        Either lineage_wf (more accurate) or taxonomy_wf
+                        (faster) (default: lineage_wf)
+</pre></div>
+</div>
 </div>
 <div class="section" id="cluster">
 <h2>Cluster<a class="headerlink" href="#cluster" title="Permalink to this headline">¶</a></h2>
-<p>Coming soon</p>
+<p>Cluster is the module that does the actual primary and secondary comparisons. Choosing parameters here can get a bit complicated- see <a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a> for information.</p>
+<p>To see the command-line options, check the help:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep cluster -h
+usage: dRep cluster [-p PROCESSORS] [-d] [-o] [-h] [-ms MASH_SKETCH]
+                    [-pa P_ANI] [--S_algorithm {ANIn,gANI}] [-sa S_ANI]
+                    [-nc COV_THRESH] [-n_PRESET {normal,tight}]
+                    [--clusterAlg CLUSTERALG] [--SkipMash] [--SkipSecondary]
+                    [-g [GENOMES [GENOMES ...]]]
+                    work_directory
+
+positional arguments:
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+
+SYSTEM PARAMETERS:
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --dry             dry run- dont do anything (default: False)
+  -o, --overwrite       overwrite existing data in work folder (default:
+                        False)
+  -h, --help            show this help message and exit
+
+CLUSTERING PARAMETERS:
+  -ms MASH_SKETCH, --MASH_sketch MASH_SKETCH
+                        MASH sketch size (default: 1000)
+  -pa P_ANI, --P_ani P_ANI
+                        ANI threshold to form primary (MASH) clusters
+                        (default: 0.9)
+  --S_algorithm {ANIn,gANI}
+                        Algorithm for secondary clustering comaprisons
+                        (default: ANIn)
+  -sa S_ANI, --S_ani S_ANI
+                        ANI threshold to form secondary clusters (default:
+                        0.99)
+  -nc COV_THRESH, --cov_thresh COV_THRESH
+                        Minmum level of overlap between genomes when doing
+                        secondary comparisons (default: 0.1)
+  -n_PRESET {normal,tight}
+                        Presents to pass to nucmer
+                        tight   = only align highly conserved regions
+                        normal  = default ANIn parameters (default: normal)
+  --clusterAlg CLUSTERALG
+                        Algorithm used to cluster genomes (passed to
+                        scipy.cluster.hierarchy.linkage (default: average)
+  --SkipMash            Skip MASH clustering, just do secondary clustering on
+                        all genomes (default: False)
+  --SkipSecondary       Skip secondary clustering, just perform MASH
+                        clustering (default: False)
+
+I/O PARAMETERS:
+  -g [GENOMES [GENOMES ...]], --genomes [GENOMES [GENOMES ...]]
+                        genomes to cluster in .fasta format. Not necessary if
+                        already loaded sequences with the &quot;filter&quot; operation
+                        (default: None)
+</pre></div>
+</div>
 </div>
 <div class="section" id="choose">
 <h2>Choose<a class="headerlink" href="#choose" title="Permalink to this headline">¶</a></h2>
-<p>Coming soon</p>
+<p>Choose is the module that picks the best genome from each secondary cluster identified in <strong>Cluster</strong>. It does this based off of the formula:</p>
+<div class="math">
+\[score = A(completeness) + B(log_{10}(N50)) – C(contamination) – D(strain heterogeneity) + E(log_{10}(genome size))\]</div>
+<p>Where A-E are command-line arguments, and the genome with the highest score is the &#8220;best&#8221;. By default, A-E are 1,1,5,1,0, respectively.</p>
+<p>To see the command-line options, check the help:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep choose -h
+usage: dRep choose [-p PROCESSORS] [-d] [-o] [-h] [-comW COMPLETENESS_WEIGHT]
+                   [-conW CONTAMINATION_WEIGHT] [-N50W N50_WEIGHT]
+                   [-sizeW SIZE_WEIGHT] [-strW STRAIN_HETEROGENEITY_WEIGHT]
+                   [-c CLUSTER] [-t THRESHOLD] [-m {gANI,ANIn}]
+                   [-mc MINIMUM_COVERAGE]
+                   [-a {average,complete,weighted,single}]
+                   [--checkM_method {taxonomy_wf,lineage_wf}]
+                   work_directory
+
+positional arguments:
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+
+SYSTEM PARAMETERS:
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --dry             dry run- dont do anything (default: False)
+  -o, --overwrite       overwrite existing data in work folder (default:
+                        False)
+  -h, --help            show this help message and exit
+
+SCORRING CHRITERIA
+Based off of the formula: Completeness - Contamination + log(N50) + log(size):
+  -comW COMPLETENESS_WEIGHT, --completeness_weight COMPLETENESS_WEIGHT
+                        completeness weight (default: 1)
+  -conW CONTAMINATION_WEIGHT, --contamination_weight CONTAMINATION_WEIGHT
+                        contamination weight (default: 5)
+  -N50W N50_WEIGHT, --N50_weight N50_WEIGHT
+                        weight of log(genome N50) (default: 0.5)
+  -sizeW SIZE_WEIGHT, --size_weight SIZE_WEIGHT
+                        weight of log(genome size) (default: 0)
+  -strW STRAIN_HETEROGENEITY_WEIGHT, --strain_heterogeneity_weight STRAIN_HETEROGENEITY_WEIGHT
+                        strain heterogeneity weight (default: 1)
+
+RE-CLUSTER PRIMARY CLUSETERS:
+  -c CLUSTER, --cluster CLUSTER
+                        primary cluster to be adjusted (default: None)
+  -t THRESHOLD, --threshold THRESHOLD
+                        clustering threshold to apply (default: 0.99)
+  -m {gANI,ANIn}, --clustering_method {gANI,ANIn}
+                        Clustering method to apply (default: ANIn)
+  -mc MINIMUM_COVERAGE, --minimum_coverage MINIMUM_COVERAGE
+                        Minimum coverage for ANIn (default: 0.1)
+  -a {average,complete,weighted,single}, --clusterAlg {average,complete,weighted,single}
+                        Algorithm used to cluster genomes (passed to
+                        scipy.cluster.hierarchy.linkage) (default: average)
+
+OTHER:
+  --checkM_method {taxonomy_wf,lineage_wf}
+                        Either lineage_wf (more accurate) or taxonomy_wf
+                        (faster) (default: lineage_wf)
+</pre></div>
+</div>
 </div>
 <div class="section" id="analyze">
 <h2>Analyze<a class="headerlink" href="#analyze" title="Permalink to this headline">¶</a></h2>
-<p>Coming soon</p>
+<p>Analyze is the module that makes all of the figures. It also has the option to visualize how a secondary cluster would look with different parameters (for example, using ANIm instead of gANI). To do that, use the <code class="docutils literal"><span class="pre">RE-CLUSTER</span> <span class="pre">PRIMARY</span> <span class="pre">CLUSTERS</span></code> arguments. To make plots, just use the -pl argument.</p>
+<p>To see the command-line options, check the help:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep analyze -h
+usage: dRep analyze [-p PROCESSORS] [-d] [-o] [-h] [-c CLUSTER] [-t THRESHOLD]
+                    [-m {ANIn,gANI}] [-mc MINIMUM_COVERAGE]
+                    [-a {complete,average,single,weighted}]
+                    [-pl [PLOTS [PLOTS ...]]]
+                    work_directory
+
+positional arguments:
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+
+SYSTEM PARAMETERS:
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --dry             dry run- dont do anything (default: False)
+  -o, --overwrite       overwrite existing data in work folder (default:
+                        False)
+  -h, --help            show this help message and exit
+
+RE-CLUSTER PRIMARY CLUSETERS:
+  -c CLUSTER, --cluster CLUSTER
+                        primary cluster to be adjusted (default: None)
+  -t THRESHOLD, --threshold THRESHOLD
+                        clustering threshold to apply (default: 0.99)
+  -m {ANIn,gANI}, --clustering_method {ANIn,gANI}
+                        Clustering method to apply (default: ANIn)
+  -mc MINIMUM_COVERAGE, --minimum_coverage MINIMUM_COVERAGE
+                        Minimum coverage for ANIn (default: 0.1)
+  -a {complete,average,single,weighted}, --clusterAlg {complete,average,single,weighted}
+                        Algorithm used to cluster genomes (passed to
+                        scipy.cluster.hierarchy.linkage) (default: average)
+
+PLOTTING:
+  -pl [PLOTS [PLOTS ...]], --plots [PLOTS [PLOTS ...]]
+                        Plots. Input &#39;all&#39; or &#39;a&#39; to plot all
+                        1) Primary clustering dendrogram
+                        2) Secondary clustering dendrograms
+                        3) Secondary clusters heatmaps
+                        4) Comparison scatterplots
+                        5) Cluster scorring plot
+                        6) Winning genomes
+                         (default: None)
+</pre></div>
+</div>
+</div>
+<div class="section" id="evaluate">
+<h2>Evaluate<a class="headerlink" href="#evaluate" title="Permalink to this headline">¶</a></h2>
+<p>Evaluate performs a series of checks to alert the user to potential problems with de-replication. It has two things that it can look for:</p>
+<p><strong>de-replicated genome similarity</strong>- this is comparing all of the de-replicated genomes to each other and making sure they&#8217;re not too similar. This is to try and catch cases where similar genomes were split into different primary clusters, and thus failed to be de-replicated. <em>Depending on the number of de-replicated genomes, this can take a while</em></p>
+<p><strong>secondary clusters that were almost different</strong>- this alerts you to cases where genomes are on the edge between being considered &#8220;same&#8221; or &#8220;different&#8221;, depending on the clustering parameters you used. <em>This module reads the parameters you used during clustering from the work directory, so you don&#8217;t need to specify them again.</em></p>
+<p>To see the command-line options, check the help:</p>
+<div class="highlight-python"><div class="highlight"><pre>mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep evaluate -h
+usage: dRep evaluate [-p PROCESSORS] [-d] [-o] [-h] [--warn_dist WARN_DIST]
+                     [--warn_sim WARN_SIM] [--warn_aln WARN_ALN]
+                     [-e [EVALUATE [EVALUATE ...]]]
+                     work_directory
+
+positional arguments:
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+
+SYSTEM PARAMETERS:
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --dry             dry run- dont do anything (default: False)
+  -o, --overwrite       overwrite existing data in work folder (default:
+                        False)
+  -h, --help            show this help message and exit
+
+WARNINGS:
+  --warn_dist WARN_DIST
+                        How far from the threshold to throw cluster warnings
+                        (default: 0.25)
+  --warn_sim WARN_SIM   Similarity threshold for warnings between dereplicated
+                        genomes (default: 0.98)
+  --warn_aln WARN_ALN   Minimum aligned fraction for warnings between
+                        dereplicated genomes (ANIn) (default: 0.25)
+
+EVALUATIONS:
+  -e [EVALUATE [EVALUATE ...]], --evaluate [EVALUATE [EVALUATE ...]]
+                        Things to evaluate Input &#39;all&#39; or &#39;a&#39; to evaluate all
+                        1) Evaluate de-replicated genome similarity
+                        2) Throw warnings for clusters that were almost different
+                        3) Generate a database of information on winning genomes
+                         (default: None)
+</pre></div>
+</div>
+</div>
+<div class="section" id="other">
+<h2>Other<a class="headerlink" href="#other" title="Permalink to this headline">¶</a></h2>
+<p>The other modules, <strong>adjust</strong> and <strong>bonus</strong>, are not part of the normal de-replication pipeline but can be very useful.</p>
+<p><strong>adjust</strong> allows the user to change the secondary clustering settings for a single primary cluster. This can be especially helpful when following up on a warning (generated using <strong>evaluate</strong>) to change the way the cluster is made.</p>
+<p><strong>bonus</strong> consists of operations that don&#8217;t really fit in with the functions of dRep, but can be helpful. Currently the only thing it can do is determine taxonomy of your bins. This is done using centrifuge, similar to how <a class="reference external" href="http://merenlab.org/2016/06/18/importing-taxonomy/">anvi&#8217;o does it</a>. If you choose to use this option, the taxonomy of genome will be shown with the filename in most figures.</p>
 </div>
 </div>
 
@@ -206,6 +513,7 @@
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 

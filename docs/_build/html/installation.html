@@ -32,7 +32,7 @@
   
     <link rel="top" title="drep 3.0.0 documentation" href="index.html"/>
         <link rel="next" title="Quick Start" href="quick_start.html"/>
-        <link rel="prev" title="dRep" href="index.html"/> 
+        <link rel="prev" title="Overview" href="overview.html"/> 
 
   
   <script src="https://cdnjs.cloudflare.com/ajax/libs/modernizr/2.6.2/modernizr.min.js"></script>
@@ -64,13 +64,51 @@
           
           
               <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="overview.html">Overview</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#genome-de-replication">Genome de-replication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="overview.html#genome-comparison">Genome comparison</a></li>
+</ul>
+</li>
 <li class="toctree-l1 current"><a class="current reference internal" href="">Installation</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="#using-pip">Using pip</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#dependencies">Dependencies</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#testing">Testing</a></li>
 <li class="toctree-l2"><a class="reference internal" href="#pyenv">pyenv</a></li>
 </ul>
 </li>
-<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a></li>
+<li class="toctree-l1"><a class="reference internal" href="quick_start.html">Quick Start</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#de-replication">De-replication</a></li>
+<li class="toctree-l2"><a class="reference internal" href="quick_start.html#genome-comparison">Genome comparison</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="interpreting_output.html">Interpreting Output</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#figures">Figures</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#warnings">Warnings</a></li>
+<li class="toctree-l2"><a class="reference internal" href="interpreting_output.html#other-data">Other data</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="module_descriptions.html">Module Descriptions</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#work-directory">Work Directory</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#filter">Filter</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#cluster">Cluster</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#choose">Choose</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#analyze">Analyze</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#evaluate">Evaluate</a></li>
+<li class="toctree-l2"><a class="reference internal" href="module_descriptions.html#other">Other</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-defines-genomes-as-being-same">What defines genomes as being &#8220;same&#8221;?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-is-the-minimum-genome-completeness-allowed-in-analysis">What is the minimum genome completeness allowed in analysis?</a></li>
+<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest-of-the-parameters">The rest of the parameters</a></li>
+</ul>
+</li>
+<li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a><ul>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#accessing-internal-information">Accessing Internal Information</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#caching">Caching</a></li>
+<li class="toctree-l2"><a class="reference internal" href="advanced_use.html#api">API</a></li>
+</ul>
+</li>
 </ul>
 
           
@@ -108,6 +146,8 @@
             
   <div class="section" id="installation">
 <h1>Installation<a class="headerlink" href="#installation" title="Permalink to this headline">¶</a></h1>
+<div class="section" id="using-pip">
+<h2>Using pip<a class="headerlink" href="#using-pip" title="Permalink to this headline">¶</a></h2>
 <p>To install dRep, simply run</p>
 <div class="highlight-python"><div class="highlight"><pre>$ pip install drep
 </pre></div>
@@ -121,6 +161,7 @@ $ pip install .
 </pre></div>
 </div>
 <p>That&#8217;s it!</p>
+</div>
 <div class="section" id="dependencies">
 <h2>Dependencies<a class="headerlink" href="#dependencies" title="Permalink to this headline">¶</a></h2>
 <p>dRep requires many other great programs to run. Not all dependencies are needed for all operations</p>
@@ -131,6 +172,7 @@ $ pip install .
 <li><a class="reference external" href="https://ani.jgi-psf.org/html/download.php?">gANI (aka CalculateANI)</a></li>
 <li><a class="reference external" href="https://omictools.com/centrifuge-tool">Centrifuge</a></li>
 </ul>
+<p>Programs need to be installed to the system path, so that you can call them from anywhere on your computer.</p>
 </div>
 <div class="section" id="testing">
 <h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
@@ -149,6 +191,10 @@ test_suite.py ...
 === 3 passed in 506.46 seconds ===
 </pre></div>
 </div>
+<dl class="docutils">
+<dt>Or just run the large integrative test::</dt>
+<dd><a class="reference external" href="mailto:mattolm&#37;&#52;&#48;biotite">mattolm<span>&#64;</span>biotite</a> ~/Programs/drep/tests $ python test_suite.py</dd>
+</dl>
 </div>
 <div class="section" id="pyenv">
 <h2>pyenv<a class="headerlink" href="#pyenv" title="Permalink to this headline">¶</a></h2>
@@ -157,6 +203,7 @@ test_suite.py ...
 <div class="highlight-python"><div class="highlight"><pre>$ pyenv global anaconda3-4.1.0 anaconda2-4.1.0
 </pre></div>
 </div>
+<p>Alternatively, you could add python2 to your CheckM shebang line (though I have not confirmed that this works)</p>
 </div>
 </div>
 
@@ -169,7 +216,7 @@ test_suite.py ...
         <a href="quick_start.html" class="btn btn-neutral float-right" title="Quick Start">Next <span class="fa fa-arrow-circle-right"></span></a>
       
       
-        <a href="index.html" class="btn btn-neutral" title="dRep"><span class="fa fa-arrow-circle-left"></span> Previous</a>
+        <a href="overview.html" class="btn btn-neutral" title="Overview"><span class="fa fa-arrow-circle-left"></span> Previous</a>
       
     </div>
   
@@ -208,6 +255,7 @@ test_suite.py ...
       <script type="text/javascript" src="_static/jquery.js"></script>
       <script type="text/javascript" src="_static/underscore.js"></script>
       <script type="text/javascript" src="_static/doctools.js"></script>
+      <script type="text/javascript" src="https://cdn.mathjax.org/mathjax/latest/MathJax.js?config=TeX-AMS-MML_HTMLorMML"></script>
 
   
 
