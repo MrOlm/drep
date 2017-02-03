@@ -13,7 +13,7 @@ import drep.d_filter as d_filter
 def d_bonus_wrapper(wd,**kwargs):
     logging.info("Loading work directory")
     wd = drep.WorkDirectory.WorkDirectory(wd)
-    logging.info(str(wd))
+    logging.debug(str(wd))
 
     if kwargs.get('run_tax'):
         logging.info('Running tax')
@@ -25,7 +25,7 @@ def run_taxonomy(wd, **kwargs):
     prod_dir = wd.get_dir('prodigal')
     cent_dir = wd.get_dir('centrifuge')
     if wd.hasDb('Tdb') and (kwargs.get('overwrite',False) == False):
-        print('Tdb already exists- run with overwrite to overwrite')
+        logging.error('Tdb already exists- run with overwrite to overwrite')
         sys.exit()
 
     # Run prodigal
@@ -57,13 +57,13 @@ def run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs):
             cmds.append(gen_centrifuge_cmd(genes,cent,**kwargs))
 
     if len(cmds) > 1:
-        print('Running Centrifuge')
+        logging.info('Running Centrifuge')
         for cmd in cmds:
-            logging.info(' '.join(cmd))
+            logging.debug(' '.join(cmd))
         drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
 
     else:
-        print('Past centrifuge runs found- will not re-run')
+        logging.info('Past centrifuge runs found- will not re-run')
 
 def gen_read2bin(gene_files):
     r2b = {}
@@ -84,7 +84,7 @@ def parse_centrifuge(Bdb, cent_dir, **kwargs):
                     "{0}{1}_report.tsv".format(cent_dir,genome))
 
         if hits.empty:
-            print("No centrifuge hits found for {0}- skipping".format(genome))
+            logging.debug("No centrifuge hits found for {0}- skipping".format(genome))
             continue
 
         x = gen_phylo_db(hits)
@@ -162,12 +162,12 @@ def get_scaff(read):
 def gen_centrifuge_cmd(genes,cent,**kwargs):
     cent_exe = shutil.which('centrifuge')
     if cent_exe == None:
-        print("Can't find centrifuge- make sure it's in your system path")
+        logging.error("Can't find centrifuge- make sure it's in your system path")
         sys.exit()
 
     cent_indicies = kwargs.get('cent_index', False)
     if cent_indicies == False:
-        print("Can't find centrifuge index- must provide for taxonomy")
+        logging.error("Can't find centrifuge index- must provide for taxonomy")
         sys.exit()
 
     cmd = [cent_exe, '-f', '-x', cent_indicies, genes, '-S', "{0}_hits.tsv".format(cent),\

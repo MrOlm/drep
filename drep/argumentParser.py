@@ -101,7 +101,7 @@ def parse_args(args):
     Compflags.add_argument("-pa","--P_ani",help="ANI threshold to form primary (MASH) clusters",
                         default=0.9, type = float)
     Compflags.add_argument("--S_algorithm", help="Algorithm for secondary clustering comaprisons",
-                        default='ANIn', choices={'ANIn','gANI','mauve'})
+                        default='ANIn', choices={'ANIn','gANI'})
     Compflags.add_argument("-sa", "--S_ani", help="ANI threshold to form secondary clusters",
                         default=0.99, type = float)
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
@@ -206,7 +206,7 @@ def parse_args(args):
     '''
 
     choose_parser = subparsers.add_parser("choose",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, scoring_parent, adjust_parent], add_help=False)
+                    parents = [parent_parser, scoring_parent], add_help=False)
 
     # Other
     Oflags = choose_parser.add_argument_group('OTHER')

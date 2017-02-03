@@ -78,7 +78,7 @@ def d_analyze_wrapper(wd, **kwargs):
     wd = drep.WorkDirectory.WorkDirectory(wd)
 
     if kwargs.get('plots') != None:
-        logging.info("calling cluster_vis_wrapper")
+        logging.debug("calling cluster_vis_wrapper")
 
         # If taxonomy info exists, add it
         if kwargs.get('include_taxonomy',True):
@@ -90,7 +90,7 @@ def d_analyze_wrapper(wd, **kwargs):
         cluster_vis_wrapper(wd, **kwargs)
 
     if kwargs.get('cluster') != None:
-        logging.info("calling cluster_test_wrapper")
+        logging.debug("calling cluster_test_wrapper")
         cluster_test_wrapper(wd, **kwargs)
 
 def cluster_vis_wrapper(wd, **kwargs):
@@ -121,24 +121,24 @@ def cluster_vis_wrapper(wd, **kwargs):
             PL_thresh = 1-PL_thresh
 
         # Make the plot
-        print("Plotting primary dendrogram...")
+        logging.info("Plotting primary dendrogram...")
         plot_MASH_dendrogram(Mdb, Cdb, Plinkage, threshold = PL_thresh,\
                         plot_dir = plot_dir)
 
     # 2) Secondary clustering dendrogram
     if '2' in to_plot:
-        print("Plotting secondary dendrograms...")
+        logging.info("Plotting secondary dendrograms...")
 
         if 'Blank' in wd.get_db('Ndb'):
-            print("Nope- you don't have secondary clusters. Skipping")
+            logging.error("Nevermind- you don't have secondary clusters. Skipping plot 2")
         else:
             plot_secondary_dendrograms(wd, plot_dir, **kwargs)
 
     # 3) Secondary clusters heatmap
     if '3' in to_plot:
         # Load the required data
-        print("Plotting secondary clusters heatmaps...")
-        print("WRITE THIS PART")
+        logging.info("Plotting secondary clusters heatmaps...")
+        logging.error("This part hasn't been written yet ¯\_(ツ)_/¯")
 
     # 4) Comparison scatterplots
     if '4' in to_plot:
@@ -150,10 +150,10 @@ def cluster_vis_wrapper(wd, **kwargs):
         Cdb = wd.get_db('Cdb')
 
         # Make the plot
-        print("Plotting Scatterplots...")
+        logging.info("Plotting Scatterplots...")
 
         if 'Blank' in wd.get_db('Ndb'):
-            print("Nope- you don't have secondary clusters. Skipping")
+            logging.error("Nope- you don't have secondary clusters. Skipping")
         else:
             plot_scatterplots(Mdb, Ndb, Cdb, plot_dir = plot_dir)
 
@@ -166,7 +166,7 @@ def cluster_vis_wrapper(wd, **kwargs):
         Chdb = wd.get_db('Chdb')
 
         # Make the plot
-        print("Plotting bin scorring plot...")
+        logging.info("Plotting bin scorring plot...")
         plot_winner_scoring_complex(Wdb, Sdb, Cdb, Chdb, plot_dir = plot_dir, **kwargs)
 
     # 6) Winning plot
@@ -179,7 +179,7 @@ def cluster_vis_wrapper(wd, **kwargs):
         Widb = wd.get_db('Widb')
 
         # Make the plot
-        print("Plotting winning genomes plot...")
+        logging.info("Plotting winning genomes plot...")
         plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir = plot_dir, **kwargs)
 
 def cluster_test_wrapper(wd, **kwargs):
@@ -251,7 +251,7 @@ def parse_options(options, args):
                     if letter in options:
                         to_plot.append(letter)
                     else:
-                        print("Can't interpret argument {0}- quitting".format(arg))
+                        logging.error("Can't interpret argument {0}- quitting".format(arg))
                         sys.exit()
 
     return to_plot
@@ -1051,32 +1051,6 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
             pp.savefig(fig)
         plt.show()
         plt.close(fig)
-
-    '''
-    # Make the ANIn heatmap
-    dd = d.pivot("reference","querry","ani")
-    _make_heatmap(dd)
-    plt.title("ANIn heatmap")
-
-    # Save this page
-    if save == True:
-        fig = plt.gcf()
-        pp.savefig(fig)
-    plt.show()
-    plt.close(fig)
-
-    # Make the ANIn coverage heatmap
-    dd = d.pivot("reference","querry","alignment_coverage")
-    _make_heatmap(dd)
-    plt.title("ANIn alignment_coverage heatmap")
-
-    # Save this page
-    if save == True:
-        fig = plt.gcf()
-        pp.savefig(fig)
-    plt.show()
-    plt.close(fig)
-    '''
 
     # Save the .pdf
     if save:

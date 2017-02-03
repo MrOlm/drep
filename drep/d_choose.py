@@ -34,7 +34,7 @@ def d_choose_wrapper(wd,**kwargs):
     # Load the WorkDirectory.
     logging.info("Loading work directory")
     workDirectory = drep.WorkDirectory.WorkDirectory(wd)
-    logging.info(str(workDirectory))
+    logging.debug(str(workDirectory))
 
     # Make sure you have Cdb
     Cdb = validate_arguments(workDirectory, **kwargs)
@@ -44,12 +44,10 @@ def d_choose_wrapper(wd,**kwargs):
         Chdb = workDirectory.get_db('Chdb')
         validate_Chdb(Chdb, Cdb)
 
-        print("Chdb (CheckM information) found and validated")
         logging.info("CheckM db found- will use")
 
     # If Chdb doesn't exist, make it
     else:
-        print("Chdb (CheckM information) not found- running CheckM now")
         logging.info("Chdb (CheckM information) not found- running CheckM now")
 
         bdb = workDirectory.get_db('Bdb')
@@ -64,12 +62,12 @@ def d_choose_wrapper(wd,**kwargs):
 
     # Make a "winning genomes" folder and populate it
     if workDirectory.hasDb('Bdb'):
-        logging.info('saving dereplicated genomes')
+        logging.debug('saving dereplicated genomes')
         Bdb = workDirectory.get_db('Bdb')
 
         output_folder = workDirectory.location + '/dereplicated_genomes/'
         if os.path.exists(output_folder):
-            logging.info("{0} already exists: removing and remaking".format(output_folder))
+            logging.debug("{0} already exists: removing and remaking".format(output_folder))
             shutil.rmtree(output_folder)
         dm.make_dir(output_folder,dry=kwargs.get('dry',False),\
                         overwrite=kwargs.get('overwrite',False))
@@ -78,7 +76,7 @@ def d_choose_wrapper(wd,**kwargs):
             loc = Bdb['location'][Bdb['genome'] == genome].tolist()[0]
             shutil.copy2(loc, "{0}{1}".format(output_folder,genome))
 
-        print("Done! Dereplicated genomes saved at {0}".format(output_folder))
+        logging.info("Done! Dereplicated genomes saved at {0}".format(output_folder))
 
     else:
         logging.info("Don't have Bdb, so can't populate genomes")
@@ -88,11 +86,11 @@ def choose_winners(Cdb,Chdb,**kwargs):
     # Generate Sdb
     genomes = list(Cdb['genome'].unique())
     Sdb = score_genomes(genomes, Chdb, **kwargs)
-    logging.info("Sdb finished")
+    logging.debug("Sdb finished")
 
     # Generate Wdb
     Wdb = pick_winners(Sdb,Cdb)
-    logging.info("Wdb finished")
+    logging.debug("Wdb finished")
 
     return Sdb, Wdb
 
@@ -140,8 +138,8 @@ def score_row(row, **kwargs):
 
 def validate_arguments(wd, **kwargs):
     if not wd.hasDb('Cdb'):
-        logging.info("Can't find Cdb- quitting")
-        print("Cdb is not found in the work directory- you must run cluster before you ",
+        logging.error("Can't find Cdb- quitting")
+        logging.error("Cdb is not found in the work directory- you must run cluster before you ",
                 + "can choose")
         sys.exit()
 
@@ -150,8 +148,7 @@ def validate_arguments(wd, **kwargs):
 def validate_Chdb(Chdb, Cdb):
     for genome in Cdb['genome'].unique():
         if genome not in Chdb['Bin Id'].tolist():
-            print("{0} is missing from Chdb- I'm going to crash now".format(genome))
-            logging.info("{0} is missing from Chdb- I'm going to crash now")
+            logging.error("{0} is missing from Chdb- I'm going to crash now".format(genome))
             sys.exit()
 
 def test_choose():

@@ -6,6 +6,16 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 
 ## [Unrealeased]
 
+## [0.3.2]
+### Fixed
+- Time estimates now take into account threading
+- Fixed the "choose" operation erroneously taking the "adjust" arguments as well
+- Removed the 'mauve' option as a secondary algorithm
+- Fixed a lot of erroneous logging
+
+### Changed
+- Removed a bunch of commented-out methods
+
 ## [0.3.1]
 ### Changed
 - READme updated

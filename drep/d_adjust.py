@@ -18,7 +18,7 @@ def d_adjust_wrapper(wd,**kwargs):
     # Load the WorkDirectory.
     logging.info("Loading work directory")
     wd = drep.WorkDirectory.WorkDirectory(wd)
-    logging.info(str(wd))
+    logging.debug(str(wd))
 
     if kwargs.get('cluster') != None:
         logging.info('adjusting cluster {0}'.format(kwargs.get('cluster')))
@@ -39,13 +39,13 @@ def remove_cluster_wrapper(wd, **kwargs):
         if type == 'primary_cluster':
             # Make sure cluster is in Cdb
             if int(cluster) not in Cdb[type].tolist():
-                print("{0} is not in Cdb- quitting".format(cluster))
+                logging.error("{0} is not in Cdb- quitting".format(cluster))
                 sys.exit()
 
             # Make sure cluster is Wdb
             W_Pclusters = [x.split('_')[0] for x in Wdb['cluster'].tolist()]
             if cluster not in W_Pclusters:
-                print("{0} is not in Wdb- quitting".format(cluster))
+                logging.error("{0} is not in Wdb- quitting".format(cluster))
                 sys.exit()
 
             # Remove the cluster
@@ -55,12 +55,12 @@ def remove_cluster_wrapper(wd, **kwargs):
 
             # Make sure cluster is in Cdb
             if cluster not in Cdb[type].tolist():
-                print("{0} is not in Cdb- quitting".format(cluster))
+                logging.error("{0} is not in Cdb- quitting".format(cluster))
                 sys.exit()
 
             # Make sure cluster is in Wdb
             if cluster not in Wdb['cluster'].tolist():
-                print("{0} is not in Wdb- quitting".format(cluster))
+                logging.error("{0} is not in Wdb- quitting".format(cluster))
                 sys.exit()
 
             # Remove the cluster
@@ -75,7 +75,7 @@ def remove_primary_cluster(Rcluster, wd, **kwargs):
     # If this is a singleton, just remove the associated secondary cluster
     if len(Cdb['genome'][Cdb['primary_cluster'] == int(Rcluster)].unique()) == 1:
         Rsecondary = "{0}_0".format(Rcluster)
-        print("{0} is a primary singleton- will remove {1} instead".format(Rcluster, Rsecondary))
+        logging.error("{0} is a primary singleton- will remove {1} instead".format(Rcluster, Rsecondary))
         remove_secondary_cluster(Rsecondary, wd, **kwargs)
         return
 
@@ -90,7 +90,7 @@ def remove_primary_cluster(Rcluster, wd, **kwargs):
             wd.location, Rcluster)
     assert os.path.isfile(Rpickle)
 
-    print("will remove cluster {0}, genomes {1}, and pickle {2}".format(Rcluster, \
+    logging.info("will remove cluster {0}, genomes {1}, and pickle {2}".format(Rcluster, \
             ' '.join(Rgenomes), os.path.basename(Rpickle)))
 
     # Remove cluster from Wdb
@@ -111,7 +111,7 @@ def remove_primary_cluster(Rcluster, wd, **kwargs):
     wd.store_db(newCdb,'Cdb',overwrite=True)
     wd.store_db(newWdb,'Wdb',overwrite=True)
 
-    print("done")
+    logging.info("done")
 
 
 def remove_secondary_cluster(Rcluster, wd, **kwargs):
@@ -123,7 +123,7 @@ def remove_secondary_cluster(Rcluster, wd, **kwargs):
     Rgenome = Wdb['genome'][Wdb['cluster'] == Rcluster].tolist()[0]
     assert os.path.isfile('{0}/dereplicated_genomes/{1}'.format(wd.location, Rgenome))
 
-    print("will remove {0} and genome {1}".format(Rcluster, Rgenome))
+    logging.info("will remove {0} and genome {1}".format(Rcluster, Rgenome))
 
     # Remove cluster from Wdb
     newWdb = Wdb[Wdb['cluster'] != Rcluster]
@@ -138,7 +138,7 @@ def remove_secondary_cluster(Rcluster, wd, **kwargs):
     wd.store_db(newCdb,'Cdb',overwrite=True)
     wd.store_db(newWdb,'Wdb',overwrite=True)
 
-    print("done")
+    logging.info("done")
 
 def cluster_type(cluster):
     if '_' in cluster:
@@ -150,7 +150,7 @@ def adjust_cluster_wrapper(wd, **kwargs):
     # Validate arguments
     cluster = kwargs.get('cluster')
     if cluster == None:
-        print("Must specify a cluster")
+        logging.error("Must specify a cluster")
         sys.exit()
     comp_method = kwargs.get('clustering_method')
     clust_method = kwargs.get('clusterAlg')
@@ -186,7 +186,7 @@ def adjust_cluster_wrapper(wd, **kwargs):
     arguments = {'linkage_method':clust_method,'linkage_cutoff':threshold,\
                         'comparison_algorithm':comp_method,'minimum_coverage':cov_thresh}
     pickle_name = "secondary_linkage_cluster_{0}.pickle".format(cluster)
-    logging.info('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
+    logging.debug('Saving secondary_linkage pickle {1} to {0}'.format(data_folder,\
                                                         pickle_name))
     with open(data_folder + pickle_name, 'wb') as handle:
         pickle.dump(linkage, handle)
@@ -218,7 +218,7 @@ def adjust_cluster_wrapper(wd, **kwargs):
 
         if change:
             # Change the ./dereplicated genomes thing
-            print("Remaking ./dereplicated genomes...")
+            logging.info("Remaking ./dereplicated genomes...")
             output_folder = wd.location + '/dereplicated_genomes/'
             dm.clobber_dir(output_folder,dry=kwargs.get('dry',False),\
                             overwrite=True)
@@ -234,7 +234,6 @@ def accounce_changes(newWdb, oriWdb):
         w1 = newWdb['genome'][newWdb['cluster'] == cluster].unique()[0]
         if cluster not in oriWdb['cluster'].tolist():
             change = "{0} is the winner of the new cluster {1}".format(w1,cluster)
-            print(change)
             logging.info(change)
             changes = True
             continue
@@ -242,7 +241,6 @@ def accounce_changes(newWdb, oriWdb):
         if w1 != w2:
             change = "the winner of cluster {0} is now {1} (was {2})".format(\
                         cluster, w1, w2)
-            print(change)
             logging.info(change)
             changes = True
             continue
@@ -250,13 +248,11 @@ def accounce_changes(newWdb, oriWdb):
     for cluster in oriWdb['cluster'].unique():
         if cluster not in newWdb['cluster'].tolist():
             change = "cluster {0} no longer exists".format(cluster)
-            print(change)
             logging.info(change)
             changes = True
 
     if not changes:
         change = "No secondary clusters were made or destroyed, and none have new winners"
-        print(change)
         logging.info(change)
 
     return changes

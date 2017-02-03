@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 ###############################################################################
 #
@@ -13,7 +13,7 @@ import logging
 
 from drep import argumentParser
 from drep.controller import Controller
-from WorkDirectory import WorkDirectory
+from drep.WorkDirectory import WorkDirectory
 
 def load_test_genomes():
     return glob.glob(os.path.join(str(os.getcwd()) + '/genomes/*'))

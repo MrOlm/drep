@@ -59,17 +59,17 @@ def d_filter_wrapper(wd,**kwargs):
 
         # Run checkM
         if kwargs.get('Chdb',None) != None:
-            logging.info("Loading provided CheckM data...")
+            logging.debug("Loading provided CheckM data...")
             Chdb = kwargs.get('Chdb')
             validate_chdb(Chdb, bdb)
 
         elif workDirectory.hasDb('Chdb'):
-            logging.info("Loading CheckM data from work directory...")
+            logging.debug("Loading CheckM data from work directory...")
             Chdb = workDirectory.get_db('Chdb')
             validate_chdb(Chdb, bdb)
 
         else:
-            logging.info("Running CheckM")
+            logging.debug("Running CheckM")
             Chdb = run_checkM_wrapper(bdb, workDirectory, **kwargs)
 
         # Filter bdb
@@ -105,7 +105,7 @@ def filter_bdb(bdb, chdb, **kwargs):
     keep_genomes = list(db['Bin Id'].unique())
     bdb = bdb[bdb['genome'].isin(keep_genomes)]
 
-    print("{0:.2f}% of genomes passed checkM filtering".format((len(keep_genomes)/len(start_genomes))*100))
+    logging.info("{0:.2f}% of genomes passed checkM filtering".format((len(keep_genomes)/len(start_genomes))*100))
 
     return bdb
 
@@ -115,7 +115,7 @@ def filter_bdb_length(bdb, min_length, verbose=False):
     x = bdb[bdb['length'] >= min_length]
     end = len(x['location'].unique())
 
-    print("{0:.2f}% of genomes passed length filtering".format((end/start)*100))
+    logging.info("{0:.2f}% of genomes passed length filtering".format((end/start)*100))
 
     return x
 
@@ -124,10 +124,10 @@ def validate_chdb(Chdb, bdb):
     b_genomes = bdb['genome'].tolist()
     for genome in b_genomes:
         if genome not in Chdb['Bin Id'].tolist():
-            print("{0} is not in checkM db".format(genome))
+            logging.error("{0} is not in checkM db".format(genome))
             quit = True
     if quit:
-        print("New checkM db needs to be made")
+        logging.error("New checkM db needs to be made")
         sys.exit()
     return
 
@@ -178,7 +178,7 @@ def run_checkM_wrapper(bdb, workDirectory, **kwargs):
     prod_folder = workDirectory.location + '/data/prodigal/'
     if not os.path.exists(prod_folder):
         os.makedirs(prod_folder)
-    print("Running prodigal")
+    logging.info("Running prodigal")
     run_prodigal(bdb, prod_folder)
 
     # Run checkM
@@ -237,14 +237,14 @@ def run_prodigal(bdb, out_dir, verbose=True, **kwargs):
         drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
     else:
         if verbose:
-            print("Past prodigal runs found- will not re-run")
+            logging.info("Past prodigal runs found- will not re-run")
 
 def run_checkM(genome_folder,checkm_outf,**kwargs):
     t = str(kwargs.get('processors','6'))
     #check_exe = '/home/mattolm/.pyenv/versions/anaconda2-4.1.0/bin/checkm'
     loc = shutil.which('checkm')
     if loc == None:
-        print('Cannot locate the program {0}- make sure its in the system path'\
+        logging.info('Cannot locate the program {0}- make sure its in the system path'\
             .format(checkm))
     check_exe = loc
 
@@ -259,7 +259,7 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
             checkm_outf + '/results.tsv','--tab_table','-t',str(t),'--pplacer_threads',\
             str(t),'-g','-x','faa']
 
-    logging.info("Running CheckM with command: {0}".format(cmd))
+    logging.debug("Running CheckM with command: {0}".format(cmd))
     dm.run_cmd(cmd,shell=False,quiet=False)
 
     # Run checkM again for the better table
@@ -270,14 +270,14 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     desired_file = checkm_outf + 'Chdb.tsv'
     cmd = [check_exe,'qa', lineage, checkm_outf, '-f', desired_file, '-t',\
             str(t), '--tab_table','-o', '2']
-    logging.info("Running CheckM with command: {0}".format(cmd))
+    logging.debug("Running CheckM with command: {0}".format(cmd))
     dm.run_cmd(cmd,shell=False,quiet=False)
 
     # Load table and return it
     try:
         chdb = pd.read_table(desired_file,sep='\t')
     except:
-        print("!!! checkM failed !!!\nIf using pyenv, make sure both python2 and " +\
+        logging.error("!!! checkM failed !!!\nIf using pyenv, make sure both python2 and " +\
             "python3 are available (for example: pyenv local anaconda2-4.1.0 " +\
             "anaconda3-4.1.0)")
         sys.exit()

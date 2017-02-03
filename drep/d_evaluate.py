@@ -13,15 +13,15 @@ import drep.d_analyze as dAnal
 
 def d_evaluate_wrapper(wd,**kwargs):
 
-    logging.info("Loading work directory")
+    logging.debug("Loading work directory")
     wd = drep.WorkDirectory.WorkDirectory(wd)
-    logging.info(str(wd))
+    logging.debug(str(wd))
 
     # Determine what to evaluate
     evs = kwargs.get('evaluate')
     options = ['1','2','3']
     to_eval = dAnal.parse_options(options, evs)
-    logging.info("evaluating {0}".format(to_eval))
+    logging.debug("evaluating {0}".format(to_eval))
 
     # 1) Evaluate de-replicated genome similarity
     if '1' in to_eval:
@@ -42,7 +42,7 @@ def d_evaluate_wrapper(wd,**kwargs):
         with open(warn_log, 'w') as file:
             file.write('\n'.join(warnings))
             file.write('\n')
-        print("{0} warnings generated: saved to {1}".format(len(warnings),warn_log))
+        logging.info("{0} warnings generated: saved to {1}".format(len(warnings),warn_log))
 
     # 3) Generate a database of information on winning genomes
     if '3' in to_eval:
@@ -52,7 +52,7 @@ def d_evaluate_wrapper(wd,**kwargs):
         # Save it
         wd.store_db(Widb,'Widb',overwrite=kwargs.get('overwrite',False))
         loc = wd.location + 'data_tables/Widb.csv'
-        print("Winner database saved to {0}".format(loc))
+        logging.info("Winner database saved to {0}".format(loc))
 
     return
 
@@ -77,7 +77,7 @@ def evaluate_warnings(wd, **kwargs):
     warn_dist = float(kwargs.get('warn_dist',.25))
 
     if 'Blank' in Ndb:
-        print ("Ndb is blank (was run with --SkipSecondary) - "\
+        logging.error("Ndb is blank (was run with --SkipSecondary) - "\
                 + "will skip cluster evaluation")
 
     if wd.hasDb('Wmdb'):
