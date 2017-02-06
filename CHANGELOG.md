@@ -4,9 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [Unrealeased]
+## [Uncommitted]
+
+## [0.3.3]
 ### Fixed
-- Small bug in telling the user when checkM is not in system path
+- Small bug in telling the user when checkM/prodigal is not in system path
+- Small bug preventing SkipSecondary from working
+
+### Added
+- Test for SkipSecondary
 
 ## [0.3.2]
 ### Fixed

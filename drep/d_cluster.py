@@ -133,7 +133,7 @@ def run_secondary_clustering(Bdb, Cdb, data_folder, **kwargs):
 
     # This should only happen when called from the wrapper, and Mdb need to be provided
     if SkipSecondary:
-        Mdb = kwargs.get('Mdb')
+        Mdb = kwargs.pop('Mdb')
 
         Cdb = gen_nomani_cdb(Cdb, Mdb, data_folder = data_folder, **kwargs)
         Ndb = pd.DataFrame({'Blank':[]})

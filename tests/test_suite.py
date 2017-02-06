@@ -140,10 +140,15 @@ class VerifyCluster():
         self.wd_loc = load_test_wd_loc()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
+        self.s_wd_loc = load_solutions_wd()
 
     def run(self):
         self.setUp()
         self.functional_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.skipsecondary_test()
         self.tearDown()
 
     def functional_test_1(self):
@@ -162,6 +167,29 @@ class VerifyCluster():
 
         # Confirm Bdb.csv is correct
         assert True
+
+    def skipsecondary_test(self):
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'-g'] +genomes \
+                + ['--SkipSecondary','-o'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Mdb.csv is correct
+        db1 = Swd.get_db('Mdb')
+        db2 =  wd.get_db('Mdb')
+        assert db1.equals(db2), "{0} is not the same!".format(d)
+
+        # Confirm Ndb.csv doesn't exist
+        db2 = wd.get_db('Ndb')
+        assert db2.empty, 'Ndb is not empty'
 
     def tearDown(self):
         logging.shutdown()
@@ -184,6 +212,6 @@ def test_dereplicate_wf():
     verifyDereplicateWf.run()
 
 if __name__ == '__main__':
-    test_dereplicate_wf()
+    test_cluster()
     print("Everything seems to be working swimmingly!")
     #print("Run with py.test")
