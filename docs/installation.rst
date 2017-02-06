@@ -10,7 +10,7 @@ $ pip install drep
 
 OR ::
 
-  $ git clone git@github.com:MrOlm/drep.git
+  $ git clone https://github.com/MrOlm/drep.git
 
   $ cd drep
 
@@ -26,6 +26,7 @@ dRep requires many other great programs to run. Not all dependencies are needed 
 * `Mash <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>`_
 * `Nucmer <http://mummer.sourceforge.net/>`_
 * `CheckM <http://ecogenomics.github.io/CheckM/>`_
+* `Prodigal <http://prodigal.ornl.gov/>`_
 * `gANI (aka CalculateANI) <https://ani.jgi-psf.org/html/download.php?>`_
 * `Centrifuge <https://omictools.com/centrifuge-tool>`_
 
@@ -34,23 +35,11 @@ Programs need to be installed to the system path, so that you can call them from
 Testing
 -------
 
-To make sure everything is installed correctly you can run the dRep test suite using py.test::
+To make sure everything is installed correctly you can run the dRep test suite::
 
  mattolm@biotite ~/Programs/drep $ cd drep/tests
 
- mattolm@biotite ~/Programs/drep/tests $ py.test
-
- === test session starts ===
- platform linux -- Python 3.5.1, pytest-3.0.5, py-1.4.32, pluggy-0.4.0
- rootdir: /home/mattolm/Programs/drep, inifile:
- collected 3 items
-
- test_suite.py ...
-
- === 3 passed in 506.46 seconds ===
-
-Or just run the large integrative test::
-  mattolm@biotite ~/Programs/drep/tests $ python test_suite.py
+mattolm@biotite ~/Programs/drep/tests $ python test_suite.py
 
 pyenv
 -----

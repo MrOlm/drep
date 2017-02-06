@@ -223,6 +223,11 @@ def calc_n50(loc):
 
 def run_prodigal(bdb, out_dir, verbose=True, **kwargs):
     t = kwargs.get('processors','6')
+    loc = shutil.which('prodigal')
+    if loc == None:
+        logging.error('Cannot locate the program {0}- make sure its in the system path'\
+            .format('prodigal'))
+        sys.exit()
 
     cmds = []
     for genome in bdb['location'].unique():
@@ -244,8 +249,9 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     #check_exe = '/home/mattolm/.pyenv/versions/anaconda2-4.1.0/bin/checkm'
     loc = shutil.which('checkm')
     if loc == None:
-        logging.info('Cannot locate the program {0}- make sure its in the system path'\
-            .format(checkm))
+        logging.error('Cannot locate the program {0}- make sure its in the system path'\
+            .format('checkm'))
+        sys.exit()
     check_exe = loc
 
     checkm_method = kwargs.get('checkM_method','lineage_wf')
