@@ -13,7 +13,7 @@ OR::
 
  $ dRep comparison_wf example_workD -g path/to/genomes*.fasta
 
-They are two ways of doing the same thing. To see a list of available modules, check the help::
+There are two ways of doing the same thing. To see a list of available modules, check the help::
 
   mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep -h
 
@@ -167,7 +167,7 @@ Choose is the module that picks the best genome from each secondary cluster iden
 
 .. math:: score = A(completeness) + B(log_{10}(N50)) – C(contamination) – D(strain heterogeneity) + E(log_{10}(genome size))
 
-Where A-E are command-line arguments, and the genome with the highest score is the "best". By default, A-E are 1,1,5,1,0, respectively.
+Where A-E are command-line arguments, and the genome with the highest score is the "best". By default, A-E are 1,0.5,5,1,0, respectively.
 
 To see the command-line options, check the help::
 
