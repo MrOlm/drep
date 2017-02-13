@@ -100,7 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-defines-genomes-as-being-same">What defines genomes as being &#8220;same&#8221;?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-is-the-minimum-genome-completeness-allowed-in-analysis">What is the minimum genome completeness allowed in analysis?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest-of-the-parameters">The rest of the parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest">The Rest</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a><ul>
@@ -148,7 +148,7 @@
 <h1>Interpreting Output<a class="headerlink" href="#interpreting-output" title="Permalink to this headline">¶</a></h1>
 <p>dRep produces a variety of output in the work directory depending on which operations are run.</p>
 <p>To explain the figures below, dRep <code class="docutils literal"><span class="pre">dereplicate_wf</span></code> was run on a set of 5 randomly chosen <em>Klebsiella oxytoca</em> isolate genomes as follows:</p>
-<div class="highlight-python"><div class="highlight"><pre>mattolm@biotite /data8/testing_Datasets/Klebsiella_oxytoca $ dRep dereplicate_wf complete_only -g *.fna --S_algorithm gANI
+<div class="highlight-python"><div class="highlight"><pre>$ dRep dereplicate_wf complete_only -g *.fna --S_algorithm gANI
 </pre></div>
 </div>
 <div class="admonition seealso">
@@ -165,7 +165,7 @@
 <div class="section" id="figures">
 <h2>Figures<a class="headerlink" href="#figures" title="Permalink to this headline">¶</a></h2>
 <p>Figures are located within the work directory, in the folder <code class="docutils literal"><span class="pre">figures</span></code>:</p>
-<div class="highlight-python"><div class="highlight"><pre>mattolm@biotite /data8/Human/NIH_4/testing_Datasets/Klebsiella_ox $ ls complete_only/figures/
+<div class="highlight-python"><div class="highlight"><pre>$ ls complete_only/figures/
 Clustering_scatterplots.pdf
 Cluster_scoring.pdf
 Primary_clustering_dendrogram.pdf
@@ -194,7 +194,7 @@ Winning_genomes.pdf
 <div class="admonition note">
 <p class="first admonition-title">Note</p>
 <p>The above figure was made with the command:</p>
-<div class="last highlight-python"><div class="highlight"><pre>mattolm@biotite /data8/Human/NIH_4/testing_Datasets/Klebsiella_oxytoca $ dRep analyze complete_only/ -c 1
+<div class="last highlight-python"><div class="highlight"><pre>$ dRep analyze complete_only/ -c 1
 </pre></div>
 </div>
 </div>

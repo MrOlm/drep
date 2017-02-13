@@ -100,7 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-defines-genomes-as-being-same">What defines genomes as being &#8220;same&#8221;?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-is-the-minimum-genome-completeness-allowed-in-analysis">What is the minimum genome completeness allowed in analysis?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest-of-the-parameters">The rest of the parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest">The Rest</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a><ul>
@@ -158,7 +158,7 @@ $ dRep analyze example_workD -pl a
 <div class="highlight-python"><div class="highlight"><pre>$ dRep comparison_wf example_workD -g path/to/genomes*.fasta
 </pre></div>
 </div>
-<p>They are two ways of doing the same thing. To see a list of available modules, check the help:</p>
+<p>There are two ways of doing the same thing. To see a list of available modules, check the help:</p>
 <div class="highlight-python"><div class="highlight"><pre>mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep -h
 
                 ...::: dRep v0.2.0 :::...
@@ -308,7 +308,7 @@ I/O PARAMETERS:
 <p>Choose is the module that picks the best genome from each secondary cluster identified in <strong>Cluster</strong>. It does this based off of the formula:</p>
 <div class="math">
 \[score = A(completeness) + B(log_{10}(N50)) – C(contamination) – D(strain heterogeneity) + E(log_{10}(genome size))\]</div>
-<p>Where A-E are command-line arguments, and the genome with the highest score is the &#8220;best&#8221;. By default, A-E are 1,1,5,1,0, respectively.</p>
+<p>Where A-E are command-line arguments, and the genome with the highest score is the &#8220;best&#8221;. By default, A-E are 1,0.5,5,1,0, respectively.</p>
 <p>To see the command-line options, check the help:</p>
 <div class="highlight-python"><div class="highlight"><pre>mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep choose -h
 usage: dRep choose [-p PROCESSORS] [-d] [-o] [-h] [-comW COMPLETENESS_WEIGHT]

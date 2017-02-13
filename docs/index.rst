@@ -9,8 +9,7 @@ dRep
 de-replication of microbial genomes
 -----------------------------------
 
-The publication is `available on bioRxiv
-<https://www.youtube.com/watch?v=dQw4w9WgXcQ>`_.
+.. The publication is `available on bioRxiv <https://www.youtube.com/watch?v=dQw4w9WgXcQ>`_.
 
 Source code is `available on GitHub
 <https://github.com/MrOlm/drep>`_.
