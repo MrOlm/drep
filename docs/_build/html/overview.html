@@ -100,7 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-defines-genomes-as-being-same">What defines genomes as being &#8220;same&#8221;?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-is-the-minimum-genome-completeness-allowed-in-analysis">What is the minimum genome completeness allowed in analysis?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest-of-the-parameters">The rest of the parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest">The Rest</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a><ul>
@@ -147,7 +147,6 @@
   <div class="section" id="overview">
 <h1>Overview<a class="headerlink" href="#overview" title="Permalink to this headline">¶</a></h1>
 <p>dRep is a python program which performs rapid pair-wise comparison of genome sets. One of it&#8217;s major purposes is for genome de-replication, but it can do a lot more.</p>
-<p>The publication is <a class="reference external" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">available on bioRxiv</a>.</p>
 <p>Source code is <a class="reference external" href="https://github.com/MrOlm/drep">available on GitHub</a>.</p>
 <div class="section" id="genome-de-replication">
 <h2>Genome de-replication<a class="headerlink" href="#genome-de-replication" title="Permalink to this headline">¶</a></h2>
@@ -167,8 +166,7 @@
 <p>Genome comparison is simply comparing a list of genomes in a pair-wise manner. This allows identification of groups of organisms that share similar DNA content in terms of Average Nucleotide Identity (ANI).</p>
 <p>dRep performs this in two steps- first with a rapid primary algorithm (Mash), and second with a more sensitive algorithm (gANI). We can&#8217;t just use Mash because, while incredibly fast, it is not robust to genome incompletenss (see <a class="reference internal" href="choosing_parameters.html"><em>Choosing parameters</em></a>) and only provides an &#8220;estimate&#8221; of ANI. gANI is robust to genome incompleteness and is more accurate, but too slow to perform pair-wise comparisons of longer genome lists.</p>
 <p>dRep first compares all genomes using Mash, and then only runs the secondary algorithm (gANI or ANIm) on sets of genomes that have at least 90% Mash ANI. This results it a great decrease in the number of (slow) secondary comparisons that need to be run while maintaining the sensitivity of gANI.</p>
-<p>See the <a class="reference external" href="https://www.youtube.com/watch?v=dQw4w9WgXcQ">publication</a> for details</p>
-<img alt="_images/FigureC.png" src="_images/FigureC.png" />
+<img alt="_images/FigureD.png" src="_images/FigureD.png" />
 </div>
 </div>
 
