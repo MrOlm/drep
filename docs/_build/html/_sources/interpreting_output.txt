@@ -5,7 +5,7 @@ dRep produces a variety of output in the work directory depending on which opera
 
 To explain the figures below, dRep ``dereplicate_wf`` was run on a set of 5 randomly chosen *Klebsiella oxytoca* isolate genomes as follows::
 
-  mattolm@biotite /data8/testing_Datasets/Klebsiella_oxytoca $ dRep dereplicate_wf complete_only -g *.fna --S_algorithm gANI
+  $ dRep dereplicate_wf complete_only -g *.fna --S_algorithm gANI
 
 .. seealso::
   :doc:`overview`
@@ -22,7 +22,7 @@ Figures
 
 Figures are located within the work directory, in the folder ``figures``::
 
-  mattolm@biotite /data8/Human/NIH_4/testing_Datasets/Klebsiella_ox $ ls complete_only/figures/
+  $ ls complete_only/figures/
   Clustering_scatterplots.pdf
   Cluster_scoring.pdf
   Primary_clustering_dendrogram.pdf
@@ -60,7 +60,7 @@ The red line shows the lowest ANI for a "self-vs-self" comparison of all genomes
 .. note::
   The above figure was made with the command::
 
-    mattolm@biotite /data8/Human/NIH_4/testing_Datasets/Klebsiella_oxytoca $ dRep analyze complete_only/ -c 1
+    $ dRep analyze complete_only/ -c 1
 
 Cluster_scoring
 +++++++++++++++

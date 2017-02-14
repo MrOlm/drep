@@ -100,7 +100,7 @@
 <li class="toctree-l1"><a class="reference internal" href="choosing_parameters.html">Choosing parameters</a><ul>
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-defines-genomes-as-being-same">What defines genomes as being &#8220;same&#8221;?</a></li>
 <li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#what-is-the-minimum-genome-completeness-allowed-in-analysis">What is the minimum genome completeness allowed in analysis?</a></li>
-<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest-of-the-parameters">The rest of the parameters</a></li>
+<li class="toctree-l2"><a class="reference internal" href="choosing_parameters.html#the-rest">The Rest</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="advanced_use.html">Advanced Use</a><ul>
@@ -153,7 +153,7 @@
 </pre></div>
 </div>
 <p>OR</p>
-<div class="highlight-python"><div class="highlight"><pre>$ git clone git@github.com:MrOlm/drep.git
+<div class="highlight-python"><div class="highlight"><pre>$ git clone https://github.com/MrOlm/drep.git
 
 $ cd drep
 
@@ -169,6 +169,7 @@ $ pip install .
 <li><a class="reference external" href="https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x">Mash</a></li>
 <li><a class="reference external" href="http://mummer.sourceforge.net/">Nucmer</a></li>
 <li><a class="reference external" href="http://ecogenomics.github.io/CheckM/">CheckM</a></li>
+<li><a class="reference external" href="http://prodigal.ornl.gov/">Prodigal</a></li>
 <li><a class="reference external" href="https://ani.jgi-psf.org/html/download.php?">gANI (aka CalculateANI)</a></li>
 <li><a class="reference external" href="https://omictools.com/centrifuge-tool">Centrifuge</a></li>
 </ul>
@@ -176,25 +177,11 @@ $ pip install .
 </div>
 <div class="section" id="testing">
 <h2>Testing<a class="headerlink" href="#testing" title="Permalink to this headline">¶</a></h2>
-<p>To make sure everything is installed correctly you can run the dRep test suite using py.test:</p>
+<p>To make sure everything is installed correctly you can run the dRep test suite:</p>
 <div class="highlight-python"><div class="highlight"><pre>mattolm@biotite ~/Programs/drep $ cd drep/tests
-
-mattolm@biotite ~/Programs/drep/tests $ py.test
-
-=== test session starts ===
-platform linux -- Python 3.5.1, pytest-3.0.5, py-1.4.32, pluggy-0.4.0
-rootdir: /home/mattolm/Programs/drep, inifile:
-collected 3 items
-
-test_suite.py ...
-
-=== 3 passed in 506.46 seconds ===
 </pre></div>
 </div>
-<dl class="docutils">
-<dt>Or just run the large integrative test::</dt>
-<dd><a class="reference external" href="mailto:mattolm&#37;&#52;&#48;biotite">mattolm<span>&#64;</span>biotite</a> ~/Programs/drep/tests $ python test_suite.py</dd>
-</dl>
+<p><a class="reference external" href="mailto:mattolm&#37;&#52;&#48;biotite">mattolm<span>&#64;</span>biotite</a> ~/Programs/drep/tests $ python test_suite.py</p>
 </div>
 <div class="section" id="pyenv">
 <h2>pyenv<a class="headerlink" href="#pyenv" title="Permalink to this headline">¶</a></h2>
