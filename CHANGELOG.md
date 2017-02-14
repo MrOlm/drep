@@ -8,6 +8,8 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ### Changed
 - Fixed some typos in documentation
 
+### Fixed
+- Edited matplotlib to make text that can be edited by illustrator
 
 ## [0.3.3]
 ### Fixed
