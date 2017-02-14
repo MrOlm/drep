@@ -1,4 +1,4 @@
-Interpreting Output
+Example Output
 ===================
 
 dRep produces a variety of output in the work directory depending on which operations are run.

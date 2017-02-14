@@ -9,7 +9,7 @@ dRep
 de-replication of microbial genomes
 -----------------------------------
 
-.. The publication is `available on bioRxiv <https://www.youtube.com/watch?v=dQw4w9WgXcQ>`_.
+The publication is available at bioRxiv_.
 
 Source code is `available on GitHub
 <https://github.com/MrOlm/drep>`_.
@@ -21,6 +21,8 @@ Comments and suggestions can be sent to `Matt Olm <mattolm@berkeley.edu>`_
 Bugs reports and feature requests can be submitted through `GitHub
 <https://github.com/MrOlm/drep/issues>`_.
 
+
+
 Contents
 --------
 
@@ -30,7 +32,9 @@ Contents
    overview
    installation
    quick_start
-   interpreting_output
+   example_output
    module_descriptions
    choosing_parameters
    advanced_use
+
+.. _bioRxiv: https://doi.org/10.1101/108142

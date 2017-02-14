@@ -42,7 +42,7 @@ The work directory is where all of the program's internal workings, log files, c
 
 .. seealso::
 
-  :doc:`interpreting_output`
+  :doc:`example_output`
     for help finding where the output from your run is located in the work directory
 
   :doc:`advanced_use`

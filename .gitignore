@@ -16,3 +16,6 @@ bin/drep
 
 # most recent distribution for pypi
 dist/
+
+# documentation build
+docs/_build/

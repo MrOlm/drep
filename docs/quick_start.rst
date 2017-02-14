@@ -35,7 +35,7 @@ To de-replicate a set of genomes, run the following command::
 This will automatically de-replicate the genome list and produce lots of information about it.
 
 .. seealso::
-  :doc:`interpreting_output`
+  :doc:`example_output`
     to view example output
   :doc:`choosing_parameters`
     for guidance changing parameters
@@ -48,12 +48,12 @@ dRep is able to perform rapid genome comparisons for a group of genomes and visu
 
  $ dRep comparison_wf output_directory -g path/to/genomes/*.fasta
 
-For help understanding the output, see :doc:`interpreting_output`
+For help understanding the output, see :doc:`example_output`
 
 To change the comparison parameters, see :doc:`choosing_parameters`
 
 .. seealso::
-  :doc:`interpreting_output`
+  :doc:`example_output`
     to view example output
   :doc:`choosing_parameters`
     for guidance changing parameters
