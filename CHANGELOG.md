@@ -4,9 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [Uncommitted]
+## [uncommitted]
+
+## [0.3.4]
 ### Changed
 - Fixed some typos in documentation
+- Added bioRxiv link in documentation
 
 ### Fixed
 - Edited matplotlib to make text that can be edited by illustrator
