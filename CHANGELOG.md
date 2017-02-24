@@ -5,6 +5,7 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
 ## [uncommitted]
+- Added TODO
 
 ## [0.3.5]
 ### Fixed
