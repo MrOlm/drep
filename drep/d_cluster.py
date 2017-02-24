@@ -87,19 +87,16 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     * Cdb = Clustering information
     """
 
-    logging.info(
-    "Step 1. Parse Arguments")
-
+    logging.info("Step 1. Parse Arguments")
 
     # Deal with nucmer presets
-    if kwargs.get('n_preset',None) != None:
+    if kwargs.get('n_preset', None) != None:
         kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
         = nucmer_preset(kwargs['n_PRESET'])
 
     logging.debug("kwargs: {0}".format(kwargs))
 
-    logging.info(
-    "Step 2. Perform MASH (primary) clustering")
+    logging.info("Step 2. Perform MASH (primary) clustering")
     if not kwargs.get('SkipMash', False):
 
         logging.info(
@@ -1151,31 +1148,29 @@ def gen_nomani_cdb(Cdb, Mdb, **kwargs):
     return cdb
 
 def test_clustering():
-
     # Get test genomes
-	test_genomes = glob.glob(str(os.getcwd()) + '/../test/genomes/*')
-	names = [os.path.basename(g) for g in test_genomes]
-	assert names == ['Enterococcus_faecalis_T2.fna',
+    test_genomes = glob.glob(str(os.getcwd()) + '/../test/genomes/*')
+    names = [os.path.basename(g) for g in test_genomes]
+    assert names == ['Enterococcus_faecalis_T2.fna',
 	                 'Escherichia_coli_Sakai.fna',
 	                 'Enterococcus_casseliflavus_EC20.fasta',
 	                 'Enterococcus_faecalis_TX0104.fa',
 	                 'Enterococcus_faecalis_YI6-1.fna']
-	Bdb = load_genomes(test_genomes)
+    Bdb = load_genomes(test_genomes)
 
-	# Set test directory
-	test_directory = str(os.getcwd()) + '/../test/test_backend/'
-	dm.make_dir(test_directory,overwrite=True)
+    # Set test directory
+    test_directory = str(os.getcwd()) + '/../test/test_backend/'
+    dm.make_dir(test_directory,overwrite=True)
 
-	# Perform functional test
-	Cdb,Mdb,Ndb = cluster_genomes(Bdb,test_directory)
+    # Perform functional test
+    Cdb, Mdb, Ndb = cluster_genomes(Bdb,test_directory)
 
-	# Confirm it's right by showing there is one group of 3 and two groups of one
-	group_lengths = sorted([len(Cdb['genome'][Cdb['ANIn_cluster'] == x].tolist())
-	                        for x in Cdb['ANIn_cluster'].unique()])
-	assert group_lengths == [1, 1, 3]
+    # Confirm it's right by showing there is one group of 3 and two groups of one
+    group_lengths = sorted([len(Cdb['genome'][Cdb['ANIn_cluster'] == x].tolist()) for x in Cdb['ANIn_cluster'].unique()])
+    assert group_lengths == [1, 1, 3]
 
-	print("Functional test success!")
+    print("Functional test success!")
 
 if __name__ == '__main__':
 
-	test_clustering()
+    test_clustering()
