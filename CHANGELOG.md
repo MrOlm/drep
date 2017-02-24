@@ -5,6 +5,10 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
 ## [uncommitted]
+
+## [0.3.6]
+### Added
+- Can now change the method of calculating coverage with ANIn
 - Added TODO
 
 ## [0.3.5]

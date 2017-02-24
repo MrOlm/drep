@@ -106,6 +106,11 @@ def parse_args(args):
                         default=0.99, type = float)
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
         genomes when doing secondary comparisons", default=0.1)
+    Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \
+        + "(for ANIn only; gANI can only do larger method)\n"
+        + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
+        + "larger  = max((aligned length / genome 1), (aligned_length / genome2)",
+                        choices=['total', 'larger'], default='total')
     Compflags.add_argument("-n_PRESET", help= "R|Presets to pass to nucmer\n" \
         + "tight   = only align highly conserved regions\n" \
         + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')

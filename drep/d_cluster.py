@@ -767,7 +767,7 @@ def process_deltadir(deltafiles, org_lengths, logger=None):
     df = pd.DataFrame(Table)
     return df
 
-def process_deltafiles(deltafiles, org_lengths, logger=None):
+def process_deltafiles(deltafiles, org_lengths, logger=None, **kwargs):
 
     Table = {'querry':[],'reference':[],'alignment_length':[],'similarity_errors':[],
             'ref_coverage':[],'querry_coverage':[],'ani':[], 'reference_length':[],
@@ -775,7 +775,9 @@ def process_deltafiles(deltafiles, org_lengths, logger=None):
 
     # Process .delta files assuming that the filename format holds:
     # org1_vs_org2.delta
-    zero_error = False  # flag to register a divide-by-zero error
+    coverage_method = kwargs.get('coverage_method')
+    logging.debug('coverage_method is {0}'.format(coverage_method))
+
     for deltafile in deltafiles:
         qname, sname = os.path.splitext(os.path.split(deltafile)[-1])[0].split('_vs_')
         tot_length, tot_sim_error = parse_delta(deltafile)
@@ -805,8 +807,13 @@ def process_deltafiles(deltafiles, org_lengths, logger=None):
         Table['ani'].append(perc_id)
         Table['ref_coverage'].append(sbjct_cover)
         Table['querry_coverage'].append(query_cover)
-        Table['alignment_coverage'].append((tot_length * 2)/(org_lengths[qname]\
+
+        if coverage_method == 'total':
+            Table['alignment_coverage'].append((tot_length * 2)/(org_lengths[qname]\
                                                              + org_lengths[sname]))
+        elif coverage_method == 'larger':
+            Table['alignment_coverage'].append(max((tot_length/org_lengths[qname]),\
+                (tot_length/org_lengths[sname])))
 
     df = pd.DataFrame(Table)
     return df
@@ -905,7 +912,7 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
     org_lengths = {get_genome_name_from_fasta(y):dm.fasta_length(x) \
                     for x,y in zip(genomes,genomes)}
     deltafiles = ["{0}.delta".format(file) for file in files]
-    df = process_deltafiles(deltafiles, org_lengths)
+    df = process_deltafiles(deltafiles, org_lengths, **kwargs)
 
     return df
 
