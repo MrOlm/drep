@@ -65,6 +65,8 @@ class VerifyDereplicateWf():
         wd_loc   = self.wd_loc
         s_wd_loc = self.s_wd_loc
 
+        sanity_check(s_wd)
+
         args = argumentParser.parse_args(['dereplicate_wf',wd_loc,'-g'] + genomes)
         controller = Controller()
         controller.parseArguments(args)

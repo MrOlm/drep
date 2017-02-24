@@ -313,7 +313,7 @@ def parse_arguments(workDirectory, **kwargs):
     loc = shutil.which('mash')
     if loc == None:
         logging.error('Cannot locate the program {0}- make sure its in the system path'\
-            .format(prog))
+            .format('mash'))
     kwargs['mash_exe'] = loc
 
     # If genomes are provided, load them
