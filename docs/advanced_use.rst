@@ -53,6 +53,8 @@ Mdb
   Pair-wise Mash comparison results
 Ndb
   Secondary comparison results
+Tdb
+  Taxonomy (as determined by centrifuge)
 Sdb
   The score of each genome
 Wdb

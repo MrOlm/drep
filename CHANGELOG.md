@@ -5,8 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
 ## [uncommitted]
+
+## [0.3.5]
 ### Fixed
-- Bug that caused the program to crash when looking for mash
+- Bug that caused the program to crash when looking for Mash
+- Lots of typos (in documentation and program help)
 
 
 ## [0.3.4]

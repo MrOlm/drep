@@ -37,9 +37,9 @@ Testing
 
 To make sure everything is installed correctly you can run the dRep test suite::
 
- mattolm@biotite ~/Programs/drep $ cd drep/tests
+ $ cd drep/tests
 
-mattolm@biotite ~/Programs/drep/tests $ python test_suite.py
+ $ python test_suite.py
 
 pyenv
 -----

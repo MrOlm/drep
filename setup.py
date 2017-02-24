@@ -17,7 +17,10 @@ setup(name='drep',
       packages=['drep'],
       scripts=['bin/dRep'],
       install_requires=[
-          #'numpy',
-          #'pandas',
+          'numpy',
+          'pandas',
+          'seaborn',
+          'matplotlib',
+          'biopython'
       ],
       zip_safe=False)

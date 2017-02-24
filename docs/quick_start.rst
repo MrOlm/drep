@@ -14,14 +14,14 @@ The functionality of dRep is broken up into modules. The modules can be run sepa
     dereplicate_wf  -> Combine several of the operations below to de-replicate a genome list
     compare_wf      -> Simply compare a list of genomes
 
-  Single opterations:
+  Single operations:
     filter          -> Filter a genome list based on size, completeness, and/or contamination
     cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
     adjust          -> Adjust genome clusters
     choose          -> Choose the best genome from each genome cluster
     evaluate        -> Evaluate genome de-replication
     bonus           -> Other random operations (currently just determine taxonomy)
-    analyze         -> Make figures realted to the above operations; test alternative clustering
+    analyze         -> Make figures related to the above operations; test alternative clustering
 
 De-replication
 ---------------

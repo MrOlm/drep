@@ -47,14 +47,14 @@ def printHelp():
     dereplicate_wf  -> Combine several of the operations below to de-replicate a genome list
     compare_wf      -> Simply compare a list of genomes
 
-  Single opterations:
+  Single operations:
     filter          -> Filter a genome list based on size, completeness, and/or contamination
     cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
     adjust          -> Adjust genome clusters
     choose          -> Choose the best genome from each genome cluster
     evaluate        -> Evaluate genome de-replication
     bonus           -> Other random operations (currently just determine taxonomy)
-    analyze         -> Make figures realted to the above operations; test alternative clustering
+    analyze         -> Make figures related to the above operations; test alternative clustering
     ''')
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=SmartFormatter)
@@ -106,7 +106,7 @@ def parse_args(args):
                         default=0.99, type = float)
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
         genomes when doing secondary comparisons", default=0.1)
-    Compflags.add_argument("-n_PRESET", help= "R|Presents to pass to nucmer\n" \
+    Compflags.add_argument("-n_PRESET", help= "R|Presets to pass to nucmer\n" \
         + "tight   = only align highly conserved regions\n" \
         + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
@@ -120,7 +120,7 @@ def parse_args(args):
     # Make a parent parser for scoring
     #
     scoring_parent = argparse.ArgumentParser(add_help=False)
-    Sflags = scoring_parent.add_argument_group('SCORRING CHRITERIA\n'+
+    Sflags = scoring_parent.add_argument_group('SCORING CRITERIA\n'+
               "Based off of the formula: Completeness - Contamination + log(N50) + log(size)")
 
     Sflags.add_argument("-comW","--completeness_weight" , default = 1, type= float,
