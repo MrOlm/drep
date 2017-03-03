@@ -4,7 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [uncommitted]
+## [UNCOMMITTED]
+
+## [0.3.7]
+### Fixed
+- Fixed anaylze to produce non-ugly plots
 
 ## [0.3.6]
 ### Added
