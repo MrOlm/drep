@@ -85,3 +85,23 @@ Arguments: ['cluster']
     
 01-21 18:27 INFO     calling cluster_vis_wrapper
 01-21 18:27 INFO     making plots ['1', '2', '3', '4', '5', '6']
+03-03 09:29 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+03-03 09:29 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/log/logger.log***
+03-03 09:29 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+03-03 09:29 DEBUG    Namespace(cluster=None, clusterAlg='average', clustering_method='ANIn', dry=False, minimum_coverage=0.1, operation='analyze', overwrite=False, plots=['2'], processors=6, threshold=0.99, work_directory='ecoli_wd/')
+03-03 09:29 DEBUG    Starting the analyze operation
+03-03 09:29 DEBUG    calling cluster_vis_wrapper
+03-03 09:29 INFO     making plots ['2']
+03-03 09:29 INFO     Plotting secondary dendrograms...
+03-03 09:29 DEBUG    !!! Finished the analyze operation !!!
+03-03 09:32 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+03-03 09:32 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/log/logger.log***
+03-03 09:32 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+03-03 09:32 DEBUG    Namespace(cluster=None, clusterAlg='average', clustering_method='ANIn', dry=False, minimum_coverage=0.1, operation='analyze', overwrite=False, plots=['2'], processors=6, threshold=0.99, work_directory='ecoli_wd/')
+03-03 09:32 DEBUG    Starting the analyze operation
+03-03 09:32 DEBUG    calling cluster_vis_wrapper
+03-03 09:32 INFO     making plots ['2']
+03-03 09:32 INFO     Plotting secondary dendrograms...
+03-03 09:32 DEBUG    !!! Finished the analyze operation !!!

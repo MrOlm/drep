@@ -583,7 +583,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     Run MASH pairwise within all samples in Bdb
     """
 
-    MASH_s = kwargs.get('MASH_s',1000)
+    MASH_s = kwargs.get('MASH_sketch',1000)
     dry = kwargs.get('dry',False)
     overwrite = kwargs.get('overwrite', False)
     mash_exe = kwargs.get('mash_exe', 'mash')

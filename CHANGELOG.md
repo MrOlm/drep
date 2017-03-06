@@ -6,6 +6,10 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 
 ## [UNCOMMITTED]
 
+## [0.3.8]
+### Fixed
+- Mash sketch size argument actually works now
+
 ## [0.3.7]
 ### Fixed
 - Fixed anaylze to produce non-ugly plots
