@@ -4,15 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [UNCOMMITTED]
+## [0.4.0] - 2017-03-10
+### Fixed
+- prodigal now multithreads the correct amount
+- compare_wf double-printing issue
+- --SkipMash now works
 
-## [0.3.8]
+### Changed
+- default checkM method is now lineage_wf in dereplicate_wf, filter, and choose
+- pyenv now reverences non-anaconda in the documentation and error messages
+- default min length in now 50,000
+
+### Added
+- more thorough testing (though still not nearly enough)
+- log now contains the exact command run
+
+## [0.3.8] - 2017-03-06
 ### Fixed
 - Mash sketch size argument actually works now
 
 ## [0.3.7]
 ### Fixed
-- Fixed anaylze to produce non-ugly plots
+- Fixed analyze to produce non-ugly plots
 
 ## [0.3.6]
 ### Added
@@ -23,7 +36,6 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ### Fixed
 - Bug that caused the program to crash when looking for Mash
 - Lots of typos (in documentation and program help)
-
 
 ## [0.3.4]
 ### Changed

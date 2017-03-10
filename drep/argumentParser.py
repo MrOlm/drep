@@ -80,7 +80,7 @@ def parse_args(args):
     #
     filter_parent = argparse.ArgumentParser(add_help=False)
     fiflags = filter_parent.add_argument_group('FILTERING OPTIONS')
-    fiflags.add_argument("-l","--length", help= "Minimum genome length",default=500000,
+    fiflags.add_argument("-l","--length", help= "Minimum genome length",default=50000,
                             type = float)
     fiflags.add_argument("-comp","--completeness", help="Minumum genome completeness",
                             default = 75, type = float)
@@ -192,7 +192,7 @@ def parse_args(args):
                         --tab_table format.')
     Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
                             + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
-                            default = 'taxonomy_wf')
+                            default = 'lineage_wf')
 
     '''
     ####### Arguments for clustering operation ######
@@ -288,7 +288,7 @@ def parse_args(args):
     Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format')
     Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
                             + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
-                            default = 'taxonomy_wf')
+                            default = 'lineage_wf')
     Iflags.add_argument('--Chdb',help='checkM run already completed. Must be in \
                         --tab_table format.')
 

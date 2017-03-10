@@ -168,7 +168,6 @@ def validate_arguments(wd,**kwargs):
         return bdb, 'Bdb'
 
 def run_checkM_wrapper(bdb, workDirectory, **kwargs):
-
     # Make the folder to house the checkM info
     checkM_loc = workDirectory.location + '/data/checkM/'
     dm.make_dir(checkM_loc,dry=kwargs.get('dry',False),\
@@ -179,7 +178,7 @@ def run_checkM_wrapper(bdb, workDirectory, **kwargs):
     if not os.path.exists(prod_folder):
         os.makedirs(prod_folder)
     logging.info("Running prodigal")
-    run_prodigal(bdb, prod_folder)
+    run_prodigal(bdb, prod_folder, **kwargs)
 
     # Run checkM
     checkM_outfolder = checkM_loc + 'checkM_outdir/'
@@ -210,18 +209,18 @@ def calc_n50(loc):
     lengths = []
     sequence = []
     with open(loc) as handle:
-      for line in handle:
-        if line.startswith('>'):
-          lengths.append(len(''.join(sequence)))
-          sequence = []
-        else:
-          sequence += line.strip()
+        for line in handle:
+            if line.startswith('>'):
+                lengths.append(len(''.join(sequence)))
+                sequence = []
+            else:
+                sequence += line.strip()
     lengths.append(len(''.join(sequence)))
 
     n50 = sorted(lengths)[int(len(lengths)/2)]
     return n50
 
-def run_prodigal(bdb, out_dir, verbose=True, **kwargs):
+def run_prodigal(bdb, out_dir, **kwargs):
     t = kwargs.get('processors','6')
     loc = shutil.which('prodigal')
     if loc == None:
@@ -241,8 +240,7 @@ def run_prodigal(bdb, out_dir, verbose=True, **kwargs):
     if len(cmds) > 0:
         drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
     else:
-        if verbose:
-            logging.info("Past prodigal runs found- will not re-run")
+        logging.info("Past prodigal runs found- will not re-run")
 
 def run_checkM(genome_folder,checkm_outf,**kwargs):
     t = str(kwargs.get('processors','6'))
@@ -284,8 +282,7 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
         chdb = pd.read_table(desired_file,sep='\t')
     except:
         logging.error("!!! checkM failed !!!\nIf using pyenv, make sure both python2 and " +\
-            "python3 are available (for example: pyenv local anaconda2-4.1.0 " +\
-            "anaconda3-4.1.0)")
+            "python3 are available (for example: pyenv pyenv global 3.5.1 2.7.9)")
         sys.exit()
     return chdb
 

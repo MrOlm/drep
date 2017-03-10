@@ -89,22 +89,18 @@ def compare_wrapper(wd,**kwargs):
 
     message = 'Step 1. Cluster'
     logging.info(message)
-    print(message)
     drep.d_cluster.d_cluster_wrapper(wd, **kwargs)
 
     message = 'Step 2. Bonus'
     logging.info(message)
-    print(message)
     drep.d_bonus.d_bonus_wrapper(wd, **kwargs)
 
     message = 'Step 3. Evaluate'
     logging.info(message)
-    print(message)
     drep.d_evaluate.d_evaluate_wrapper(wd, evaluate = '2', **kwargs)
 
     message = 'Step 4. Analyze'
     logging.info(message)
-    print(message)
     drep.d_analyze.d_analyze_wrapper(wd, plots = '1234', **kwargs)
 
 def validate_dereplicate(wd, **kwargs):

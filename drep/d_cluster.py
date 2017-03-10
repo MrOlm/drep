@@ -99,25 +99,23 @@ def cluster_genomes(Bdb, data_folder, **kwargs):
     logging.info("Step 2. Perform MASH (primary) clustering")
     if not kwargs.get('SkipMash', False):
 
-        logging.info(
-        "2a. Run pair-wise MASH clustering")
+        logging.info("2a. Run pair-wise MASH clustering")
         Mdb = all_vs_all_MASH(Bdb, data_folder, **kwargs)
 
-        logging.info(
-        "2b. Cluster pair-wise MASH clustering")
+        logging.info("2b. Cluster pair-wise MASH clustering")
         Cdb = cluster_mash_database(Mdb, data_folder= data_folder, **kwargs)
 
     else:
+        logging.info("2. Nevermind! Skipping Mash")
         Cdb = gen_nomash_cdb(Bdb)
+        Mdb = pd.DataFrame({'Blank':[]})
 
     logging.info("{0} primary clusters made".format(len(Cdb['MASH_cluster'].unique())))
 
-    logging.info(
-    "Step 3. Perform secondary clustering")
+    logging.info("Step 3. Perform secondary clustering")
 
     Ndb, Cdb = run_secondary_clustering(Bdb, Cdb, data_folder, Mdb = Mdb, \
                 **kwargs)
-
 
     logging.info(
     "Step 4. Return output")

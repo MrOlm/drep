@@ -118,6 +118,7 @@ class Controller():
 
         logging.debug("!"*80)
         logging.debug("***Logger started up at {0}***".format(loc))
+        logging.debug("Command to run dRep was: {0}\n".format(sys.argv))
         logging.debug("!"*80 + '\n')
 
     def parseArguments(self, args):

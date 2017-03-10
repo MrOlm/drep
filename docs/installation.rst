@@ -48,6 +48,6 @@ Because dRep is written in python3 and CheckM is written in python2, you may nee
 
 With CheckM installed in a python2 installation of pyenv, and dRep installed in the python3 version, the following command should set allow both python2 and python3 commands to be called::
 
- $ pyenv global anaconda3-4.1.0 anaconda2-4.1.0
+ $ pyenv global 3.5.1 2.7.9
 
 Alternatively, you could add python2 to your CheckM shebang line (though I have not confirmed that this works)
