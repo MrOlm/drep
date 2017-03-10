@@ -382,8 +382,8 @@ def test_quick():
     rerun_test()
 
 if __name__ == '__main__':
-    #test_quick()
+    test_quick()
     #test_short()
-    #test_long()
-    dereplicate_wf_test()
+    test_long()
+    #dereplicate_wf_test()
     print("Everything seems to be working swimmingly!")
