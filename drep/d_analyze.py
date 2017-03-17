@@ -1162,6 +1162,7 @@ def _make_mds_plot(name, dist, names, **kwargs):
 
     plt.title('Primary cluster {0}; grid spacing: {1}% ANI'.format(name, tick_spacing*100))
 
+    plt.axis('equal')
     ax = plt.gca()
     ax.set_xticklabels([])
     ax.set_yticklabels([])

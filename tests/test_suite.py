@@ -426,6 +426,7 @@ def test_long():
     dereplicate_wf_test()
     filter_test()
     cluster_test()
+    analyze_test()
 
 @pytest.mark.short
 def test_short():
@@ -437,10 +438,10 @@ def test_quick():
     rerun_test()
 
 if __name__ == '__main__':
-    analyze_test()
-    #test_quick()
+    #analyze_test()
+    test_quick()
     #test_short()
-    #test_long()
+    test_long()
     #dereplicate_wf_test()
 
     print("Everything seems to be working swimmingly!")

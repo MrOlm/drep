@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [0.5.1] - 2017-03-17
+### Fixed
+- Plot 3 (MDS) now prints onto a square grid
+- Testing suite now launches all tests automatically
+
 ## [0.5.0] - 2017-03-16
 ### Added
 - The final analyze plot can now be made!
