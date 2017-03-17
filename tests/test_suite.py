@@ -143,6 +143,56 @@ class VerifyFilter():
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
 
+class VerifyAnalyze():
+    def __init__(self):
+        pass
+
+    def setUp(self):
+        self.s_wd_loc = load_solutions_wd()
+        self.working_wd_loc = load_test_wd_loc()
+
+        self.tearDown()
+
+        # copy over the data from solutions directory
+        os.mkdir(self.working_wd_loc)
+        shutil.copytree(os.path.join(self.s_wd_loc, 'data'), \
+            os.path.join(self.working_wd_loc, 'data'))
+        shutil.copytree(os.path.join(self.s_wd_loc, 'data_tables'), \
+            os.path.join(self.working_wd_loc, 'data_tables'))
+        shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
+            os.path.join(self.working_wd_loc, 'log'))
+
+
+    def run(self):
+        self.setUp()
+        self.unit_test_1()
+        #self.tearDown()
+
+    def unit_test_1(self):
+        '''
+        Ensure analyze produces plots
+        '''
+        args = argumentParser.parse_args(['analyze',self.working_wd_loc,'-pl'] + \
+            ['a'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        FIGS = ['Cluster_scoring.pdf', 'Clustering_scatterplots.pdf', \
+            'Primary_clustering_dendrogram.pdf', 'Secondary_clustering_dendrograms.pdf', \
+            'Winning_genomes.pdf', 'Secondary_clustering_MDS.pdf']
+
+        fig_dir = os.path.join(self.working_wd_loc, 'figures', '')
+        figs = [os.path.basename(f) for f in glob.glob(fig_dir + '*')]
+
+        assert sorted(figs) == sorted(FIGS)
+        for fig in glob.glob(fig_dir + '*'):
+            assert os.path.getsize(fig) > 0
+
+    def tearDown(self):
+        logging.shutdown()
+        if os.path.isdir(self.working_wd_loc):
+            shutil.rmtree(self.working_wd_loc)
+
 class VerifyCluster():
     def __init__(self):
         pass
@@ -357,6 +407,11 @@ def cluster_test():
     verifyCluster = VerifyCluster()
     verifyCluster.run()
 
+def analyze_test():
+    ''' test the analyze operation '''
+    verifyAnalyze= VerifyAnalyze()
+    verifyAnalyze.run()
+
 def dereplicate_wf_test():
     ''' test the dereplicate_wf operation '''
     verifyDereplicateWf = VerifyDereplicateWf()
@@ -382,8 +437,10 @@ def test_quick():
     rerun_test()
 
 if __name__ == '__main__':
-    test_quick()
+    analyze_test()
+    #test_quick()
     #test_short()
-    test_long()
+    #test_long()
     #dereplicate_wf_test()
+
     print("Everything seems to be working swimmingly!")

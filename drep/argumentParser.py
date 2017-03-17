@@ -232,7 +232,7 @@ def parse_args(args):
                         + "Input 'all' or 'a' to plot all\n"
                         + "1) Primary clustering dendrogram\n"
                         + "2) Secondary clustering dendrograms\n"
-                        + "3) Secondary clusters heatmaps\n"
+                        + "3) Secondary clustering MDS\n"
                         + "4) Comparison scatterplots\n"
                         + "5) Cluster scorring plot\n"
                         + "6) Winning genomes\n",

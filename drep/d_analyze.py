@@ -7,15 +7,15 @@ import pandas as pd
 import os
 import seaborn as sns
 from matplotlib import pyplot as plt
+import matplotlib.ticker as ticker
 from matplotlib.backends.backend_pdf import PdfPages
-#matplotlib.rcParams['pdf.fonttype'] = 42
-#matplotlib.rcParams['ps.fonttype'] = 42
+import matplotlib.patches as mpatches
+
 import scipy.cluster.hierarchy
 import logging
-import glob
-import logging
-import shutil
 import math
+
+from sklearn import manifold
 
 import drep as dm
 import drep
@@ -139,8 +139,12 @@ def cluster_vis_wrapper(wd, **kwargs):
     # 3) Secondary clusters heatmap
     if '3' in to_plot:
         # Load the required data
-        logging.info("Plotting secondary clusters heatmaps...")
-        logging.error("This part hasn't been written yet ¯\_(ツ)_/¯")
+        logging.info("Plotting secondary clusters MDS...")
+
+        if 'Blank' in wd.get_db('Ndb'):
+            logging.error("Nevermind- you don't have secondary clusters. Skipping plot 3")
+        else:
+            plot_secondary_mds(wd, plot_dir, **kwargs)
 
     # 4) Comparison scatterplots
     if '4' in to_plot:
@@ -184,8 +188,62 @@ def cluster_vis_wrapper(wd, **kwargs):
         logging.info("Plotting winning genomes plot...")
         plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir = plot_dir, **kwargs)
 
-def cluster_test_wrapper(wd, **kwargs):
+def plot_secondary_mds(wd, plot_dir, **kwargs):
+    '''
+    Make a .pdf of MDS of each cluster
+    '''
+    save = False
 
+    # initialize a .pdf
+    if plot_dir != False:
+        pp = PdfPages(plot_dir + 'Secondary_clustering_MDS.pdf')
+        save = True
+    else:
+        save = False
+
+    # for every cluster:
+    Cdb = wd.get_db('Cdb')
+    for cluster in sorted(Cdb['primary_cluster'].unique()):
+        d = Cdb[Cdb['primary_cluster'] == cluster]
+
+        # Skip if it's a singleton
+        if len(d['genome'].unique()) == 1:
+            continue
+
+        # Load the linkage information
+        linkI = wd.get_cluster("secondary_linkage_cluster_{0}".format(cluster))
+        db = linkI['db']
+        args = linkI['arguments']
+
+        # Load name to cluster
+        names = list(db.columns)
+        name2cluster = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+        for name in names: # Handle the case where you deleted a secondary cluster
+            if name not in Cdb['genome'].tolist():
+                name2cluster[name] = '0_0'
+
+        # Get the colors
+        name2color = gen_color_dictionary(names, name2cluster)
+        colors = [name2color[n] for n in names]
+
+        # Make cluster 2 color
+        cluster2color = {name2cluster[n]: name2color[n] for n in names}
+
+        # make the mds plot
+        _make_mds_plot(cluster, db, names, colors=colors, annotate=False,
+                      cluster2color = cluster2color)
+
+        # save the plot
+        fig = plt.gcf()
+        if save == True:
+            pp.savefig(fig, bbox_inches='tight')
+        plt.show()
+        plt.close(fig)
+
+    pp.close()
+    plt.close('all')
+
+def cluster_test_wrapper(wd, **kwargs):
     # Validate arguments
     cluster = kwargs.get('cluster')
     comp_method = kwargs.get('clustering_method','ANIn')
@@ -234,9 +292,7 @@ def cluster_test_wrapper(wd, **kwargs):
             "Clust method: {0}    Min cov: {1}".format(clust_method, cov_thresh)
     kwargs['name2cluster'] = cdb.set_index('genome')['cluster'].to_dict()
 
-
     plot_clustertest(linkage, names, wd, **kwargs)
-
 
 def parse_options(options, args):
     to_plot = []
@@ -1058,6 +1114,81 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
     if save:
         pp.close()
     plt.close('all')
+
+def calc_dist(x1, y1, x2, y2):
+    dist = math.hypot(x2 - x1, y2 - y1)
+    return dist
+
+def _make_mds_plot(name, dist, names, **kwargs):
+    '''
+    Use MDS to cluster points.
+
+    From here:
+    http://baoilleach.blogspot.com/2014/01/convert-distance-matrix-to-2d.html
+    '''
+
+    # load kwargs
+    annotate = kwargs.get('annotate', False)
+    colors = kwargs.get('colors', False)
+    shepard = kwargs.get('shepard', False)
+    tick_spacing = kwargs.get('tick_spacing', .01)
+    c2c = kwargs.get('cluster2color', False)
+
+    # perform MDS
+    mds = manifold.MDS(n_components=2, dissimilarity="precomputed", random_state=6)
+    results = mds.fit(dist)
+    coords = results.embedding_
+
+    # make shepard plot
+    if shepard:
+        _shepard_plot(coords, dist, names)
+
+    # plot
+    sns.set_style('whitegrid')
+    plt.subplots_adjust(bottom = 0.1)
+    plt.scatter(
+        coords[:, 0], coords[:, 1], marker = 'o', linestyle = 'None',\
+        color = colors
+        )
+
+    if annotate:
+        for label, x, y in zip(names, coords[:, 0], coords[:, 1]):
+            plt.annotate(
+                label,
+                xy = (x, y), xytext = (-20, 20),
+                textcoords = 'offset points', ha = 'right', va = 'bottom',
+                bbox = dict(boxstyle = 'round,pad=0.5', fc = 'yellow', alpha = 0.5),
+                arrowprops = dict(arrowstyle = '->', connectionstyle = 'arc3,rad=0'))
+
+    plt.title('Primary cluster {0}; grid spacing: {1}% ANI'.format(name, tick_spacing*100))
+
+    ax = plt.gca()
+    ax.set_xticklabels([])
+    ax.set_yticklabels([])
+    ax.xaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+    ax.yaxis.set_major_locator(ticker.MultipleLocator(tick_spacing))
+
+    # Add legend
+    legendC = c2c
+    if legendC != None:
+        patches = [mpatches.Patch(color = color, label = label)
+                    for label, color in zip(legendC.keys(), legendC.values())]
+        lgd = plt.legend(patches, legendC.keys(), loc = 'center left', \
+                   bbox_to_anchor=(1, 0.5), prop = {'size': 10, 'style': 'italic'})
+
+def _shepard_plot(coords, dist, names):
+    table = {'ani_dist':[], 'mds_dist':[]}
+    for v1, mx, my in zip(names, coords[:, 0], coords[:, 1]):
+        for v2, mx2, my2 in zip(names, coords[:, 0], coords[:, 1]):
+            m_dist = calc_dist(mx, my, mx2, my2)
+
+            a_dist = dist.ix[v1, v2]
+
+            table['mds_dist'].append(m_dist)
+            table['ani_dist'].append(a_dist)
+
+    adb = pd.DataFrame(table)
+    sns.regplot(data=adb, x='ani_dist', y='mds_dist')
 
 """
 OTHER

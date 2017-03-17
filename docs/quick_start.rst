@@ -5,7 +5,7 @@ The functionality of dRep is broken up into modules. The modules can be run sepa
 
  $ dRep -h
 
-                ...::: dRep v0.3.0 :::...
+                ...::: dRep v0.5.0 :::...
 
   Choose one of the operations below for more detailed help.
   Example: dRep dereplicate_wf -h
@@ -46,7 +46,7 @@ Genome comparison
 
 dRep is able to perform rapid genome comparisons for a group of genomes and visualize their relatedness. For example::
 
- $ dRep comparison_wf output_directory -g path/to/genomes/*.fasta
+ $ dRep compare_wf output_directory -g path/to/genomes/*.fasta
 
 For help understanding the output, see :doc:`example_output`
 
