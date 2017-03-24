@@ -974,7 +974,7 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     # Run prodigal
     if verbose:
         logging.info("Running prodigal...")
-    dFilter.run_prodigal(bdb, prod_folder, verbose=verbose)
+    dFilter.run_prodigal(bdb, prod_folder, verbose=verbose, **kwargs)
 
     # Gen gANI commands
     if verbose:

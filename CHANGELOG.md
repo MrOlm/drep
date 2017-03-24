@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [0.5.2] - 2017-03-24
+### Fixed
+- prodigal now properly threads for gANI
+
 ## [0.5.1] - 2017-03-17
 ### Fixed
 - Plot 3 (MDS) now prints onto a square grid
