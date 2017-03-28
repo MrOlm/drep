@@ -32,6 +32,12 @@ import drep.d_bonus
 import drep.d_evaluate
 import drep.d_workflows
 
+def version():
+    versionFile = open(os.path.join(drep.__path__[0], 'VERSION'))
+    return versionFile.read().strip()
+
+VERSION = version()
+
 class Controller():
     def __init__(self):
         self.logger = logging.getLogger()
@@ -119,6 +125,7 @@ class Controller():
         logging.debug("!"*80)
         logging.debug("***Logger started up at {0}***".format(loc))
         logging.debug("Command to run dRep was: {0}\n".format(sys.argv))
+        logging.debug("dRep version {0} was run \n".format(VERSION))
         logging.debug("!"*80 + '\n')
 
     def parseArguments(self, args):

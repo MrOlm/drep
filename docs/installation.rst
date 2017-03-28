@@ -18,17 +18,27 @@ OR ::
 
 That's it!
 
+Pip is a great package with many options to change the installation parameters in various ways. For details, see `pip documentation <https://packaging.python.org/installing/>`_
+
 Dependencies
 ------------
 
 dRep requires many other great programs to run. Not all dependencies are needed for all operations
 
-* `Mash <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>`_
-* `Nucmer <http://mummer.sourceforge.net/>`_
-* `CheckM <http://ecogenomics.github.io/CheckM/>`_
-* `Prodigal <http://prodigal.ornl.gov/>`_
-* `gANI (aka CalculateANI) <https://ani.jgi-psf.org/html/download.php?>`_
-* `Centrifuge <https://omictools.com/centrifuge-tool>`_
+**Near Essential**
+
+* `Mash <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>`_ - Makes primary clusters (v1.1.1 confirmed works)
+* `MUMmer <http://mummer.sourceforge.net/>`_ - Performs ANIm comparison method (v3.23 confirmed works)
+
+**Recommended**
+
+* `CheckM <http://ecogenomics.github.io/CheckM/>`_ - Determines contamination and completeness of genomes (v1.0.7 confirmed works)
+* `gANI (aka CalculateANI) <https://ani.jgi-psf.org/html/download.php?>`_ - Performs gANI comparison method (v1.0 confirmed works)
+* `Prodigal <http://prodigal.ornl.gov/>`_ - Used be both checkM and gANI (v2.6.3 confirmed works)
+
+**Accessory**
+
+* `Centrifuge <https://omictools.com/centrifuge-tool>`_ - Performs taxonomic assignment of bins (v1.0.3 confirmed works)
 
 Programs need to be installed to the system path, so that you can call them from anywhere on your computer.
 

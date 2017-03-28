@@ -236,7 +236,8 @@ def make_linkage_Ndb(Ndb,algorithm,**kwargs):
         d.loc[d['alignment_coverage'] <= cov_thresh, 'ani'] = 0
 
         # Make a linkagedb by averaging values and setting self-compare to 1
-        d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+        #d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+        add_avani(d)
         d['dist'] = 1 - d['av_ani']
         db = d.pivot("reference", "querry", "dist")
 
@@ -247,7 +248,8 @@ def make_linkage_Ndb(Ndb,algorithm,**kwargs):
         d.loc[d['alignment_coverage'] <= cov_thresh, 'ani'] = 0
 
         # Make a linkagedb by averaging values and setting self-compare to 1
-        d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+        #d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+        add_avani(d)
         d['dist'] = 1 - d['av_ani']
         #print(d[d.duplicated()])
 
@@ -409,7 +411,8 @@ def cluster_anin_database(Cdb, Ndb, data_folder = False, **kwargs):
             continue
 
         # Make a linkagedb
-        d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+        #d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+        add_avani(d)
         d['dist'] = 1 - d['av_ani']
         db = d.pivot("reference", "querry", "dist")
 
@@ -1120,6 +1123,27 @@ def average_ani(row,db):
         ani2 = float(db['ani'][(db['reference'] == g1) & (db['querry'] == g2)].tolist()[0])
         avg = np.mean([ani1,ani2])
         return avg
+
+def add_avani(db):
+    '''
+    add a column titled 'av_ani' to the passed in dataframe
+
+    dataframe must have rows reference, querey, and ani.
+    '''
+
+    logging.debug('making dictionary for average_ani')
+    combo2value = {}
+    for i, row in db.iterrows():
+        combo2value["{0}-vs-{1}".format(row['querry'], row['reference'])] \
+            = row['ani']
+
+    logging.debug('list comprehension for average_ani')
+    db['av_ani'] = [np.mean([combo2value["{0}-vs-{1}".format(q,r)], \
+                        combo2value["{0}-vs-{1}".format(r,q)]]) if r != q else 1\
+                        for q, r in zip(db['querry'].tolist(), \
+                        db['reference'].tolist())]
+
+    logging.debug('averageing done')
 
 def nucmer_preset(preset):
    #nucmer argument c, n_maxgap, n_noextend, n_method

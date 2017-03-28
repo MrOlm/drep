@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## UNCOMITTED
+## [0.5.3] - 2017-03-28
 ### Changed
 - documentation about dependencies changed; versions added as well
+- changed the way ani averaging is done; substantial speed increase when working with very large secondary clusters
+- added the dRep version to the log file
 
 ## [0.5.2] - 2017-03-24
 ### Fixed
