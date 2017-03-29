@@ -827,7 +827,7 @@ def process_gani_files(files):
         results = parse_gani_file(file)
 
         # calculate coverage using the "larger" method
-        cov = max(results['rq_coverage'], results['rq_coverage'])
+        cov = max(results['rq_coverage'], results['qr_coverage'])
 
         # Add forward results
         Table['reference'].append(results['reference'])
