@@ -110,7 +110,7 @@ def parse_args(args):
         + "(for ANIn only; gANI can only do larger method)\n"
         + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
         + "larger  = max((aligned length / genome 1), (aligned_length / genome2)",
-                        choices=['total', 'larger'], default='total')
+                        choices=['total', 'larger'], default='larger')
     Compflags.add_argument("-n_PRESET", help= "R|Presets to pass to nucmer\n" \
         + "tight   = only align highly conserved regions\n" \
         + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')

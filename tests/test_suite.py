@@ -284,6 +284,10 @@ class QuickTests():
         shutil.rmtree(os.path.join(self.working_wd_loc, 'data', 'Clustering_files'))
 
     def run (self):
+        # self.setUp()
+        # self.unit_tests_5()
+        # self.tearDown()
+
         self.setUp()
         self.unit_tests_1()
         self.tearDown()
@@ -391,6 +395,26 @@ class QuickTests():
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
             assert not db1.equals(db2), "{0} is the same! (and shouldn't be)".format(db)
+
+    def unit_tests_5(self):
+        '''
+        Test changing cluster --S_algorithm gANI
+        '''
+        # normal complete run
+        args = argumentParser.parse_args(['cluster',self.working_wd_loc,'-g'] + \
+            self.genomes + ['-o', '--S_algorithm', 'gANI'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd  = WorkDirectory(self.s_wd_loc)
+        wd   = WorkDirectory(self.working_wd_loc)
+
+        # Confirm the following are correct:
+        for db in ['Cdb', 'Mdb']:
+            db1 = Swd.get_db(db)
+            db2 =  wd.get_db(db)
+            assert db1.equals(db2), "{0} is not the same!".format(db)
 
     def tearDown(self):
         logging.shutdown()

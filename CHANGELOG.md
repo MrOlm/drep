@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [0.5.4] - 2017-03-28
+### Changed
+- default coverage method is now larger (tests are updated to reflect this)
+
+### Fixed
+- gANI now properly computes the coverage using the "larger" method
+- gANI can now tell when it's not installed
+
 ## [0.5.3] - 2017-03-28
 ### Changed
 - documentation about dependencies changed; versions added as well

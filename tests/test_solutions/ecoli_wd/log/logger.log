@@ -105,3 +105,30 @@ Arguments: ['cluster']
 03-03 09:32 INFO     making plots ['2']
 03-03 09:32 INFO     Plotting secondary dendrograms...
 03-03 09:32 DEBUG    !!! Finished the analyze operation !!!
+03-28 19:18 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+03-28 19:18 DEBUG    ***Logger started up at /Users/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/log/logger.log***
+03-28 19:18 DEBUG    Command to run dRep was: ['/Users/mattolm/.pyenv/versions/anaconda3-2.4.0/bin/dRep', 'cluster', 'ecoli_wd/', '-o']
+
+03-28 19:18 DEBUG    dRep version 0.5.4 was run 
+
+03-28 19:18 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+03-28 19:18 DEBUG    Namespace(MASH_sketch=1000, P_ani=0.9, S_algorithm='ANIn', S_ani=0.99, SkipMash=False, SkipSecondary=False, clusterAlg='average', cov_thresh=0.1, coverage_method='larger', dry=False, genomes=None, n_PRESET='normal', operation='cluster', overwrite=True, processors=6, work_directory='ecoli_wd/')
+03-28 19:18 DEBUG    Starting the clustering operation
+03-28 19:18 DEBUG    Loading work directory
+03-28 19:18 DEBUG    Located: /Users/mattolm/Programs/drep/tests/test_solutions/ecoli_wd
+Datatables: ['Cdb', 'Chdb', 'Ndb_backup', 'Wdb', 'Widb', 'Mdb', 'Bdb', 'Sdb']
+Cluster files: ['secondary_linkage_cluster_1', 'primary_linkage']
+Arguments: ['cluster']
+03-28 19:18 DEBUG    THIS WILL OVERWRITE Cdb
+03-28 19:18 DEBUG    THIS WILL OVERWRITE Mdb
+03-28 19:18 INFO     Step 1. Parse Arguments
+03-28 19:18 DEBUG    kwargs: {'S_ani': 0.99, 'cov_thresh': 0.1, 'n_method': 'mum', 'coverage_method': 'larger', 'work_directory': 'ecoli_wd/', 'operation': 'cluster', 'P_ani': 0.9, 'genomes': None, 'SkipMash': False, 'n_noextend': False, 'n_maxgap': 90, 'mash_exe': '/usr/local/bin/mash', 'overwrite': True, 'n_c': 65, 'dry': False, 'n_PRESET': 'normal', 'clusterAlg': 'average', 'MASH_sketch': 1000, 'S_algorithm': 'ANIn', 'SkipSecondary': False, 'processors': 6}
+03-28 19:18 INFO     Step 2. Perform MASH (primary) clustering
+03-28 19:18 INFO     2a. Run pair-wise MASH clustering
+03-28 19:18 INFO     2b. Cluster pair-wise MASH clustering
+03-28 19:18 DEBUG    Clustering MASH database
+03-28 19:18 DEBUG    Saving primary_linkage pickle to /Users/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/data/Clustering_files/
+03-28 19:18 INFO     3 primary clusters made
+03-28 19:18 INFO     Step 3. Perform secondary clustering
+03-28 19:18 INFO     Running 11 ANIn comparisons- should take ~ 0.6 min

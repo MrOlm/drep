@@ -826,17 +826,22 @@ def process_gani_files(files):
     for file in files:
         results = parse_gani_file(file)
 
+        # calculate coverage using the "larger" method
+        cov = max(results['rq_coverage'], results['rq_coverage'])
+
         # Add forward results
         Table['reference'].append(results['reference'])
         Table['querry'].append(results['querry'])
         Table['ani'].append(float(results['rq_ani'])/100)
-        Table['alignment_coverage'].append(results['rq_coverage'])
+        Table['alignment_coverage'].append(cov)
+        #Table['alignment_coverage'].append(results['rq_coverage'])
 
         # Add reverse results [they're the same]
         Table['reference'].append(results['querry'])
         Table['querry'].append(results['reference'])
         Table['ani'].append(float(results['qr_ani'])/100)
-        Table['alignment_coverage'].append(results['qr_coverage'])
+        Table['alignment_coverage'].append(cov)
+        #Table['alignment_coverage'].append(results['qr_coverage'])
 
 
     # Add self comparisons
@@ -955,7 +960,14 @@ def run_pairwise_mauve(bdb, data_folder, **kwargs):
     return df
 
 def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
-    gANI_exe = kwargs.get('gANI_exe','ANIcalculator')
+    #gANI_exe = kwargs.get('gANI_exe','ANIcalculator')
+    loc = shutil.which('ANIcalculator')
+    if loc == None:
+        logging.error('Cannot locate the program {0}- make sure its in the system path'\
+            .format('ANIcalculator (for gANI)'))
+        sys.exit()
+    gANI_exe = loc
+
     p = kwargs.get('processors',6)
     prod_folder = kwargs.get('prod_folder')
     genomes = bdb['location'].tolist()
