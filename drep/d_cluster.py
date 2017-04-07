@@ -245,7 +245,7 @@ def make_linkage_Ndb(Ndb,algorithm,**kwargs):
         cov_thresh = float(kwargs.get('cov_thresh',0.5))
 
         # Remove values without enough coverage
-        d.loc[d['alignment_coverage'] <= cov_thresh, 'ani'] = 0
+        d.loc[d['alignment_coverage'] < cov_thresh, 'ani'] = 0
 
         # Make a linkagedb by averaging values and setting self-compare to 1
         #d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
@@ -965,7 +965,6 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     if loc == None:
         logging.error('Cannot locate the program {0}- make sure its in the system path'\
             .format('ANIcalculator (for gANI)'))
-        sys.exit()
     gANI_exe = loc
 
     p = kwargs.get('processors',6)

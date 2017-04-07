@@ -21,6 +21,7 @@ setup(name='drep',
           'pandas',
           'seaborn',
           'matplotlib',
-          'biopython'
+          'biopython',
+          'sklearn'
       ],
       zip_safe=False)

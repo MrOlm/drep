@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## UNCOMITTED
+### Fixed
+- coverage values at the threshold are now accepted (< instead of <=)
+- setup now automatically installs scikit-bio (needed for MDS plot)
+
 ## [0.5.4] - 2017-03-28
 ### Changed
 - default coverage method is now larger (tests are updated to reflect this)
