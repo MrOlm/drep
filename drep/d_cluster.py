@@ -915,8 +915,13 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
         thread_nucmer_cmds_status(cmds,p,verbose=False)
 
     # Parse output
-    org_lengths = {get_genome_name_from_fasta(y):dm.fasta_length(x) \
-                    for x,y in zip(genomes,genomes)}
+    org_lengths = {}
+    for genome in genomes:
+        org_lengths[get_genome_name_from_fasta(genome)] = dm.fasta_length(genome)
+
+    # org_lengths = {get_genome_name_from_fasta(y):dm.fasta_length(x) \
+    #                 for x,y in zip(genomes,genomes)}
+
     deltafiles = ["{0}.delta".format(file) for file in files]
     df = process_deltafiles(deltafiles, org_lengths, **kwargs)
 
