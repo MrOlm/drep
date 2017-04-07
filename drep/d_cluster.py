@@ -917,6 +917,7 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
     # Parse output
     org_lengths = {}
     for genome in genomes:
+        logging.debug("getting genome length of {0}".format(genome))
         org_lengths[get_genome_name_from_fasta(genome)] = dm.fasta_length(genome)
 
     # org_lengths = {get_genome_name_from_fasta(y):dm.fasta_length(x) \
