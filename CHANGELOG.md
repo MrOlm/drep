@@ -4,10 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## UNCOMITTED
+## [0.5.5] - 2017-04-09
 ### Fixed
 - coverage values at the threshold are now accepted (< instead of <=)
 - setup now automatically installs scikit-bio (needed for MDS plot)
+
+### Changed
+- the loop in which genome lengths are calculated in d_cluster is changed to
+prevent errors when running large numbers of genomes
 
 ## [0.5.4] - 2017-03-28
 ### Changed
