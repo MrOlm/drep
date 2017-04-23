@@ -9,7 +9,9 @@
 
 # completed test files
 tests/test/*
-tests/test_backend/*
+tests/test_backend/crap/*
+tests/test_backend/ecoli_wd/*
+tests/test_backend/large_set/*
 
 # development symlink
 bin/drep

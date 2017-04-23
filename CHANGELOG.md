@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [0.5.6] - 2017-04-23
+### Fixed
+- nc option now works with gANI (controller makes it a float)
+- test_backend is now a thing automatically
+
 ## [0.5.5] - 2017-04-09
 ### Fixed
 - coverage values at the threshold are now accepted (< instead of <=)

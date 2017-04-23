@@ -105,7 +105,7 @@ def parse_args(args):
     Compflags.add_argument("-sa", "--S_ani", help="ANI threshold to form secondary clusters",
                         default=0.99, type = float)
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
-        genomes when doing secondary comparisons", default=0.1)
+        genomes when doing secondary comparisons", default=0.1, type=float)
     Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \
         + "(for ANIn only; gANI can only do larger method)\n"
         + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
