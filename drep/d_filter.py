@@ -61,6 +61,7 @@ def d_filter_wrapper(wd,**kwargs):
         if kwargs.get('Chdb',None) != None:
             logging.debug("Loading provided CheckM data...")
             Chdb = kwargs.get('Chdb')
+            Chdb = pd.read_csv(Chdb)
             validate_chdb(Chdb, bdb)
 
         elif workDirectory.hasDb('Chdb'):

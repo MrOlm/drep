@@ -56,7 +56,7 @@ def run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs):
                     os.path.exists("{0}_report.tsv".format(cent))):
             cmds.append(gen_centrifuge_cmd(genes,cent,**kwargs))
 
-    if len(cmds) > 1:
+    if len(cmds) >= 1:
         logging.info('Running Centrifuge')
         for cmd in cmds:
             logging.debug(' '.join(cmd))
