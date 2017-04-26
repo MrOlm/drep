@@ -4,10 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## UNCOMMITTED
+## [0.5.7] - 2017-04-26
 ### Fixed
 - having the user add their own Chdb now works
 - in bonus, changed an erroneous > to >= when calling centrifuge
+- changed the way the test_suite compares dataframes
 
 ## [0.5.6] - 2017-04-23
 ### Fixed

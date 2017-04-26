@@ -12,6 +12,8 @@ import pytest
 import shutil
 import logging
 
+import pandas as pd
+
 from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
@@ -39,7 +41,7 @@ def ensure_identicle(Swd, wd, skip = None):
         db1 = Swd.get_db(d)
         db2 =  wd.get_db(d)
 
-        assert db1.equals(db2), "{0} is not the same!".format(d)
+        assert compare_dfs(db1, db2), "{0} is not the same!".format(d)
 
     # Compare the clustering files
     pass
@@ -54,10 +56,31 @@ def sanity_check(Swd):
     f = open(Swd.location + '/log/amiinsane.txt')
     l = f.readlines()[0].strip()
     f.close()
-
     assert l == "No, you're not", l
 
     return
+
+def compare_dfs(db1, db2):
+    '''
+    Return True if dataframes are equal (order of dataframes doesn't matter)
+    '''
+
+    db1 = db1.fillna(0)
+    db2 = db2.fillna(0)
+
+    df = pd.concat([db1, db2])
+    df = df.reset_index(drop=True)
+    df_gpby = df.groupby(list(df.columns))
+    idx = [x[0] for x in df_gpby.groups.values() if len(x) == 1]
+
+    identicle = (len(idx) == 0)
+    # if not identicle:
+    #     print("index: ", idx)
+    #     print("db1: ",db1)
+    #     print("db2: ",db2)
+    #     print("df_gpby: ", str(df_gpby))
+    
+    return identicle
 
 class VerifyDereplicateWf():
     def __init__(self):
@@ -251,7 +274,7 @@ class VerifyCluster():
         # Confirm Mdb.csv is correct
         db1 = Swd.get_db('Mdb')
         db2 =  wd.get_db('Mdb')
-        assert db1.equals(db2), "{0} is not the same!".format('Mdb')
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Mdb')
 
         # Confirm Ndb.csv doesn't exist
         db2 = wd.get_db('Ndb')
@@ -322,7 +345,7 @@ class QuickTests():
         for db in ['Cdb', 'Mdb', 'Ndb']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
-            assert db1.equals(db2), "{0} is not the same!".format(db)
+            assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
 
     def unit_tests_2(self):
         '''
@@ -342,13 +365,13 @@ class QuickTests():
         for db in ['Mdb']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
-            assert db1.equals(db2), "{0} is not the same!".format(db)
+            assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
 
         # Confirm the following are not the same:
         for db in ['Cdb', 'Ndb']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
-            assert not db1.equals(db2), "{0} is the same! (and shouldn't be)".format(db)
+            assert not compare_dfs(db1, db2), "{0} is the same! (and shouldn't be)".format(db)
 
     def unit_tests_3(self):
         ''' Test cluster with --skipMash
@@ -368,7 +391,7 @@ class QuickTests():
         for db in ['Cdb', 'Ndb', 'Mdb']:
             db1 = Swd.get_db(db)
             db2 = wd.get_db(db)
-            assert not db1.equals(db2), "{0} is the same! (and shouldn't be)".format(db)
+            assert not compare_dfs(db1, db2), "{0} is the same! (and shouldn't be)".format(db)
 
     def unit_tests_4(self):
         '''
@@ -388,13 +411,13 @@ class QuickTests():
         for db in ['Mdb']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
-            assert db1.equals(db2), "{0} is not the same!".format(db)
+            assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
 
         # Confirm the following are not the same:
         for db in ['Ndb', 'Cdb']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
-            assert not db1.equals(db2), "{0} is the same! (and shouldn't be)".format(db)
+            assert not compare_dfs(db1, db2), "{0} is the same! (and shouldn't be)".format(db)
 
     def unit_tests_5(self):
         '''
@@ -414,12 +437,41 @@ class QuickTests():
         for db in ['Cdb', 'Mdb']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
-            assert db1.equals(db2), "{0} is not the same!".format(db)
+            assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
 
     def tearDown(self):
         logging.shutdown()
         if os.path.isdir(self.working_wd_loc):
             shutil.rmtree(self.working_wd_loc)
+
+class UnitTests():
+    '''
+    Very quick tests of random things THAT REQUIRE NO FILES / SETUP
+    '''
+
+    def run(self):
+        '''
+        run all tests
+        '''
+        self.test1()
+
+    def test1(self):
+        '''
+        test compare_dfs
+        '''
+        df1 = pd.DataFrame({'genome':['a', 'b', 'c'], 'value':[0, 0, 1]})
+        df2 = pd.DataFrame({'genome':['c', 'b', 'a'], 'value':[1, 0, 0]})
+        df3 = pd.DataFrame({'genome':['a', 'b', 'c'], 'value':[0, 0, 0]})
+        df4 = pd.DataFrame({'value':[0, 0, 1], 'genome':['a', 'b', 'c']})
+
+        assert not df1.equals(df2)
+        assert not df1.equals(df3)
+        assert df1.equals(df4)
+
+        assert compare_dfs(df1, df2)
+        assert compare_dfs(df1, df4)
+
+        assert not compare_dfs(df1, df3)
 
 def filter_test():
     ''' test the filter operation '''
@@ -445,6 +497,10 @@ def rerun_test():
     ''' run some tests on an already made workDirectory (to speed them up)'''
     QuickTests().run()
 
+def unit_test():
+    ''' run simple unit tests'''
+    UnitTests().run()
+
 @pytest.mark.long
 def test_long():
     dereplicate_wf_test()
@@ -461,8 +517,13 @@ def test_short():
 def test_quick():
     rerun_test()
 
+@pytest.mark.unit
+def test_unit():
+    unit_test()
+
 if __name__ == '__main__':
     #analyze_test()
+    #test_unit()
     test_quick()
     #test_short()
     test_long()
