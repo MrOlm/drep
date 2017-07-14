@@ -79,7 +79,7 @@ def compare_dfs(db1, db2):
     #     print("db1: ",db1)
     #     print("db2: ",db2)
     #     print("df_gpby: ", str(df_gpby))
-    
+
     return identicle
 
 class VerifyDereplicateWf():
@@ -473,6 +473,13 @@ class UnitTests():
 
         assert not compare_dfs(df1, df3)
 
+
+    def test2(self):
+        '''
+        test bonus debug
+        '''
+        pass
+
 def filter_test():
     ''' test the filter operation '''
     verifyFilter = VerifyFilter()
@@ -524,7 +531,7 @@ def test_unit():
 if __name__ == '__main__':
     #analyze_test()
     #test_unit()
-    test_quick()
+    #test_quick()
     #test_short()
     test_long()
     #dereplicate_wf_test()

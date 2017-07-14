@@ -25,6 +25,10 @@ Dependencies
 
 dRep requires many other great programs to run. Not all dependencies are needed for all operations
 
+To check which dependencies are installed on your system and accessible by dRep, run ::
+
+ $ dRep bonus testDir --check_dependencies
+
 **Near Essential**
 
 * `Mash <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>`_ - Makes primary clusters (v1.1.1 confirmed works)
@@ -33,7 +37,7 @@ dRep requires many other great programs to run. Not all dependencies are needed 
 **Recommended**
 
 * `CheckM <http://ecogenomics.github.io/CheckM/>`_ - Determines contamination and completeness of genomes (v1.0.7 confirmed works)
-* `gANI (aka CalculateANI) <https://ani.jgi-psf.org/html/download.php?>`_ - Performs gANI comparison method (v1.0 confirmed works)
+* `gANI (aka ANIcalculator) <https://ani.jgi-psf.org/html/download.php?>`_ - Performs gANI comparison method (v1.0 confirmed works)
 * `Prodigal <http://prodigal.ornl.gov/>`_ - Used be both checkM and gANI (v2.6.3 confirmed works)
 
 **Accessory**

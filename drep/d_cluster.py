@@ -19,6 +19,7 @@ import glob
 import drep as dm
 import drep
 import drep.d_filter as dFilter
+import drep.d_bonus as dBonus
 
 # This is to make pandas shut up with it's warnings
 pd.options.mode.chained_assignment = None
@@ -964,10 +965,14 @@ def run_pairwise_mauve(bdb, data_folder, **kwargs):
     return df
 
 def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
-    #gANI_exe = kwargs.get('gANI_exe','ANIcalculator')
-    loc = shutil.which('ANIcalculator')
+    # gANI_exe = kwargs.get('gANI_exe','ANIcalculator')
+    # loc = shutil.which('ANIcalculator')
+    loc, works = dBonus.find_program('ANIcalculator')
     if loc == None:
         logging.error('Cannot locate the program {0}- make sure its in the system path'\
+            .format('ANIcalculator (for gANI)'))
+    if works == False:
+        logging.error('Program {0} is not working'\
             .format('ANIcalculator (for gANI)'))
     gANI_exe = loc
 
@@ -1044,7 +1049,16 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     return df
 
 def parse_gani_file(file):
-    x = pd.read_table(file)
+    try:
+        x = pd.read_table(file)
+    except:
+        logging.error('gANI file {0} does not exist. The most likely reason is that '.format(file)\
+            + 'one of the genomes has a .fasta header than gANI doesnt like.'\
+            + ' Known issues include having a header over 160 characaters long, or any '\
+            + 'kind of special character besides "_" (including ".", ":", and "-").'\
+            + ' To fix this error either use ANIn (which is not as picky with fasta headers)'\
+            + ', or fix the .fasta headers to conform to those rules.')
+        sys.exit()
     x = x.rename(columns={'GENOME1':'reference','GENOME2':'querry','AF(1->2)':'rq_coverage',\
                         'AF(2->1)':'qr_coverage','ANI(1->2)':'rq_ani','ANI(2->1)':'qr_ani'})
     dict = x.to_dict(orient='list')

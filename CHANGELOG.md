@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## UNCOMMITTED
+### Added
+- bonus --check_dependencies now exists
+- gANI now gives a message when it fails
+
+### Fixed
+- pytest is now automatically installed with pip
+- the logger now does ' '.join(args) when printing the args to run dRep
+- documentation now correctly says "ANIcalculator"
+- makes sure ANIcalculator and checkM work when loading them (even if you can find them in the system path)
+
 ## [0.5.7] - 2017-04-26
 ### Fixed
 - having the user add their own Chdb now works

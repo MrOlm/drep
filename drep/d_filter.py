@@ -244,11 +244,22 @@ def run_prodigal(bdb, out_dir, **kwargs):
         logging.info("Past prodigal runs found- will not re-run")
 
 def run_checkM(genome_folder,checkm_outf,**kwargs):
+    import drep.d_bonus as dBonus
     t = str(kwargs.get('processors','6'))
     #check_exe = '/home/mattolm/.pyenv/versions/anaconda2-4.1.0/bin/checkm'
-    loc = shutil.which('checkm')
+    # loc = shutil.which('checkm')
+    # if loc == None:
+    #     logging.error('Cannot locate the program {0}- make sure its in the system path'\
+    #         .format('checkm'))
+    #     sys.exit()
+    # check_exe = loc
+    loc, works = dBonus.find_program('checkm')
     if loc == None:
         logging.error('Cannot locate the program {0}- make sure its in the system path'\
+            .format('checkm'))
+        sys.exit()
+    if works == False:
+        logging.error('Program {0} is not working!! Im going to crash now'\
             .format('checkm'))
         sys.exit()
     check_exe = loc

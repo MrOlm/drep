@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+#!/usr/bin/env python
 
 '''
 dRep- parse command-line arguemnts
@@ -53,7 +53,7 @@ def printHelp():
     adjust          -> Adjust genome clusters
     choose          -> Choose the best genome from each genome cluster
     evaluate        -> Evaluate genome de-replication
-    bonus           -> Other random operations (currently just determine taxonomy)
+    bonus           -> Other random operations (determine taxonomy / debug dependencies)
     analyze         -> Make figures related to the above operations; test alternative clustering
     ''')
 def parse_args(args):
@@ -258,6 +258,11 @@ def parse_args(args):
 
     bonus_parser = subparsers.add_parser("bonus",formatter_class=SmartFormatter,\
                     parents = [parent_parser, tax_parent], add_help=False)
+
+    # Check_dependencies
+    Cflags = bonus_parser.add_argument_group("DEBUGGING")
+    Cflags.add_argument('--check_dependencies', action='store_true',\
+                    help= "Check if program has access to all dependencies")
 
     '''
     ####### Arguments for evaluate operation ######

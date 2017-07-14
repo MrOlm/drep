@@ -5,8 +5,10 @@ import os
 import pandas as pd
 import sys
 import shutil
+import subprocess
 
 import drep.WorkDirectory
+#import drep as dm
 import drep as dm
 import drep.d_filter as d_filter
 
@@ -14,6 +16,10 @@ def d_bonus_wrapper(wd,**kwargs):
     logging.info("Loading work directory")
     wd = drep.WorkDirectory.WorkDirectory(wd)
     logging.debug(str(wd))
+
+    if kwargs.get('check_dependencies'):
+        logging.info('Checking dependencies')
+        check_dependencies(wd, **kwargs)
 
     if kwargs.get('run_tax'):
         logging.info('Running tax')
@@ -43,6 +49,33 @@ def run_taxonomy(wd, **kwargs):
     # Save Tdb and Bdb
     wd.store_db(Tdb,'Tdb',overwrite=kwargs.get('overwrite',False))
     wd.store_db(Bdb,'Bdb',overwrite=True)
+
+def check_dependencies(wd, **kwargs):
+    '''
+    For all possible dependencies, see if you can find them
+    '''
+    for dep in ['mash', 'nucmer', 'checkm', 'ANIcalculator', 'prodigal', 'centrifuge']:
+        loc, works = find_program(dep)
+        works_message = {True:'all good', False:'!!! ERROR !!!'}[works]
+        logging.info('{0:.<40} {1:15} (location = {2})'.format(dep, works_message, loc))
+
+def find_program(dep):
+    '''
+    return location of progrgam, works = True/False (based on calling the help)
+    '''
+    # find the location of the program
+    loc = shutil.which(dep)
+
+    # make sure the help on the program works
+    works = False
+    if loc != None:
+        try:
+            o = subprocess.check_output([loc, '-h'],stderr= subprocess.STDOUT)
+            works = True
+        except:
+            pass
+
+    return loc, works
 
 def run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs):
     t = kwargs.get('processors','6')
