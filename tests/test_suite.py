@@ -216,6 +216,32 @@ class VerifyAnalyze():
         if os.path.isdir(self.working_wd_loc):
             shutil.rmtree(self.working_wd_loc)
 
+class VerifyTaxonomy():
+    def setUp(self):
+        self.genomes = load_test_genomes()
+        self.wd_loc = load_test_wd_loc()
+        if os.path.isdir(self.wd_loc):
+            shutil.rmtree(self.wd_loc)
+        self.s_wd_loc = load_solutions_wd()
+
+    def run(self):
+        self.setUp()
+        self.taxTest1()
+        self.tearDown()
+
+        print('tax test 1 passed')
+
+    def taxTest1(self):
+        '''
+        Check the taxonomy call for max method
+        '''
+        pass
+
+    def tearDown(self):
+        logging.shutdown()
+        if os.path.isdir(self.wd_loc):
+            shutil.rmtree(self.wd_loc)
+
 class VerifyCluster():
     def __init__(self):
         pass
@@ -508,6 +534,10 @@ def unit_test():
     ''' run simple unit tests'''
     UnitTests().run()
 
+def taxonomy_test():
+    ''' test taxonomy methods'''
+    VerifyTaxonomy().run()
+
 @pytest.mark.long
 def test_long():
     dereplicate_wf_test()
@@ -533,7 +563,8 @@ if __name__ == '__main__':
     #test_unit()
     #test_quick()
     #test_short()
-    test_long()
+    #test_long()
     #dereplicate_wf_test()
+    taxonomy_test()
 
     print("Everything seems to be working swimmingly!")

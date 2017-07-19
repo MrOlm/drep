@@ -146,6 +146,12 @@ def parse_args(args):
     Tflags = tax_parent.add_argument_group('TAXONOMY')
     Tflags.add_argument("--run_tax",help='generate taxonomy information (Tdb)', \
                     action = "store_true")
+    Tflags.add_argument("--tax_method",help='R|Method of determining taxonomy\n' \
+                    + "percent = The most descriptive taxonimic level with at least (per) hits\n"\
+                    + "max     = The centrifuge taxonomic level with the most overall hits",\
+                    default='percent', choices=['percent','max'])
+    Tflags.add_argument("-per", "--percent", help='minimum percent for percent method', \
+                    default = "50")
     Tflags.add_argument("--cent_index",help='path to centrifuge index (for example, ' + \
                     "/home/mattolm/download/centrifuge/indices/b+h+v")
 
