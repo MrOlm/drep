@@ -1,0 +1,36 @@
+tax_ID,tax_confidence,tax_level,taxonomy,best_hit,full_tax,genome
+2,100.0,superkingdom,Bacteria,False,False,Enterococcus_casseliflavus_EC20.fasta
+1239,100.0,phylum,Firmicutes,False,False,Enterococcus_casseliflavus_EC20.fasta
+91061,100.0,class,Bacilli,False,False,Enterococcus_casseliflavus_EC20.fasta
+186826,100.0,order,Lactobacillales,False,False,Enterococcus_casseliflavus_EC20.fasta
+81852,100.0,family,Enterococcaceae,False,False,Enterococcus_casseliflavus_EC20.fasta
+1350,100.0,genus,Enterococcus,False,False,Enterococcus_casseliflavus_EC20.fasta
+37734,98.10441267868241,species,Enterococcus casseliflavus,True,37734|Bacteria|Firmicutes|Bacilli|Lactobacillales|Enterococcaceae|Enterococcus|Enterococcus casseliflavus,Enterococcus_casseliflavus_EC20.fasta
+2,100.0,superkingdom,Bacteria,False,False,Enterococcus_faecalis_T2.fna
+1239,99.77097647303769,phylum,Firmicutes,False,False,Enterococcus_faecalis_T2.fna
+91061,99.18800749531543,class,Bacilli,False,False,Enterococcus_faecalis_T2.fna
+186826,98.14699146366854,order,Lactobacillales,False,False,Enterococcus_faecalis_T2.fna
+81852,97.31417863835104,family,Enterococcaceae,False,False,Enterococcus_faecalis_T2.fna
+1350,97.31417863835104,genus,Enterococcus,False,False,Enterococcus_faecalis_T2.fna
+1351,95.50281074328545,species,Enterococcus faecalis,True,1351|Bacteria|Firmicutes|Bacilli|Lactobacillales|Enterococcaceae|Enterococcus|Enterococcus faecalis,Enterococcus_faecalis_T2.fna
+2,100.0,superkingdom,Bacteria,False,False,Enterococcus_faecalis_TX0104.fa
+1239,99.9116802826231,phylum,Firmicutes,False,False,Enterococcus_faecalis_TX0104.fa
+91061,99.82336056524619,class,Bacilli,False,False,Enterococcus_faecalis_TX0104.fa
+186826,98.74144402737912,order,Lactobacillales,False,False,Enterococcus_faecalis_TX0104.fa
+81852,98.18944579377346,family,Enterococcaceae,False,False,Enterococcus_faecalis_TX0104.fa
+1350,98.12320600574078,genus,Enterococcus,False,False,Enterococcus_faecalis_TX0104.fa
+1351,95.03201589754913,species,Enterococcus faecalis,True,1351|Bacteria|Firmicutes|Bacilli|Lactobacillales|Enterococcaceae|Enterococcus|Enterococcus faecalis,Enterococcus_faecalis_TX0104.fa
+2,100.0,superkingdom,Bacteria,False,False,Enterococcus_faecalis_YI6-1.fna
+1239,99.95536710555679,phylum,Firmicutes,False,False,Enterococcus_faecalis_YI6-1.fna
+91061,99.39745592501674,class,Bacilli,False,False,Enterococcus_faecalis_YI6-1.fna
+186826,99.0180763222495,order,Lactobacillales,False,False,Enterococcus_faecalis_YI6-1.fna
+81852,98.61638027226066,family,Enterococcaceae,False,False,Enterococcus_faecalis_YI6-1.fna
+1350,98.61638027226066,genus,Enterococcus,False,False,Enterococcus_faecalis_YI6-1.fna
+1351,97.92457040839099,species,Enterococcus faecalis,True,1351|Bacteria|Firmicutes|Bacilli|Lactobacillales|Enterococcaceae|Enterococcus|Enterococcus faecalis,Enterococcus_faecalis_YI6-1.fna
+2,100.0,superkingdom,Bacteria,False,False,Escherichia_coli_Sakai.fna
+1224,100.0,phylum,Proteobacteria,False,False,Escherichia_coli_Sakai.fna
+1236,99.98646820027064,class,Gammaproteobacteria,False,False,Escherichia_coli_Sakai.fna
+91347,99.98646820027064,order,Enterobacterales,False,False,Escherichia_coli_Sakai.fna
+543,99.98646820027064,family,Enterobacteriaceae,False,False,Escherichia_coli_Sakai.fna
+561,91.67794316644114,genus,Escherichia,False,False,Escherichia_coli_Sakai.fna
+562,90.60893098782138,species,Escherichia coli,True,562|Bacteria|Proteobacteria|Gammaproteobacteria|Enterobacterales|Enterobacteriaceae|Escherichia|Escherichia coli,Escherichia_coli_Sakai.fna

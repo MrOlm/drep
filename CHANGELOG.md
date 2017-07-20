@@ -5,6 +5,11 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
 ## Uncommitted
+### Added
+- genome input for bonus
+- option to to the 'percent' method for determining taxonomy
+- testing for taxonomy
+- Tdb now includes the columns "best_hit" and "full_tax" (for both methods of determining taxonomy)
 
 ## [1.0.0] - 2017-07-14
 ### Added

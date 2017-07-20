@@ -1,0 +1,26 @@
+tax_ID,tax_confidence,tax_level,taxonomy,genome,best_hit,full_tax
+386585.0,4.298815437523882,leaf,Escherichia coli O157:H7 str. Sakai,Escherichia_coli_Sakai.fna,False,False
+,,subspecies,,Escherichia_coli_Sakai.fna,False,False
+562.0,91.59342758884219,species,Escherichia coli,Escherichia_coli_Sakai.fna,True,562|Bacteria|Proteobacteria|Gammaproteobacteria|Enterobacterales|Enterobacteriaceae|Escherichia|Escherichia coli
+620.0,0.6687046236148261,genus,Shigella,Escherichia_coli_Sakai.fna,False,False
+10744.0,0.22927015666794037,family,Podoviridae,Escherichia_coli_Sakai.fna,False,False
+226185.0,22.842821339061942,leaf,Enterococcus faecalis V583,Enterococcus_faecalis_YI6-1.fna,False,False
+,,subspecies,,Enterococcus_faecalis_YI6-1.fna,False,False
+1351.0,38.73970640887934,species,Enterococcus faecalis,Enterococcus_faecalis_YI6-1.fna,True,1351|Bacteria|Firmicutes|Bacilli|Lactobacillales|Enterococcaceae|Enterococcus|Enterococcus faecalis
+1301.0,0.03580379520229145,genus,Streptococcus,Enterococcus_faecalis_YI6-1.fna,False,False
+128827.0,0.2864303616183316,family,Erysipelotrichaceae,Enterococcus_faecalis_YI6-1.fna,False,False
+226185.0,41.020543406229294,leaf,Enterococcus faecalis V583,Enterococcus_faecalis_TX0104.fa,True,226185|Bacteria|Firmicutes|Bacilli|Lactobacillales|Enterococcaceae|Enterococcus|Enterococcus faecalis
+,,subspecies,,Enterococcus_faecalis_TX0104.fa,False,False
+1351.0,28.528827037773357,species,Enterococcus faecalis,Enterococcus_faecalis_TX0104.fa,False,False
+1301.0,0.09940357852882703,genus,Streptococcus,Enterococcus_faecalis_TX0104.fa,False,False
+81852.0,0.03313452617627568,family,Enterococcaceae,Enterococcus_faecalis_TX0104.fa,False,False
+226185.0,23.09702711532179,leaf,Enterococcus faecalis V583,Enterococcus_faecalis_T2.fna,False,False
+,,subspecies,,Enterococcus_faecalis_T2.fna,False,False
+1351.0,36.81803332244365,species,Enterococcus faecalis,Enterococcus_faecalis_T2.fna,True,1351|Bacteria|Firmicutes|Bacilli|Lactobacillales|Enterococcaceae|Enterococcus|Enterococcus faecalis
+1279.0,0.09800718719372753,genus,Staphylococcus,Enterococcus_faecalis_T2.fna,False,False
+128827.0,0.22868343678536426,family,Erysipelotrichaceae,Enterococcus_faecalis_T2.fna,False,False
+565655.0,99.84182220816197,leaf,Enterococcus casseliflavus EC20,Enterococcus_casseliflavus_EC20.fasta,True,565655|Bacteria|Firmicutes|Bacilli|Lactobacillales|Enterococcaceae|Enterococcus|Enterococcus casseliflavus
+,,subspecies,,Enterococcus_casseliflavus_EC20.fasta,False,False
+1353.0,1.7083201518506803,species,Enterococcus gallinarum,Enterococcus_casseliflavus_EC20.fasta,False,False
+,,genus,,Enterococcus_casseliflavus_EC20.fasta,False,False
+,,family,,Enterococcus_casseliflavus_EC20.fasta,False,False

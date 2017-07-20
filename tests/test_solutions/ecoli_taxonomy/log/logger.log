@@ -1,0 +1,79 @@
+07-19 15:26 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+07-19 15:26 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/log/logger.log***
+07-19 15:26 DEBUG    Command to run dRep was: /home/mattolm/.pyenv/versions/anaconda3-4.1.0/bin/dRep filter ecoli_taxonomy -g ../genomes/Enterococcus_casseliflavus_EC20.fasta ../genomes/Enterococcus_faecalis_T2.fna ../genomes/Enterococcus_faecalis_TX0104.fa ../genomes/Enterococcus_faecalis_YI6-1.fna ../genomes/Escherichia_coli_Sakai.fna --skipCheckM
+
+07-19 15:26 DEBUG    dRep version 1.0.0 was run 
+
+07-19 15:26 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+07-19 15:26 DEBUG    Namespace(Chdb=None, checkM_method='lineage_wf', completeness=75, contamination=25, dry=False, genomes=['../genomes/Enterococcus_casseliflavus_EC20.fasta', '../genomes/Enterococcus_faecalis_T2.fna', '../genomes/Enterococcus_faecalis_TX0104.fa', '../genomes/Enterococcus_faecalis_YI6-1.fna', '../genomes/Escherichia_coli_Sakai.fna'], length=50000, operation='filter', overwrite=False, processors=6, skipCheckM=True, strain_htr=25, work_directory='ecoli_taxonomy')
+07-19 15:26 DEBUG    Starting the filter operation
+07-19 15:26 DEBUG    Loading work directory in filter
+07-19 15:26 DEBUG    Located: /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy
+Datatables: []
+Cluster files: []
+Arguments: []
+07-19 15:26 DEBUG    Validating filter arguments
+07-19 15:26 INFO     Will filter the genome list
+07-19 15:26 DEBUG    Filtering genomes by size
+07-19 15:26 INFO     100.00% of genomes passed length filtering
+07-19 15:26 DEBUG    !!! Finished the filter operation !!!
+07-19 15:27 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+07-19 15:27 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/log/logger.log***
+07-19 15:27 DEBUG    Command to run dRep was: /home/mattolm/.pyenv/versions/anaconda3-4.1.0/bin/dRep bonus ecoli_taxonomy --run_tax --cent_index /home/mattolm/download/centrifuge/indices/b+h+v
+
+07-19 15:27 DEBUG    dRep version 1.0.0 was run 
+
+07-19 15:27 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+07-19 15:27 DEBUG    Namespace(cent_index='/home/mattolm/download/centrifuge/indices/b+h+v', check_dependencies=False, dry=False, operation='bonus', overwrite=False, percent='50', processors=6, run_tax=True, tax_method='percent', work_directory='ecoli_taxonomy')
+07-19 15:27 DEBUG    Starting the bonus operation
+07-19 15:27 INFO     Loading work directory
+07-19 15:27 DEBUG    Located: /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy
+Datatables: ['Bdb']
+Cluster files: []
+Arguments: []
+07-19 15:27 INFO     Running tax
+07-19 15:29 INFO     Running Centrifuge
+07-19 15:29 DEBUG    /home/mattolm/download/centrifuge/centrifuge -f -x /home/mattolm/download/centrifuge/indices/b+h+v /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/prodigal/Enterococcus_casseliflavus_EC20.fasta.fna -S /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Enterococcus_casseliflavus_EC20.fasta_hits.tsv -p 1 --report-file /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Enterococcus_casseliflavus_EC20.fasta_report.tsv
+07-19 15:29 DEBUG    /home/mattolm/download/centrifuge/centrifuge -f -x /home/mattolm/download/centrifuge/indices/b+h+v /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/prodigal/Enterococcus_faecalis_T2.fna.fna -S /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Enterococcus_faecalis_T2.fna_hits.tsv -p 1 --report-file /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Enterococcus_faecalis_T2.fna_report.tsv
+07-19 15:29 DEBUG    /home/mattolm/download/centrifuge/centrifuge -f -x /home/mattolm/download/centrifuge/indices/b+h+v /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/prodigal/Enterococcus_faecalis_TX0104.fa.fna -S /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Enterococcus_faecalis_TX0104.fa_hits.tsv -p 1 --report-file /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Enterococcus_faecalis_TX0104.fa_report.tsv
+07-19 15:29 DEBUG    /home/mattolm/download/centrifuge/centrifuge -f -x /home/mattolm/download/centrifuge/indices/b+h+v /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/prodigal/Enterococcus_faecalis_YI6-1.fna.fna -S /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Enterococcus_faecalis_YI6-1.fna_hits.tsv -p 1 --report-file /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Enterococcus_faecalis_YI6-1.fna_report.tsv
+07-19 15:29 DEBUG    /home/mattolm/download/centrifuge/centrifuge -f -x /home/mattolm/download/centrifuge/indices/b+h+v /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/prodigal/Escherichia_coli_Sakai.fna.fna -S /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Escherichia_coli_Sakai.fna_hits.tsv -p 1 --report-file /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/data/centrifuge/Escherichia_coli_Sakai.fna_report.tsv
+07-19 15:31 DEBUG    !!! Finished the bonus operation !!!
+07-19 16:51 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+07-19 16:51 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/log/logger.log***
+07-19 16:51 DEBUG    Command to run dRep was: /home/mattolm/.pyenv/versions/anaconda3-4.1.0/bin/dRep bonus ecoli_taxonomy/ --run_tax --tax_method max
+
+07-19 16:51 DEBUG    dRep version 1.0.0 was run 
+
+07-19 16:51 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+07-19 16:51 DEBUG    Namespace(cent_index=None, check_dependencies=False, dry=False, genomes=None, operation='bonus', overwrite=False, percent='50', processors=6, run_tax=True, tax_method='max', work_directory='ecoli_taxonomy/')
+07-19 16:51 DEBUG    Starting the bonus operation
+07-19 16:51 INFO     Loading work directory
+07-19 16:51 DEBUG    Located: /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy
+Datatables: []
+Cluster files: []
+Arguments: []
+07-19 16:51 INFO     Running tax
+07-19 16:51 ERROR    I don't have anything to determine the taxonomy of! Give me a genome list
+07-19 16:51 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+07-19 16:51 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy/log/logger.log***
+07-19 16:51 DEBUG    Command to run dRep was: /home/mattolm/.pyenv/versions/anaconda3-4.1.0/bin/dRep bonus ecoli_taxonomy/ --run_tax --tax_method max -g ../genomes/Enterococcus_casseliflavus_EC20.fasta ../genomes/Enterococcus_faecalis_T2.fna ../genomes/Enterococcus_faecalis_TX0104.fa ../genomes/Enterococcus_faecalis_YI6-1.fna ../genomes/Escherichia_coli_Sakai.fna
+
+07-19 16:51 DEBUG    dRep version 1.0.0 was run 
+
+07-19 16:51 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+07-19 16:51 DEBUG    Namespace(cent_index=None, check_dependencies=False, dry=False, genomes=['../genomes/Enterococcus_casseliflavus_EC20.fasta', '../genomes/Enterococcus_faecalis_T2.fna', '../genomes/Enterococcus_faecalis_TX0104.fa', '../genomes/Enterococcus_faecalis_YI6-1.fna', '../genomes/Escherichia_coli_Sakai.fna'], operation='bonus', overwrite=False, percent='50', processors=6, run_tax=True, tax_method='max', work_directory='ecoli_taxonomy/')
+07-19 16:51 DEBUG    Starting the bonus operation
+07-19 16:51 INFO     Loading work directory
+07-19 16:51 DEBUG    Located: /home/mattolm/Programs/drep/tests/test_solutions/ecoli_taxonomy
+Datatables: []
+Cluster files: []
+Arguments: []
+07-19 16:51 INFO     Running tax
+07-19 16:51 INFO     Past prodigal runs found- will not re-run
+07-19 16:51 INFO     Past centrifuge runs found- will not re-run
+07-19 16:51 DEBUG    !!! Finished the bonus operation !!!

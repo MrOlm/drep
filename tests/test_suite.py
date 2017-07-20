@@ -29,6 +29,10 @@ def load_solutions_wd():
     loc = os.path.join(str(os.getcwd()),'../tests/test_solutions/ecoli_wd')
     return loc
 
+def load_solutions_taxonomy_wd():
+    loc = os.path.join(str(os.getcwd()),'../tests/test_solutions/ecoli_taxonomy')
+    return loc
+
 def ensure_identicle(Swd, wd, skip = None):
     if skip == None:
         skip = []
@@ -189,7 +193,7 @@ class VerifyAnalyze():
     def run(self):
         self.setUp()
         self.unit_test_1()
-        #self.tearDown()
+        self.tearDown()
 
     def unit_test_1(self):
         '''
@@ -217,16 +221,28 @@ class VerifyAnalyze():
             shutil.rmtree(self.working_wd_loc)
 
 class VerifyTaxonomy():
+    ''' These tests skip running centrifuge and prodigal, but test parsing of files
+    '''
+
     def setUp(self):
         self.genomes = load_test_genomes()
         self.wd_loc = load_test_wd_loc()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
-        self.s_wd_loc = load_solutions_wd()
+        self.s_wd_loc = load_solutions_taxonomy_wd()
+
+        # copy over the data from solutions directory
+        os.mkdir(self.wd_loc)
+        shutil.copytree(os.path.join(self.s_wd_loc, 'data'), \
+            os.path.join(self.wd_loc, 'data'))
 
     def run(self):
         self.setUp()
         self.taxTest1()
+        self.tearDown()
+
+        self.setUp()
+        self.taxTest2()
         self.tearDown()
 
         print('tax test 1 passed')
@@ -235,7 +251,55 @@ class VerifyTaxonomy():
         '''
         Check the taxonomy call for max method
         '''
-        pass
+        genomes = self.genomes
+        wd_loc = self.wd_loc
+        swd_loc = self.s_wd_loc
+
+        # Call the command
+        args = argumentParser.parse_args(['bonus',wd_loc,'-g'] +genomes \
+                + ['--run_tax','--cent_index','/home/mattolm/download/centrifuge/indices/b+h+v',\
+                '--tax_method', 'max'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(swd_loc)
+        wd = WorkDirectory(wd_loc)
+
+        tdbS = Swd.get_db('Bdb')
+        tdb = wd.get_db('Bdb')
+        assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Bdb')
+
+        tdbS = Swd.get_db('Tdb')
+        tdb = wd.get_db('Tdb')
+        assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Tdb')
+
+    def taxTest2(self):
+        '''
+        Check the taxonomy call for percent method
+        '''
+        genomes = self.genomes
+        wd_loc = self.wd_loc
+        swd_loc = self.s_wd_loc
+
+        # Call the command
+        args = argumentParser.parse_args(['bonus',wd_loc,'-g'] +genomes \
+                + ['--run_tax','--cent_index','/home/mattolm/download/centrifuge/indices/b+h+v',\
+                '--tax_method', 'percent'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(swd_loc)
+        wd = WorkDirectory(wd_loc)
+
+        tdbS = Swd.get_db('BdbP')
+        tdb = wd.get_db('Bdb')
+        assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Bdb')
+
+        tdbS = Swd.get_db('TdbP')
+        tdb = wd.get_db('Tdb')
+        assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Tdb')
 
     def tearDown(self):
         logging.shutdown()
@@ -250,7 +314,7 @@ class VerifyCluster():
         self.genomes = load_test_genomes()
         self.wd_loc = load_test_wd_loc()
         if os.path.isdir(self.wd_loc):
-            shutil.rmtree(self.wd_loc)
+            shutil.rmtree(self.wd_loc, ignore_errors=True)
         self.s_wd_loc = load_solutions_wd()
 
     def run(self):
@@ -535,7 +599,10 @@ def unit_test():
     UnitTests().run()
 
 def taxonomy_test():
-    ''' test taxonomy methods'''
+    '''
+    Test taxonomy methods
+    '''
+
     VerifyTaxonomy().run()
 
 @pytest.mark.long
@@ -549,6 +616,7 @@ def test_long():
 def test_short():
     cluster_test()
     rerun_test()
+    taxonomy_test()
 
 @pytest.mark.quick
 def test_quick():
@@ -565,6 +633,7 @@ if __name__ == '__main__':
     #test_short()
     #test_long()
     #dereplicate_wf_test()
-    taxonomy_test()
+    #taxonomy_test()
+    #cluster_test()
 
     print("Everything seems to be working swimmingly!")

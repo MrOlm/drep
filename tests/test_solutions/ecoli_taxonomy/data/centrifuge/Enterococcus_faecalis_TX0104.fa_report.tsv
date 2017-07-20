@@ -1,0 +1,76 @@
+name	taxID	taxRank	genomeSize	numReads	numUniqueReads	abundance
+Gammaproteobacteria	1236	class	5260088	1	0	0.0
+Firmicutes	1239	phylum	3482884	1	0	0.0
+Staphylococcus	1279	genus	3831402	3	0	0.0
+Staphylococcus aureus	1280	species	4189009	13	3	1.80517e-20
+Staphylococcus epidermidis	1282	species	2601987	2	0	2.41158e-95
+Staphylococcus schleiferi	1295	species	12494798	1	0	0.0
+Streptococcus	1301	genus	2062489	5	0	0.0
+Streptococcus suis	1307	species	2106595	5	0	9.23014e-39
+Streptococcus pyogenes	1314	species	1940887	4	0	0.00333559
+Enterococcus	1350	genus	3036872	1	0	0.0
+Enterococcus faecalis	1351	species	2996992	910	373	0.164132
+Enterococcus faecium	1352	species	2979896	48	5	0.0316675
+Enterococcus gallinarum	1353	species	3821349	3	3	0.0
+Enterococcus hirae	1354	species	2856440	5	2	0.00272898
+Lactococcus	1357	genus	2447168	1	0	0.0
+Aerococcus viridans	1377	species	2199877	1	0	0.0
+Bacillus subtilis	1423	species	5133743	3	0	6.35666e-17
+Clostridioides difficile	1496	species	5577074	1	0	0.0
+Listeria monocytogenes	1639	species	3048547	1	1	0.0
+Erysipelothrix rhusiopathiae	1648	species	1770425	1	0	0.0
+Actinobacteria	1760	class	4535411	1	0	0.0
+Carnobacterium	2747	genus	3073765	1	0	0.0
+Homo sapiens	9606	species	3236336281	13	10	0.0
+Epsilonproteobacteria	29547	class	1890646	1	0	0.0
+synthetic construct	32630	species	26537524	2	1	8.67587e-224
+Melissococcus plutonius	33970	species	2059558	1	0	0.0
+Enterococcus durans	53345	species	6143683	14	1	2.86113e-15
+Macrococcus caseolyticus	69966	species	2219737	1	0	0.0
+Enterococcaceae	81852	family	2894002	1	0	0.0
+Clostridium pasteurianum BC1	86416	leaf	5044100	1	1	0.0
+Staphylococcus epidermidis RP62A	176279	leaf	2643840	4	0	2.00306e-97
+Enterococcus faecalis V583	226185	leaf	3359974	1413	1086	0.470501
+Staphylococcus pseudintermedius	283734	species	2594798	3	0	0
+Flavonifractor plautii	292800	species	3818500	1	1	0.0
+Enterococcus faecium DO	333849	leaf	3052572	7	0	4.40158e-45
+Finegoldia magna ATCC 29328	334413	leaf	1986740	1	0	0.0
+Pandoraea thiooxydans	445709	species	4464186	1	1	0.0
+Staphylococcus aureus subsp. aureus USA300_FPR3757	451515	leaf	2917469	2	0	0.0
+Macrococcus caseolyticus JCSC5402	458233	leaf	2219737	1	1	0.0
+Enterococcus faecalis OG1RF	474186	leaf	2739625	387	171	1.54851e-42
+Eggerthella sp. YY7918	502558	species	3123671	1	0	1.47754e-19
+Streptococcus equi subsp. equi 4047	553482	leaf	2253793	1	0	0.0
+Streptococcus suis SC84	568813	leaf	2095898	5	0	0.00126649
+Streptococcus suis BM407	568814	leaf	2170808	1	0	1.76775e-15
+Desulfobacula toluolica Tol2	651182	leaf	5197905	1	1	0.0
+Enterococcus phage phiFL1A	673832	leaf	38764	4	3	0
+Enterococcus phage phiFL2A	673835	leaf	36270	1	0	0.112671
+Enterococcus phage phiFL3A	673837	leaf	39576	5	3	0
+Enterococcus phage phiFL4A	673839	species	37856	8	2	0.119902
+Desulfurobacterium thermolithotrophum DSM 11699	868864	leaf	1541968	1	1	0.0
+Eubacterium sulci ATCC 35585	888727	leaf	1739380	1	0	0.0
+Staphylococcus aureus subsp. aureus ECT-R 2	889933	leaf	2759052	1	0	0.0
+Staphylococcus pseudintermedius HKU10-03	937773	leaf	2617381	1	1	0.0
+Tetragenococcus halophilus NBRC 12172	945021	leaf	2562720	2	2	0.0
+Streptococcus suis JS14	945704	leaf	2137435	1	0	0.00264633
+Staphylococcus pseudintermedius ED99	984892	leaf	2572216	1	0	1.07368e-14
+Streptococcus gallolyticus subsp. gallolyticus ATCC BAA-2069	990317	leaf	2377209	1	1	0.0
+Basilea psittacipulmonis DSM 24701	1072685	leaf	1959069	1	1	0.0
+Staphylococcus aureus subsp. aureus ST228	1074919	leaf	22318508	2	0	0.0
+Enterococcus faecium Aus0004	1155766	leaf	3019780	32	1	6.36871e-74
+Staphylococcus warneri SG1	1194526	leaf	2560716	1	0	0.0
+Enterococcus faecalis ATCC 29212	1201292	leaf	3048131	460	130	0.0225338
+Enterococcus faecalis D32	1206105	leaf	3062505	426	177	0.00964411
+Bacillus subtilis subsp. subtilis str. AG1839	1221328	leaf	4193640	1	0	0.0
+Streptococcus suis SC070731	1246365	leaf	2138568	1	0	1.00102e-08
+Enterococcus faecalis str. Symbioflor 1	1261557	leaf	2810675	327	34	9.42256e-15
+Enterococcus faecalis DENG1	1287066	leaf	2961043	394	99	0.00199003
+Enterococcus mundtii QU 25	1300150	leaf	3351060	1	0	0
+Enterococcus faecium Aus0085	1305849	leaf	3239275	32	2	0.0126544
+Bacillus bombysepticus str. Wang	1330043	leaf	5873592	1	0	0.0
+Staphylococcus aureus subsp. aureus SA268	1368166	leaf	2833899	11	4	0.0123309
+Melissococcus plutonius S1	1385937	leaf	2073864	1	1	0.0
+Streptococcus agalactiae CNCTC 10/84	1427374	leaf	2013842	1	1	0.0
+Chryseobacterium sp. IHB B 17019	1721091	species	4077766	1	1	0.0
+Staphylococcus phage SPbeta-like	1732063	species	127726	3	0	0.031995

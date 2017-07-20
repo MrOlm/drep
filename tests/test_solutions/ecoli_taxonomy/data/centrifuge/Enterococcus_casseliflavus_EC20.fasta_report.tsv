@@ -1,0 +1,7 @@
+name	taxID	taxRank	genomeSize	numReads	numUniqueReads	abundance
+Enterococcus faecium	1352	species	2979896	3	0	1.03397e-18
+Enterococcus gallinarum	1353	species	3821349	55	4	0.000551857
+Enterococcus hirae	1354	species	2856440	1	0	1.57541e-19
+Enterococcus durans	53345	species	6143683	1	0	2.15571e-20
+Enterococcus faecium DO	333849	leaf	3052572	1	0	0.0
+Enterococcus casseliflavus EC20	565655	leaf	3427276	3157	3104	0.999448

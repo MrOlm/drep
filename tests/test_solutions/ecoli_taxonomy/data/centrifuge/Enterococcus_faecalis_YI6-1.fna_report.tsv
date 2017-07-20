@@ -1,0 +1,68 @@
+name	taxID	taxRank	genomeSize	numReads	numUniqueReads	abundance
+Haemophilus influenzae	727	species	1901941	1	1	0.0
+Staphylococcus	1279	genus	3831402	1	0	0.0
+Staphylococcus aureus	1280	species	4189009	1	0	0.0
+Streptococcus	1301	genus	2062489	1	0	0.0
+Streptococcus agalactiae	1311	species	2062434	2	0	0.0
+Streptococcus iniae	1346	species	2086959	1	0	0.0
+Enterococcus faecalis	1351	species	2996992	1138	469	0.32053
+Enterococcus faecium	1352	species	2979896	11	0	6.15526e-13
+Bacillales	1385	order	4555528	7	0	0.0
+Bacillus licheniformis	1402	species	8445242	1	0	0.0
+Clostridioides difficile	1496	species	5577074	1	1	0.0
+Lactobacillus salivarius	1624	species	2082826	1	0	0
+Listeria monocytogenes	1639	species	3048547	3	2	0.0
+Mycoplasmatales	2085	order	976599	1	0	0.0
+Mycoplasmataceae	2092	family	976599	1	0	0.0
+Homo sapiens	9606	species	3236336281	5	4	0.0
+synthetic construct	32630	species	26537524	3	3	0.000355477
+Enterococcus durans	53345	species	6143683	10	0	0.0
+Aerococcus christensenii	87541	species	1634920	1	0	0.003024
+Staphylococcaceae	90964	family	3804085	4	0	0.0
+Bacilli	91061	class	3437248	1	0	0.0
+Erysipelotrichaceae	128827	family	1770425	11	0	0.0
+Clostridiales	186802	order	4108646	8	0	0.0
+Peptostreptococcaceae	186804	family	4665558	2	0	0.0
+Bacillaceae	186817	family	5236859	3	0	0.0
+Lactobacillales	186826	order	2263286	12	0	0.0
+Enterococcus faecalis V583	226185	leaf	3359974	771	536	0.189719
+Lactobacillus johnsonii NCC 533	257314	leaf	1992676	1	1	0.0
+Lactococcus lactis subsp. cremoris SK11	272622	leaf	2598348	1	0	0.0
+Bacillus licheniformis DSM 13 = ATCC 14580	279010	leaf	8445242	2	0	0.0
+Clostridium beijerinckii NCIMB 8052	290402	leaf	6000632	1	0	0.0
+Chlamydia psittaci 6BC	331636	leaf	2358433	1	0	0.0
+Enterococcus faecium DO	333849	leaf	3052572	5	1	2.04519e-15
+Enterococcus faecalis OG1RF	474186	leaf	2739625	482	212	0.045579
+Gardnerella vaginalis ATCC 14019	525284	leaf	1667350	1	0	0.0
+Erysipelotrichales	526525	order	1770425	1	0	0.0
+Ruminococcaceae	541000	family	3744377	1	0	0.0
+Listeria monocytogenes L99	563174	leaf	2979198	1	0	0.0
+Gardnerella vaginalis ATCC 14018 = JCM 11026	585528	leaf	1667406	1	0	0.0
+Francisella guangzhouensis	594679	species	1661527	1	1	0.0
+Deferribacter desulfuricans SSM1	639282	leaf	2542933	1	0	0.0
+Tenacibaculum dicentrarchi	669041	species	2918253	1	1	0.0
+Enterococcus phage phiFL1A	673832	leaf	38764	1	1	0.0
+Streptococcus constellatus subsp. pharyngis C232	696216	leaf	1935414	1	0	0.0
+Streptococcus constellatus subsp. pharyngis C818	862968	leaf	1935662	1	0	0.0
+Streptococcus constellatus subsp. pharyngis C1050	862969	leaf	1991156	1	0	0.0
+Clostridium beijerinckii ATCC 35702	864803	leaf	5999050	1	0	0.0
+Tetragenococcus halophilus NBRC 12172	945021	leaf	2562720	1	1	0.0
+Enterococcus phage EF62phi	977801	species	30505	35	35	0.309244
+Gardnerella vaginalis HMP9231	1009464	leaf	1726519	1	0	0.0
+Listeria monocytogenes M7	1030009	leaf	2976163	1	0	0.0
+Chlamydia psittaci CP3	1050219	leaf	1175702	1	0	0.0
+Chlamydia psittaci NJ1	1050221	leaf	1168986	1	0	0.0
+Lactococcus lactis subsp. cremoris UC509.9	1111678	leaf	2457347	1	0	0.0
+Enterococcus faecium Aus0004	1155766	leaf	3019780	1	0	0.0
+Enterococcus faecalis ATCC 29212	1201292	leaf	3048131	563	140	0.0473074
+Enterococcus faecalis D32	1206105	leaf	3062505	474	205	0.0295756
+Chlamydia psittaci MN	1218354	leaf	1175981	1	0	0.0
+Chlamydia psittaci WS/RT/E30	1218356	leaf	1148342	1	0	0.0
+Enterococcus faecalis str. Symbioflor 1	1261557	leaf	2810675	451	52	0.013297
+Enterococcus faecalis DENG1	1287066	leaf	2961043	510	112	0.0413695
+Lactococcus lactis subsp. cremoris KW2	1295826	leaf	2427048	1	0	0.0
+Enterococcus mundtii QU 25	1300150	leaf	3351060	4	0	1.11067e-13
+Enterococcus faecium Aus0085	1305849	leaf	3239275	2	1	0.0
+Streptococcus agalactiae 09mas018883	1309806	leaf	2138694	1	0	0.0
+Paenibacillus sp. FSL R5-0345	1536770	species	6787172	1	0	0.0
+Mollicutes bacterium HR1	1541959	species	1878735	1	1	0.0

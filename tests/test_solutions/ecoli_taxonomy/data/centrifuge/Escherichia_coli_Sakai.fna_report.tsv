@@ -1,0 +1,75 @@
+name	taxID	taxRank	genomeSize	numReads	numUniqueReads	abundance
+Enterobacteriaceae	543	family	5884089	2	0	0.0
+Escherichia	561	genus	6738506	11	0	0.0
+Escherichia coli	562	species	6788280	5008	4198	0.398355
+Escherichia fergusonii	564	species	4643861	20	0	0.0
+Shigella	620	genus	4815334	37	0	0.0
+Shigella boydii	621	species	4760589	75	0	9.98399e-26
+Shigella flexneri	623	species	4787214	61	0	4.84105e-28
+Shigella sonnei	624	species	5137894	108	0	1.68723e-23
+Enterobacteria phage 933W	10730	leaf	61670	7	0	0
+Podoviridae	10744	family	64274	12	0	0.0
+synthetic construct	32630	species	26537524	3	1	2.44252e-05
+Escherichia coli O157:H7	83334	leaf	33973358	435	13	4.3744e-13
+Enterobacteria phage VT2-Sakai	97081	leaf	60942	21	0	0.144322
+Escherichia coli O157:H7 str. EDL933	155864	leaf	5639399	302	2	9.268e-13
+Lambdalikevirus	186765	genus	0	5	0	0.0
+Escherichia Stx1 converting phage	194948	leaf	59866	26	0	0.444558
+Stx2 converting phage II	194949	leaf	62706	23	0	4.41151e-10
+Enterobacteria phage BP-4795	196242	species	57930	24	0	2.80632e-15
+Shigella flexneri 2a str. 2457T	198215	leaf	4599354	1	0	1.27468e-43
+Escherichia albertii	208962	species	4701875	13	0	3.78079e-55
+Shigella sonnei 53G	216599	leaf	5220473	22	0	3.05521e-38
+Shigella dysenteriae Sd197	300267	leaf	4560911	92	0	4.69687e-23
+Shigella boydii Sb227	300268	leaf	4646520	29	1	5.18441e-34
+Shigella sonnei Ss046	300269	leaf	5055316	18	0	3.8815e-39
+Escherichia coli HS	331112	leaf	4643538	1	0	0.0
+Streptocarpus flower break virus	335187	species	6279	1	0	8.3766e-13
+Shigella boydii CDC 3083-94	344609	leaf	4874659	37	0	1.58845e-33
+Shigella flexneri 5 str. 8401	373384	leaf	4574284	6	1	1.72189e-41
+Enterobacteria phage 933W sensu lato	374810	species	61042	61	0	0.0
+Shigella flexneri 1a	374923	leaf	4853344	1	0	0.0
+Stx2-converting phage 86	379329	species	60238	2	0	7.10188e-13
+Escherichia coli O157:H7 str. Sakai	386585	leaf	5594477	477	72	0.0127406
+Enterobacteria phage cdtI	414970	species	47021	1	0	1.93789e-12
+Escherichia coli O157:H7 str. EC4115	444450	leaf	5704171	3	0	0.0
+Escherichia coli ATCC 8739	481805	leaf	4746218	1	0	0.0
+Enterobacteria phage Min27	489779	leaf	63395	6	0	0
+Escherichia coli O157:H7 str. TW14359	544404	leaf	5622737	3	0	0.0
+Stx2-converting phage 1717	563769	species	62147	28	0	6.12754e-15
+Enterobacteria phage YYZ-2008	564886	species	54896	40	0	6.5454e-16
+Escherichia coli O26:H11 str. 11368	573235	leaf	5855531	5	0	2.76805e-70
+Escherichia fergusonii ATCC 35469	585054	leaf	4643861	15	1	2.14561e-42
+Escherichia coli O103:H2 str. 12009	585395	leaf	5524860	1	0	3.4401e-78
+Escherichia coli O111:H- str. 11128	585396	leaf	5766081	12	1	5.27267e-63
+Enterobacteriaceae bacterium strain FGI 57	693444	species	4762179	1	0	0.0
+Escherichia coli UMNK88	696406	leaf	5666764	1	0	0.0
+Escherichia coli O55:H7 str. CB9615	701177	leaf	5452353	10	0	3.1365e-76
+Escherichia coli Xuzhou21	741093	leaf	5516736	282	1	0
+Stx2 converting phage vB_EcoP_24B	866553	leaf	57677	6	0	1.51929e-17
+Escherichia coli O157:H16	930406	leaf	5104557	2	2	0.0
+Enterobacteria phage VT2phi_272	936054	species	65955	15	0	0
+Escherichia coli O157	1045010	leaf	11581399	113	1	0.0
+Escherichia coli O104:H4 str. C227-11	1048254	leaf	5446006	1	0	0.0
+Escherichia coli O55:H7 str. RM12579	1048689	leaf	5448306	9	0	2.87349e-76
+Helicobacter pylori ELS37	1055527	leaf	1669876	1	1	0.0
+Escherichia phage TL-2011b	1124654	species	44784	1	0	0
+Escherichia phage TL-2011c	1124655	species	60523	7	0	0
+Escherichia coli O104:H4 str. 2011C-3493	1133852	leaf	5437407	1	0	0.0
+Escherichia coli O104:H4 str. 2009EL-2071	1133853	leaf	5389708	1	0	0.0
+Escherichia coli O104:H4 str. 2009EL-2050	1134782	leaf	5438174	1	0	0.0
+Escherichia phage P13374	1150869	species	60894	5	0	1.91764e-13
+Escherichia coli O145:H28 str. RM12581	1248823	leaf	5737293	5	0	0.0
+Escherichia coli O145:H28 str. RM13514	1248902	leaf	5737294	5	0	0.0
+Escherichia coli O145:H28 str. RM12761	1248903	leaf	5559014	2	0	0.0
+Escherichia coli O145:H28 str. RM13516	1248915	leaf	5559008	2	0	0.0
+Escherichia coli APEC O78	1274814	leaf	4798435	2	0	0.0
+Escherichia coli ACN001	1311757	leaf	4936576	2	0	0.0
+Escherichia coli O157:H7 str. SS17	1328859	leaf	5655941	4	1	0.0
+Escherichia coli O157:H7 str. SS52	1330457	leaf	5583430	5	1	3.4456e-47
+Shigella phage 75/02 Stx	1416032	species	60875	2	0	2.92719e-15
+Escherichia albertii KF1	1440052	leaf	4701875	20	0	6.1153e-50
+Escherichia phage phi191	1458706	species	61035	3	0	4.33026e-13
+Escherichia phage PA2	1660365	species	63569	15	0	0
+Hydrogenobaculum phage 1	1732176	species	19351	1	0	2.04402e-14
+Shigella sp. PAMC 28760	1813821	species	4558287	124	0	1.02488e-19

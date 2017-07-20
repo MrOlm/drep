@@ -270,6 +270,10 @@ def parse_args(args):
     Cflags.add_argument('--check_dependencies', action='store_true',\
                     help= "Check if program has access to all dependencies")
 
+    # I/O Parameters
+    Iflags = bonus_parser.add_argument_group('I/O PARAMETERS')
+    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to check in .fasta format')
+
     '''
     ####### Arguments for evaluate operation ######
     '''

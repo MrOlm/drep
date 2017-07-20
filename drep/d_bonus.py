@@ -27,12 +27,7 @@ def d_bonus_wrapper(wd,**kwargs):
 
 def run_taxonomy(wd, **kwargs):
     # Validate arguments- make sure you have everything you need
-    Bdb = wd.get_db('Bdb')
-    prod_dir = wd.get_dir('prodigal')
-    cent_dir = wd.get_dir('centrifuge')
-    if wd.hasDb('Tdb') and (kwargs.get('overwrite',False) == False):
-        logging.error('Tdb already exists- run with overwrite to overwrite')
-        sys.exit()
+    Bdb, prod_dir, cent_dir = validate_arguments(wd, **kwargs)
 
     # Run prodigal
     d_filter.run_prodigal(Bdb, prod_dir, **kwargs)
@@ -40,15 +35,63 @@ def run_taxonomy(wd, **kwargs):
     # Run centrifuge
     run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs)
 
-    # Call a centrifuge parser that returns Tdb
-    Tdb = parse_centrifuge(Bdb, cent_dir, **kwargs)
+    # # Call a centrifuge parser that returns Tdb
+    # Tdb = parse_centrifuge(Bdb, cent_dir, **kwargs)
+    #
+    # # Add taxonomic info to Bdb
+    # Bdb = add_taxonomy(Bdb,Tdb)
 
-    # Add taxonomic info to Bdb
-    Bdb = add_taxonomy(Bdb,Tdb)
+    # Parse taxonomy
+    Tdb, Bdb = parse_taxonomy(Bdb, cent_dir, **kwargs)
 
     # Save Tdb and Bdb
     wd.store_db(Tdb,'Tdb',overwrite=kwargs.get('overwrite',False))
     wd.store_db(Bdb,'Bdb',overwrite=True)
+
+def parse_taxonomy(Bdb, cent_dir, **kwargs):
+    '''
+    take the centrifuge directory and Bdb, return Tdb and Bdb with an added 'taxonomy' column
+    '''
+
+    method = kwargs.get('tax_method')
+
+    if method == 'max':
+        Tdb = parse_centrifuge(Bdb, cent_dir, **kwargs)
+
+    elif method == 'percent':
+        Tdb = parse_centrifuge_percent(Bdb, cent_dir, **kwargs)
+
+    else:
+        logging.error("dont recognize method {0}, quitting".format(method))
+        sys.exit()
+
+    Bdb = add_taxonomy(Bdb,Tdb)
+    return Tdb, Bdb
+
+def validate_arguments(wd, **kwargs):
+    '''
+    make sure you have everything you need
+    '''
+    if wd.hasDb('Bdb'):
+        if kwargs.get('genomes',None) != None:
+            logging.error("Both Bdb and a genome list are found- either don't include "\
+                    + "a genome list or start a new work directory!")
+            sys.exit()
+        Bdb = wd.get_db('Bdb')
+
+    else:
+        if kwargs.get('genomes',None) == None:
+            logging.error("I don't have anything to determine the taxonomy of! Give me a genome list")
+            sys.exit()
+        Bdb = drep.d_cluster.load_genomes(kwargs['genomes'])
+
+    prod_dir = wd.get_dir('prodigal')
+    cent_dir = wd.get_dir('centrifuge')
+    if wd.hasDb('Tdb') and (kwargs.get('overwrite',False) == False):
+        logging.error('Tdb already exists- run with overwrite to overwrite')
+        sys.exit()
+
+    return Bdb, prod_dir, cent_dir
 
 def check_dependencies(wd, **kwargs):
     '''
@@ -124,7 +167,160 @@ def parse_centrifuge(Bdb, cent_dir, **kwargs):
         x['genome'] = genome
         Tdb = pd.concat([x,Tdb], ignore_index=True)
 
+    # Find the best hits
+    g2t = {}
+    for genome in Tdb['genome'].unique():
+        d = Tdb[Tdb['genome'] == genome]
+        taxID = d['tax_ID'][d['tax_confidence'] == d['tax_confidence'].max()].tolist()[0]
+        g2t[genome] = taxID
+    Tdb['best_hit'] = [True if g2t[g] == t else False for g,t in zip(Tdb['genome'], Tdb['tax_ID'])]
+
+    # Try and add full taxonomy string
+    try:
+        Tdb['full_tax'] = [lineage_from_taxId(t) if b else False for t, b in zip(\
+                Tdb['tax_ID'], Tdb['best_hit'])]
+    except:
+        logging.info("problem determing full tax string with ete3 - skipping")
+
     return Tdb
+
+def parse_centrifuge_percent(Bdb, cent_dir, **kwargs):
+    min_perc = int(kwargs.get('percent'))
+    min_score = kwargs.get('min_score', 250)
+
+    Tdb = pd.DataFrame()
+    for genome in Bdb['genome'].unique():
+        hits = parse_raw_centrifuge("{0}{1}_hits.tsv".format(cent_dir,genome), \
+                    "{0}{1}_report.tsv".format(cent_dir,genome))
+        tdb = tdb_from_hits(hits[hits['score'] > min_score], minPerc= int(min_perc))
+        tdb['genome'] = genome
+
+        Tdb = pd.concat([Tdb, tdb])
+    # Find the best hit
+
+    # THIS IS HARDER BECAUSE YOU HAVE TO PICK THE LOWEST LEVEL OVER the percent
+    # # Find the best hits
+    # g2t = {}
+    # for genome in Tdb['genome'].unique():
+    #     d = Tdb[Tdb['genome'] == genome]
+    #     taxID = d['tax_ID'][d['tax_confidence'] == d['tax_confidence'].max()].tolist()[0]
+    #     g2t[genome] = taxID
+    # Tdb['best_hit'] = [True if g2t[g] == t else False for g,t in zip(Tdb['genome'], Tdb['tax_ID'])]
+    #
+    # # Try and add full taxonomy string
+    # try:
+    #     Tdb['full_tax'] = [lineage_from_taxId(t) if b else False for t, b in zip(\
+    #             Tdb['tax_ID'], Tdb['best_hit'])]
+    # except:
+    #     logging.info("problem determing full tax string with ete3 - skipping")
+
+    return Tdb
+
+def tdb_from_hits(hits, minPerc= 50, testing=False):
+    '''
+    Determines the lowest taxonomic level with at least minPerc certainty
+
+    For every hit:
+        reconstruct the lineage (kingdom, phylum, class, ect.)
+        add a count to every rank in the lineage
+
+    For every rank:
+        see if the number of hits matching one taxa at that rank is above the minPerc
+        the denominator for this equation is the number of hits that have a phyla rank
+
+    * Note: this is complicated because some lower ranks don't have higher ranks
+        For example, species [Eubacterium] rectale (taxID 39491) has no genus
+        Also, species [artifical construct] (taxID 32630) has no anything but species
+
+    '''
+
+    from ete3 import NCBITaxa
+    ncbi = NCBITaxa()
+
+    Levels = ['superkingdom','phylum','class','order','family','genus','species']
+
+    # generate nested dictionary for levels
+    countDic = {}
+    for level in Levels:
+        countDic[level] = {}
+
+    # fill in nested dictionary
+    for t in hits['taxID'].tolist():
+        if t == 0:
+            continue
+
+        lin = ncbi.get_lineage(t)
+        lin2name  = ncbi.get_taxid_translator(lin)
+        name2rank = ncbi.get_rank(lin)
+
+        for i in lin:
+            rank = name2rank[i]
+            name = lin2name[i]
+            if rank in countDic:
+                countDic[rank][i] = countDic[rank].get(i,0) + 1
+
+    # make the table
+    total = sum(countDic['phylum'].values())
+    table = {'tax_ID':[], 'tax_confidence':[], 'tax_level':[], 'taxonomy':[]}
+    count = None
+
+    for level in Levels:
+        dic = countDic[level]
+        for name in sorted(dic, key=dic.get, reverse= True):
+            count = dic[name]
+            break
+
+        if count == None:
+            table['tax_ID'].append(None)
+            table['tax_confidence'].append(0)
+            table['tax_level'].append(level)
+            table['taxonomy'].append('unk')
+
+        else:
+            lin = ncbi.get_lineage(name)
+            lin2name  = ncbi.get_taxid_translator(lin)
+            name2rank = ncbi.get_rank(lin)
+            rank2name = {v: k for k, v in name2rank.items()}
+            tax = (lin2name[rank2name[level]])
+
+            table['tax_ID'].append(name)
+            table['tax_confidence'].append(((count/total) *100))
+            table['tax_level'].append(level)
+            table['taxonomy'].append(tax)
+
+        count = None
+    tdb = pd.DataFrame(table)
+
+    # find and mark the best hit
+    best = tdb['tax_ID'][tdb['tax_confidence'] >= minPerc].tolist()[-1]
+    tdb['best_hit'] = [True if i == best else False for i in tdb['tax_ID']]
+
+    # get the full taxonomy for the best hit
+    tdb['full_tax'] = [lineage_from_taxId(t) if b else False for t, b in zip(\
+            tdb['tax_ID'], tdb['best_hit'])]
+
+    return tdb
+
+def lineage_from_taxId(t):
+    from ete3 import NCBITaxa
+    ncbi = NCBITaxa()
+
+    Levels = ['superkingdom','phylum','class','order','family','genus','species']
+    name = []
+
+    lin = ncbi.get_lineage(t)
+
+    lin2name  = ncbi.get_taxid_translator(lin)
+    name2rank = ncbi.get_rank(lin)
+    rank2name = {v: k for k, v in name2rank.items()}
+
+    for level in Levels:
+        if level in rank2name:
+            name.append(lin2name[rank2name[level]])
+        else:
+            name.append('unk')
+
+    return '|'.join([str(int(t))] + name)
 
 def parse_raw_centrifuge(hits, report):
     tax = pd.read_table(report)
@@ -143,8 +339,10 @@ def parse_raw_centrifuge(hits, report):
 def add_taxonomy(Bdb,Tdb):
     g2t = {}
     for genome in Tdb['genome'].unique():
-        d = Tdb[Tdb['genome'] == genome]
-        tax = d['taxonomy'][d['tax_confidence'] == d['tax_confidence'].max()].tolist()[0]
+        d = Tdb[(Tdb['genome'] == genome) & (Tdb['best_hit'] == True)]
+        assert len(d) == 1
+
+        tax = d['taxonomy'].tolist()[0]
         g2t[genome] = tax
     Bdb['taxonomy'] = Bdb['genome'].map(g2t)
     return Bdb
