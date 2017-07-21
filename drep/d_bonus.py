@@ -6,6 +6,7 @@ import pandas as pd
 import sys
 import shutil
 import subprocess
+import time
 
 import drep.WorkDirectory
 #import drep as dm
@@ -249,9 +250,17 @@ def tdb_from_hits(hits, minPerc= 50, testing=False):
         if t == 0:
             continue
 
-        lin = ncbi.get_lineage(t)
-        lin2name  = ncbi.get_taxid_translator(lin)
-        name2rank = ncbi.get_rank(lin)
+        # This try / except thing is trying to catch sporatic errors of:
+        # sqlite3.OperationalError: disk I/O error
+        try:
+            lin = ncbi.get_lineage(t)
+            lin2name  = ncbi.get_taxid_translator(lin)
+            name2rank = ncbi.get_rank(lin)
+        except:
+            time.sleep(1)
+            lin = ncbi.get_lineage(t)
+            lin2name  = ncbi.get_taxid_translator(lin)
+            name2rank = ncbi.get_rank(lin)
 
         for i in lin:
             rank = name2rank[i]

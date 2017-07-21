@@ -628,11 +628,11 @@ def test_unit():
 
 if __name__ == '__main__':
     #analyze_test()
-    #test_unit()
-    #test_quick()
-    #test_short()
+    test_unit()
+    test_quick()
+    test_short()
     #test_long()
-    #dereplicate_wf_test()
+    dereplicate_wf_test()
     #taxonomy_test()
     #cluster_test()
 

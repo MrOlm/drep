@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## Uncommitted
+## [1.1.0] - 2017-07-20
 ### Added
 - genome input for bonus
 - option to to the 'percent' method for determining taxonomy
