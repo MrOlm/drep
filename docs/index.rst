@@ -9,7 +9,7 @@ dRep
 de-replication of microbial genomes
 -----------------------------------
 
-The publication is available at bioRxiv_.
+The publication is available at ISME_ and an open-source pre-print is available on bioRxiv_.
 
 Source code is `available on GitHub
 <https://github.com/MrOlm/drep>`_.
@@ -38,3 +38,4 @@ Contents
    advanced_use
 
 .. _bioRxiv: https://doi.org/10.1101/108142
+.. _ISME: http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html

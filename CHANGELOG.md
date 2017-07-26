@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [1.1.1] - 2017-07-26
+### Changed
+- added links to ISME publication in readme and documentation
+
 ## [1.1.0] - 2017-07-20
 ### Added
 - genome input for bonus

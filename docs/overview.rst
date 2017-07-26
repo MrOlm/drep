@@ -3,7 +3,7 @@ Overview
 
 dRep is a python program which performs rapid pair-wise comparison of genome sets. One of it's major purposes is for genome de-replication, but it can do a lot more.
 
-The publication is available at bioRxiv_.
+The publication is available at ISME_ and an open-source pre-print is available on bioRxiv_.
 
 Source code is `available on GitHub
 <https://github.com/MrOlm/drep>`_.
@@ -38,3 +38,4 @@ dRep first compares all genomes using Mash, and then only runs the secondary alg
 .. image:: images/FigureD.png
 
 .. _bioRxiv: https://doi.org/10.1101/108142
+.. _ISME: http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html
