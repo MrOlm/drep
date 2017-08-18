@@ -22,7 +22,7 @@ setup(name='drep',
           'seaborn',
           'matplotlib',
           'biopython',
-          'sklearn',
+          'scikit-learn',
           'pytest'
       ],
       zip_safe=False)
