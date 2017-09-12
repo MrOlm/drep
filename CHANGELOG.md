@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [1.1.3] - 2017-09-11
+### fixed
+- N50 calculation is not correct
+
 ## [1.1.2] - 2017-08-25
 ### Changed
 - fixed proper pip sklean-learn (thanks Ben Woodcroft)

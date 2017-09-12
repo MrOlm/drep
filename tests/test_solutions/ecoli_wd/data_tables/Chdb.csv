@@ -1,6 +1,6 @@
 Bin Id,Marker lineage,# genomes,# markers,# marker sets,Completeness,Contamination,Strain heterogeneity,Genome size (bp),# ambiguous bases,# scaffolds,# contigs,N50 (scaffolds),N50 (contigs),Mean scaffold length (bp),Mean contig length (bp),Longest scaffold (bp),Longest contig (bp),GC,GC std (scaffolds > 1kbp),Coding density,Translation table,# predicted genes,0,1,2,3,4,5+
 Enterococcus_casseliflavus_EC20.fasta,Bacteria,5449,104,58,98.28,0.0,0.0,3427276,41288,3161,3161,3427276,378,316,303,3131,2963,33.7,7.09,-100.0,-1,-1,1,103,0,0,0,0
-Enterococcus_faecalis_T2.fna,Bacteria,5449,104,58,98.28,0.0,0.0,3263835,43729,3177,3177,1209,362,294,280,2033,1909,34.7,6.14,-100.0,-1,-1,1,103,0,0,0,0
-Enterococcus_faecalis_TX0104.fa,Bacteria,5449,104,58,96.55,0.0,0.0,3156478,41098,3145,3145,425,352,284,271,2033,1907,34.7,5.77,-100.0,-1,-1,2,102,0,0,0,0
-Enterococcus_faecalis_YI6-1.fna,Bacteria,5449,104,58,98.28,0.0,0.0,3030328,40686,2914,2914,328325,366,302,288,2033,1909,34.6,6.56,-100.0,-1,-1,1,103,0,0,0,0
+Enterococcus_faecalis_T2.fna,Bacteria,5449,104,58,98.28,0.0,0.0,3263835,43729,3177,3177,774663,362,294,280,2033,1909,34.7,6.14,-100.0,-1,-1,1,103,0,0,0,0
+Enterococcus_faecalis_TX0104.fa,Bacteria,5449,104,58,96.55,0.0,0.0,3156478,41098,3145,3145,388414,352,284,271,2033,1907,34.7,5.77,-100.0,-1,-1,2,102,0,0,0,0
+Enterococcus_faecalis_YI6-1.fna,Bacteria,5449,104,58,98.28,0.0,0.0,3030328,40686,2914,2914,2294892,366,302,288,2033,1909,34.6,6.56,-100.0,-1,-1,1,103,0,0,0,0
 Escherichia_coli_Sakai.fna,Bacteria,5449,104,58,100.0,0.0,0.0,5498450,65166,5280,5280,5498450,378,304,291,5292,4903,36.2,6.37,-100.0,-1,-1,0,104,0,0,0,0

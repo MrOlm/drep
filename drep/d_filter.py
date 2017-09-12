@@ -207,19 +207,18 @@ def fix_chdb(Chdb, Bdb):
     return Chdb
 
 def calc_n50(loc):
-    lengths = []
-    sequence = []
-    with open(loc) as handle:
-        for line in handle:
-            if line.startswith('>'):
-                lengths.append(len(''.join(sequence)))
-                sequence = []
-            else:
-                sequence += line.strip()
-    lengths.append(len(''.join(sequence)))
+    from Bio import SeqIO
 
-    n50 = sorted(lengths)[int(len(lengths)/2)]
-    return n50
+    lengths = []
+    for seq_record in SeqIO.parse(loc, "fasta"):
+        lengths.append(len(seq_record))
+
+    half = sum(lengths)/2
+    tally = 0
+    for l in sorted(lengths, reverse=True):
+        tally += l
+        if tally > half:
+            return l
 
 def run_prodigal(bdb, out_dir, **kwargs):
     t = kwargs.get('processors','6')
