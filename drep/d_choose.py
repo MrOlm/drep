@@ -130,9 +130,10 @@ def score_row(row, **kwargs):
     con = float(row['Contamination'].tolist()[0])
     n50 = float(row['N50 (scaffolds)'].tolist()[0])
     size = float(row['Genome size (bp)'].tolist()[0])
-    str = float(row['Strain heterogeneity'].tolist()[0])
+    strh = float(row['Strain heterogeneity'].tolist()[0])
 
-    score = (com * comW) - (con * conW) + (np.log10(n50) * n50W) + (np.log10(size) * sizeW) - (strW * str)
+    score = (com * comW) - (con * conW) + (strW * (con * (strh/100))) \
+        + (np.log10(n50) * n50W) + (np.log10(size) * sizeW)
     return score
 
 

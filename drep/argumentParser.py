@@ -126,18 +126,22 @@ def parse_args(args):
     #
     scoring_parent = argparse.ArgumentParser(add_help=False)
     Sflags = scoring_parent.add_argument_group('SCORING CRITERIA\n'+
-              "Based off of the formula: Completeness - Contamination + log(N50) + log(size)")
+              "Based off of the formula: \nA*Completeness - B*Contamination + C*(Contamination * (strain_heterogeneity/100)) " + \
+              "+ D*log(N50) + E*log(size)\n\n" + \
+              "A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weight; " + \
+              "D = N50_weight; E = size_weight")
 
     Sflags.add_argument("-comW","--completeness_weight" , default = 1, type= float,
                         help='completeness weight')
     Sflags.add_argument("-conW","--contamination_weight", default = 5, type= float,
                         help='contamination weight')
+    Sflags.add_argument("-strW","--strain_heterogeneity_weight", default = 1, type= float,
+                        help='strain heterogeneity weight')
     Sflags.add_argument("-N50W","--N50_weight", default = 0.5, type= float,
                         help='weight of log(genome N50)')
     Sflags.add_argument("-sizeW","--size_weight", default = 0, type= float,
                         help='weight of log(genome size)')
-    Sflags.add_argument("-strW","--strain_heterogeneity_weight", default = 1, type= float,
-                        help='strain heterogeneity weight')
+
 
     #
     # Make a parent parser for taxonomy

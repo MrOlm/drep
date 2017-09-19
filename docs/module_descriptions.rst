@@ -165,19 +165,17 @@ Choose
 
 Choose is the module that picks the best genome from each secondary cluster identified in **Cluster**. It does this based off of the formula:
 
-.. math:: score = A(completeness) + B(log_{10}(N50)) – C(contamination) – D(strain heterogeneity) + E(log_{10}(genome size))
+.. math:: score = A(completeness) – B(contamination) +  C(Contamination * (strain_heterogeneity/100)) + D(log(N50)) + E(log(size))
 
-Where A-E are command-line arguments, and the genome with the highest score is the "best". By default, A-E are 1,0.5,5,1,0, respectively.
+Where A-E are command-line arguments, and the genome with the highest score is the "best". By default, A-E are 1,5,1,0.5,0 respectively.
 
 To see the command-line options, check the help::
 
-  mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep choose -h
+  $ dRep choose -h
   usage: dRep choose [-p PROCESSORS] [-d] [-o] [-h] [-comW COMPLETENESS_WEIGHT]
-                     [-conW CONTAMINATION_WEIGHT] [-N50W N50_WEIGHT]
-                     [-sizeW SIZE_WEIGHT] [-strW STRAIN_HETEROGENEITY_WEIGHT]
-                     [-c CLUSTER] [-t THRESHOLD] [-m {gANI,ANIn}]
-                     [-mc MINIMUM_COVERAGE]
-                     [-a {average,complete,weighted,single}]
+                     [-conW CONTAMINATION_WEIGHT]
+                     [-strW STRAIN_HETEROGENEITY_WEIGHT] [-N50W N50_WEIGHT]
+                     [-sizeW SIZE_WEIGHT]
                      [--checkM_method {taxonomy_wf,lineage_wf}]
                      work_directory
 
@@ -193,31 +191,21 @@ To see the command-line options, check the help::
                           False)
     -h, --help            show this help message and exit
 
-  SCORRING CHRITERIA
-  Based off of the formula: Completeness - Contamination + log(N50) + log(size):
+  SCORING CRITERIA
+  Based off of the formula:
+  A*Completeness - B*Contamination + C*(Contamination * (strain_heterogeneity/100)) + D*log(N50) + E*log(size)
+
+  A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weight; D = N50_weight; E = size_weight:
     -comW COMPLETENESS_WEIGHT, --completeness_weight COMPLETENESS_WEIGHT
                           completeness weight (default: 1)
     -conW CONTAMINATION_WEIGHT, --contamination_weight CONTAMINATION_WEIGHT
                           contamination weight (default: 5)
+    -strW STRAIN_HETEROGENEITY_WEIGHT, --strain_heterogeneity_weight STRAIN_HETEROGENEITY_WEIGHT
+                          strain heterogeneity weight (default: 1)
     -N50W N50_WEIGHT, --N50_weight N50_WEIGHT
                           weight of log(genome N50) (default: 0.5)
     -sizeW SIZE_WEIGHT, --size_weight SIZE_WEIGHT
                           weight of log(genome size) (default: 0)
-    -strW STRAIN_HETEROGENEITY_WEIGHT, --strain_heterogeneity_weight STRAIN_HETEROGENEITY_WEIGHT
-                          strain heterogeneity weight (default: 1)
-
-  RE-CLUSTER PRIMARY CLUSETERS:
-    -c CLUSTER, --cluster CLUSTER
-                          primary cluster to be adjusted (default: None)
-    -t THRESHOLD, --threshold THRESHOLD
-                          clustering threshold to apply (default: 0.99)
-    -m {gANI,ANIn}, --clustering_method {gANI,ANIn}
-                          Clustering method to apply (default: ANIn)
-    -mc MINIMUM_COVERAGE, --minimum_coverage MINIMUM_COVERAGE
-                          Minimum coverage for ANIn (default: 0.1)
-    -a {average,complete,weighted,single}, --clusterAlg {average,complete,weighted,single}
-                          Algorithm used to cluster genomes (passed to
-                          scipy.cluster.hierarchy.linkage) (default: average)
 
   OTHER:
     --checkM_method {taxonomy_wf,lineage_wf}

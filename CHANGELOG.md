@@ -4,9 +4,13 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [1.2.0] - 2017-19-11
+### fixed
+- Scoring with regards to strain heterogeneity modified
+
 ## [1.1.3] - 2017-09-11
 ### fixed
-- N50 calculation is not correct
+- N50 calculation is now correct
 
 ## [1.1.2] - 2017-08-25
 ### Changed
