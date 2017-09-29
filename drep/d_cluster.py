@@ -778,7 +778,7 @@ def process_deltafiles(deltafiles, org_lengths, logger=None, **kwargs):
     # Process .delta files assuming that the filename format holds:
     # org1_vs_org2.delta
     coverage_method = kwargs.get('coverage_method')
-    logging.debug('coverage_method is {0}'.format(coverage_method))
+    #logging.debug('coverage_method is {0}'.format(coverage_method))
 
     for deltafile in deltafiles:
         qname, sname = os.path.splitext(os.path.split(deltafile)[-1])[0].split('_vs_')
@@ -913,6 +913,8 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
 
     # Run commands
     if len(cmds) > 0:
+        for c in cmds:
+            logging.debug(' '.join(cmd))
         thread_nucmer_cmds_status(cmds,p,verbose=False)
 
     # Parse output
