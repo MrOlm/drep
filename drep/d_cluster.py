@@ -914,7 +914,7 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
     # Run commands
     if len(cmds) > 0:
         for c in cmds:
-            logging.debug(' '.join(cmd))
+            logging.debug(' '.join(c))
         thread_nucmer_cmds_status(cmds,p,verbose=False)
 
     # Parse output
@@ -954,7 +954,7 @@ def run_pairwise_mauve(bdb, data_folder, **kwargs):
 
     # Run commands
     if len(cmds) > 0:
-        t#hread_nucmer_cmds_status(cmds,p,verbose=False)
+        thread_nucmer_cmds_status(cmds,p,verbose=False)
 
     # Parse output
     '''

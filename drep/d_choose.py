@@ -46,6 +46,14 @@ def d_choose_wrapper(wd,**kwargs):
 
         logging.info("CheckM db found- will use")
 
+    # If skip checkM, make a dummy Chdb
+    elif kwargs.get('skipCheckM') == True:
+        logging.info("Chdb (CheckM information) not found- WILL NOT USE COMPLETENSS OR COMTAMINATION")
+
+        bdb = workDirectory.get_db('Bdb')
+        Chdb = make_dummy_Chdb(bdb)
+        workDirectory.store_db(Chdb,'Chdb',overwrite=kwargs.get('overwrite',False))
+
     # If Chdb doesn't exist, make it
     else:
         logging.info("Chdb (CheckM information) not found- running CheckM now")
@@ -93,6 +101,20 @@ def choose_winners(Cdb,Chdb,**kwargs):
     logging.debug("Wdb finished")
 
     return Sdb, Wdb
+
+def make_dummy_Chdb(bdb):
+    '''
+    make an empty chdb that can be used to pick genomes based on N50 and genome length
+    '''
+    chdb = bdb.copy()
+    chdb.rename(columns={'genome': 'Bin Id', 'length': 'Genome size (bp)'}, inplace=True)
+
+    blanks = ['Completeness', 'Contamination', 'Strain heterogeneity']
+    for b in blanks:
+        chdb[b] = 0
+    chdb = drep.d_filter.fix_chdb(chdb, bdb)
+
+    return chdb
 
 def pick_winners(Sdb, Cdb):
     Table = {'genome':[],'cluster':[],'score':[]}

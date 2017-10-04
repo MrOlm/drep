@@ -220,6 +220,83 @@ class VerifyAnalyze():
         if os.path.isdir(self.working_wd_loc):
             shutil.rmtree(self.working_wd_loc)
 
+class VerifyChoose():
+    def __init__(self):
+        pass
+
+    def setUp(self):
+        self.s_wd_loc = load_solutions_wd()
+        self.working_wd_loc = load_test_wd_loc()
+
+        self.tearDown()
+
+        # copy over the data from solutions directory
+        os.mkdir(self.working_wd_loc)
+        shutil.copytree(os.path.join(self.s_wd_loc, 'data'), \
+            os.path.join(self.working_wd_loc, 'data'))
+        shutil.copytree(os.path.join(self.s_wd_loc, 'data_tables'), \
+            os.path.join(self.working_wd_loc, 'data_tables'))
+        shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
+            os.path.join(self.working_wd_loc, 'log'))
+
+    def run(self):
+        self.setUp()
+        self.unit_test_1()
+        self.unit_test_2()
+        self.tearDown()
+
+    def unit_test_1(self):
+        '''
+        Ensure choose can handle when Chdb is not present, running checkM automatically
+        '''
+        # Delete Chdb
+        wd_loc = self.working_wd_loc
+        os.remove(wd_loc + '/data_tables/Chdb.csv')
+
+        # Run choose - this should re-run checkM and re-generate chdb
+        args = argumentParser.parse_args(['choose', wd_loc, '-o', '--checkM_method',\
+            'taxonomy_wf'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        Swd  = WorkDirectory(self.s_wd_loc)
+        wd   = WorkDirectory(self.working_wd_loc)
+        for db in ['Chdb']:
+            db1 = Swd.get_db(db)
+            db2 =  wd.get_db(db)
+            assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
+
+    def unit_test_2(self):
+        '''
+        Try out the --skipCheckM argument for choose
+        '''
+        # Delete Chdb
+        wd_loc = self.working_wd_loc
+        os.remove(wd_loc + '/data_tables/Chdb.csv')
+        os.remove(wd_loc + '/data_tables/Sdb.csv')
+        os.remove(wd_loc + '/data_tables/Wdb.csv')
+
+        # Run choose with --skipCheckM
+        args = argumentParser.parse_args(['choose', wd_loc, '--skipCheckM'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        Swd  = WorkDirectory(self.s_wd_loc)
+        wd   = WorkDirectory(self.working_wd_loc)
+        for db in ['Chdb', 'Sdb', 'Wdb']:
+            db1 = Swd.get_db(db)
+            db2 =  wd.get_db(db)
+            assert not compare_dfs(db1, db2), "{0} is the same!".format(db)
+
+        sdb = wd.get_db('Sdb')
+        for s in sdb['score'].tolist():
+            assert (s > 0) & (s < 5)
+
+    def tearDown(self):
+        logging.shutdown()
+        if os.path.isdir(self.working_wd_loc):
+            shutil.rmtree(self.working_wd_loc)
+
 class VerifyTaxonomy():
     ''' These tests skip running centrifuge and prodigal, but test parsing of files
     '''
@@ -604,6 +681,11 @@ def analyze_test():
     verifyAnalyze= VerifyAnalyze()
     verifyAnalyze.run()
 
+def choose_test():
+    ''' test the choose operation '''
+    verifyChoose= VerifyChoose()
+    verifyChoose.run()
+
 def dereplicate_wf_test():
     ''' test the dereplicate_wf operation '''
     verifyDereplicateWf = VerifyDereplicateWf()
@@ -629,6 +711,7 @@ def test_long():
     dereplicate_wf_test()
     filter_test()
     cluster_test()
+    choose_test()
     analyze_test()
 
 @pytest.mark.short
@@ -646,13 +729,15 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    #analyze_test()
     test_unit()
     test_quick()
     test_short()
-    test_long()
-    #dereplicate_wf_test()
-    #taxonomy_test()
-    #cluster_test()
+    # test_long()
+    #
+    # choose_test()
+    # analyze_test()
+    # dereplicate_wf_test()
+    # taxonomy_test()
+    cluster_test()
 
     print("Everything seems to be working swimmingly!")

@@ -228,6 +228,8 @@ def parse_args(args):
     Oflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
                             + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
                             default = 'lineage_wf')
+    Oflags.add_argument("--skipCheckM", help="Don't run checkM- will ignore comp and con "\
+                            + "scores", action='store_true')
 
     '''
     ####### Arguments for analyze operation ######
