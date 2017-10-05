@@ -91,7 +91,7 @@ def d_filter_wrapper(wd,**kwargs):
 def filter_bdb(bdb, chdb, **kwargs):
     min_comp = kwargs.get('completeness',False)
     max_con = kwargs.get('contamination',False)
-    min_strain_htr = kwargs.get('strain_htr',False)
+    # min_strain_htr = kwargs.get('strain_htr',False)
     start_genomes = list(bdb['genome'].unique())
     assert len(start_genomes) > 0
 
@@ -101,8 +101,8 @@ def filter_bdb(bdb, chdb, **kwargs):
         db = db[(db['Completeness'] >= min_comp)]
     if max_con != False:
         db = db[db['Contamination'] <= max_con]
-    if min_strain_htr != False:
-        db = db[db['Strain heterogeneity'] <= min_strain_htr]
+    # if min_strain_htr != False:
+    #     db = db[db['Strain heterogeneity'] <= min_strain_htr]
     keep_genomes = list(db['Bin Id'].unique())
     bdb = bdb[bdb['genome'].isin(keep_genomes)]
 

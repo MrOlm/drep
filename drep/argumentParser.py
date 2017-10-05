@@ -86,8 +86,8 @@ def parse_args(args):
                             default = 75, type = float)
     fiflags.add_argument("-con","--contamination", help="Maximum genome contamination",
                             default = 25, type = float)
-    fiflags.add_argument("-str","--strain_htr", help="Maximum strain heterogeneity",
-                            default = 25, type = float)
+    # fiflags.add_argument("-str","--strain_htr", help="Maximum strain heterogeneity",
+    #                         default = 25, type = float)
     fiflags.add_argument("--skipCheckM", help="Don't run checkM- will ignore con and "\
                             + "comp settings", action='store_true')
 
