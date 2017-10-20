@@ -4,9 +4,9 @@ import pandas as pd
 import os
 import glob
 import shutil
-import multiprocessing
+# import multiprocessing
+# from subprocess import call
 import logging
-from subprocess import call
 import sys
 import json
 import scipy.cluster.hierarchy
@@ -41,6 +41,40 @@ Cdb = pandas containing clustering information (both MASH and ANIn)
     cluster_genomes(). It will then take the output information and save it to the
     WorkDirectory object.
 """
+
+def d_cluster_wrapper(workDirectory, **kwargs):
+
+    # Load the WorkDirectory.
+    logging.debug("Loading work directory")
+    workDirectory = drep.WorkDirectory.WorkDirectory(workDirectory)
+    logging.debug(str(workDirectory))
+
+    # Parse arguments
+    Bdb, data_folder, kwargs = parse_arguments(workDirectory, **kwargs)
+    if kwargs['n_PRESET'] != None:
+        kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
+        = nucmer_preset(kwargs['n_PRESET'])
+
+    # Run the main program
+    Cdb, Mdb, Ndb = cluster_genomes(Bdb, data_folder, wd=workDirectory, **kwargs)
+
+    # Save the output
+    data_dir = workDirectory.location + '/data_tables/'
+    if not os.path.exists(data_dir):
+        os.makedirs(data_dir)
+
+    logging.debug("Main program run complete- saving output to {0}".format(data_dir))
+
+    Cdb.to_csv(os.path.join(data_dir,'Cdb.csv'),index=False)
+    Mdb.to_csv(os.path.join(data_dir,'Mdb.csv'),index=False)
+    Ndb.to_csv(os.path.join(data_dir,'Ndb.csv'),index=False)
+    Bdb.to_csv(os.path.join(data_dir,'Bdb.csv'),index=False)
+
+    # Log arguments
+    cluster_log = workDirectory.location + '/log/cluster_arguments.json'
+    with open(cluster_log, 'w') as fp:
+        json.dump(kwargs, fp)
+    fp.close()
 
 def cluster_genomes(Bdb, data_folder, **kwargs):
 
@@ -270,40 +304,6 @@ def estimate_time(comps, alg):
     if alg == 'gANI':
         time = comps * .1
     return time
-
-def d_cluster_wrapper(workDirectory, **kwargs):
-
-    # Load the WorkDirectory.
-    logging.debug("Loading work directory")
-    workDirectory = drep.WorkDirectory.WorkDirectory(workDirectory)
-    logging.debug(str(workDirectory))
-
-    # Parse arguments
-    Bdb, data_folder, kwargs = parse_arguments(workDirectory, **kwargs)
-    if kwargs['n_PRESET'] != None:
-        kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
-        = nucmer_preset(kwargs['n_PRESET'])
-
-    # Run the main program
-    Cdb, Mdb, Ndb = cluster_genomes(Bdb, data_folder, **kwargs)
-
-    # Save the output
-    data_dir = workDirectory.location + '/data_tables/'
-    if not os.path.exists(data_dir):
-        os.makedirs(data_dir)
-
-    logging.debug("Main program run complete- saving output to {0}".format(data_dir))
-
-    Cdb.to_csv(os.path.join(data_dir,'Cdb.csv'),index=False)
-    Mdb.to_csv(os.path.join(data_dir,'Mdb.csv'),index=False)
-    Ndb.to_csv(os.path.join(data_dir,'Ndb.csv'),index=False)
-    Bdb.to_csv(os.path.join(data_dir,'Bdb.csv'),index=False)
-
-    # Log arguments
-    cluster_log = workDirectory.location + '/log/cluster_arguments.json'
-    with open(cluster_log, 'w') as fp:
-        json.dump(kwargs, fp)
-    fp.close()
 
 def parse_arguments(workDirectory, **kwargs):
 
@@ -590,6 +590,12 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     overwrite = kwargs.get('overwrite', False)
     mash_exe = kwargs.get('mash_exe', 'mash')
 
+    # set up logdir
+    if 'wd' in kwargs:
+        logdir = kwargs.get('wd').get_dir('cmd_logs')
+    else:
+        logdir = False
+
     # Set up folders
     MASH_folder = data_folder + 'MASH_files/'
     if not os.path.exists(MASH_folder):
@@ -611,19 +617,19 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
 
     if not dry:
         if len(cmds) > 0:
-            thread_mash_cmds_status(cmds)
+            dm.thread_cmds(cmds, logdir=logdir)
 
     # Combine MASH sketches
-    cmd = [mash_exe, 'paste', MASH_folder + 'ALL.msh', sketch_folder+ '*']
-    cmd = ' '.join(cmd)
-    dm.run_cmd(cmd,dry,True)
+    cmd = [mash_exe, 'paste', MASH_folder + 'ALL.msh'] + glob.glob(sketch_folder+ '*')
+    # cmd = ' '.join(cmd)
+    dm.run_cmd(cmd, dry, shell=False, logdir=logdir)
 
     # Calculate distances
     all_file = MASH_folder + 'ALL.msh'
     cmd = [mash_exe, 'dist', all_file, all_file, '>', MASH_folder
             + 'MASH_table.tsv']
     cmd = ' '.join(cmd)
-    dm.run_cmd(cmd,dry,True)
+    dm.run_cmd(cmd, dry, shell=True, logdir=logdir)
 
     # Make Mdb based on all genomes in the MASH folder
     Mdb = pd.DataFrame()
@@ -915,7 +921,13 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
     if len(cmds) > 0:
         for c in cmds:
             logging.debug(' '.join(c))
-        thread_nucmer_cmds_status(cmds,p,verbose=False)
+
+        if 'wd' in kwargs:
+            logdir = kwargs.get('wd').get_dir('cmd_logs')
+        else:
+            logdir = False
+        dm.thread_cmds(cmds, logdir=logdir)
+        #thread_nucmer_cmds_status(cmds,p,verbose=False)
 
     # Parse output
     org_lengths = {}
@@ -1024,7 +1036,12 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     # Run commands
     if len(cmds) > 0:
         logging.debug('Running gANI commands: {0}'.format('\n'.join([' '.join(x) for x in cmds])))
-        thread_mash_cmds_status(cmds,p)
+        if 'wd' in kwargs:
+            logdir = kwargs.get('wd').get_dir('cmd_logs')
+        else:
+            logdir = False
+        dm.thread_cmds(cmds, logdir=logdir)
+
     else:
         if verbose:
             logging.info("gANI already run- will not re-run")
@@ -1119,19 +1136,19 @@ def gen_nomash_cdb(Bdb):
     Cdb['MASH_cluster'] = 0
     return Cdb
 
-def run_nucmer_cmd(cmd,dry=False,shell=False):
-    devnull = open(os.devnull, 'w')
-    if shell:
-        if not dry: call(cmd,shell=True, stderr=devnull,stdout=devnull)
-        else: print(cmd)
-    else:
-        if not dry: call(cmd, stderr=devnull,stdout=devnull)
-        else: print(' '.join(cmd))
-    return
-
-def run_mash_cmd(cmds):
-    cmd = ' '.join(cmd)
-    dm.run_cmd(cmd,dry=False,shell=True)
+# def run_nucmer_cmd(cmd,dry=False,shell=False):
+#     devnull = open(os.devnull, 'w')
+#     if shell:
+#         if not dry: call(cmd,shell=True, stderr=devnull,stdout=devnull)
+#         else: print(cmd)
+#     else:
+#         if not dry: call(cmd, stderr=devnull,stdout=devnull)
+#         else: print(' '.join(cmd))
+#     return
+#
+# def run_mash_cmd(cmds):
+#     cmd = ' '.join(cmd)
+#     dm.run_cmd(cmd,dry=False,shell=True)
 
 def load_genomes(genome_list):
     Table = {'genome':[],'location':[]}

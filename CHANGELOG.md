@@ -4,6 +4,14 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [1.3.1] - 2017-10-19
+### Changed
+- output of all external commands is now stored in the log directory
+- all external commands are now run through the same method
+
+### Fixed
+- mash should now work on larger argument lists
+
 ## [1.3.0] - 2017-10-05
 ### Fixed
 - filtering with regards to strain heterogeneity fixed

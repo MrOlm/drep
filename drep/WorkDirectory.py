@@ -203,10 +203,16 @@ class WorkDirectory(object):
         d = None
         if dir == 'prodigal':
             d = self.location + '/data/prodigal/'
-        if dir == 'centrifuge':
+        elif dir == 'centrifuge':
             d = self.location + '/data/centrifuge/'
-        if dir == 'ESOM':
+        elif dir == 'ESOM':
             d = self.location + '/data/ESOM/'
+        elif dir == 'log':
+            d = self.location + '/log/'
+        elif dir == 'cmd_logs':
+            d = self.location + '/log/cmd_logs/'
+        elif dir == 'MASH':
+            d = self.location + '/data/MASH_files/'
 
         if not os.path.exists(d):
             os.makedirs(d)

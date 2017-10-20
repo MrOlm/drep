@@ -14,9 +14,11 @@ import logging
 
 import pandas as pd
 
+import drep as dm
 from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
+from drep.d_bonus import find_program
 
 def load_test_genomes():
     return glob.glob(os.path.join(str(os.getcwd()) + '/genomes/*'))
@@ -93,7 +95,7 @@ class VerifyDereplicateWf():
     def run(self):
         self.setUp()
         self.functional_test_1()
-        self.tearDown()
+        #self.tearDown()
 
     def functional_test_1(self):
         genomes  = self.genomes
@@ -396,6 +398,10 @@ class VerifyCluster():
 
     def run(self):
         self.setUp()
+        self.functional_test_2()
+        self.tearDown()
+
+        self.setUp()
         self.functional_test_1()
         self.tearDown()
 
@@ -413,16 +419,51 @@ class VerifyCluster():
         '''
         genomes = self.genomes
         wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
 
         args = argumentParser.parse_args(['cluster',wd_loc,'-g']+genomes)
         controller = Controller()
         controller.parseArguments(args)
 
-        # Confirm Cdb.csv is correct
-        assert True
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
 
-        # Confirm Bdb.csv is correct
-        assert True
+        # Confirm Cdb.csv is correct
+        db1 = Swd.get_db('Cdb')
+        db2 =  wd.get_db('Cdb')
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
+
+    def functional_test_2(self):
+        '''
+        Cluster the 5 genomes using gANI
+        '''
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        # Make sure gANI is installed
+        loc, works = find_program('ANIcalculator')
+        if loc == None:
+            print('Cannot locate the program {0}- skipping related tests'\
+                .format('ANIcalculator (for gANI)'))
+            return
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
+            'gANI','-g']+genomes)
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Cdb.csv is correct
+        db1 = Swd.get_db('Cdb')
+        del db1['comparison_algorithm']
+        db2 =  wd.get_db('Cdb')
+        del db2['comparison_algorithm']
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
 
     def skipsecondary_test(self):
         genomes = self.genomes
@@ -477,6 +518,10 @@ class QuickTests():
         # self.setUp()
         # self.unit_tests_5()
         # self.tearDown()
+
+        self.setUp()
+        self.unit_tests_6()
+        self.tearDown()
 
         self.setUp()
         self.unit_tests_1()
@@ -607,6 +652,26 @@ class QuickTests():
             db2 =  wd.get_db(db)
             assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
 
+    def unit_tests_6(self):
+        '''
+        Test drep call commands
+        '''
+        # try on single mash command
+
+        wd   = WorkDirectory(self.working_wd_loc)
+        MASH_folder = wd.get_dir('MASH')
+        log_folder = wd.get_dir('cmd_logs')
+
+        mash_exe = 'mash'
+        all_file = MASH_folder + 'ALL.msh'
+
+        cmd = [mash_exe, 'dist', all_file, all_file, '>', MASH_folder
+            + 'MASH_table.tsv']
+        cmd = ' '.join(cmd)
+        dm.run_cmd(cmd, shell=True, logdir=log_folder)
+
+        assert len(glob.glob(log_folder + '*')) == 3
+
     def tearDown(self):
         logging.shutdown()
         if os.path.isdir(self.working_wd_loc):
@@ -729,14 +794,14 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    test_unit()
-    test_quick()
-    test_short()
+    #test_unit()
+    #test_quick()
+    #test_short()
     # test_long()
     #
     # choose_test()
     # analyze_test()
-    # dereplicate_wf_test()
+    #dereplicate_wf_test()
     # taxonomy_test()
     cluster_test()
 

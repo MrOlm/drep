@@ -179,11 +179,11 @@ def run_checkM_wrapper(bdb, workDirectory, **kwargs):
     if not os.path.exists(prod_folder):
         os.makedirs(prod_folder)
     logging.info("Running prodigal")
-    run_prodigal(bdb, prod_folder, **kwargs)
+    run_prodigal(bdb, prod_folder, wd=workDirectory, **kwargs)
 
     # Run checkM
     checkM_outfolder = checkM_loc + 'checkM_outdir/'
-    Chdb = run_checkM(prod_folder, checkM_outfolder, **kwargs)
+    Chdb = run_checkM(prod_folder, checkM_outfolder, wd=workDirectory, **kwargs)
     validate_chdb(Chdb, bdb)
 
     # Fix genome size and N50 of Chdb
@@ -238,20 +238,18 @@ def run_prodigal(bdb, out_dir, **kwargs):
             cmds.append(['prodigal','-i',genome,'-d',fna,'-a',faa,'-m','-p','meta'])
 
     if len(cmds) > 0:
-        drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
+        if 'wd' in kwargs:
+            logdir = kwargs.get('wd').get_dir('cmd_logs')
+        else:
+            logdir = False
+        dm.thread_cmds(cmds, shell=False, logdir=logdir, t=int(t))
+
     else:
         logging.info("Past prodigal runs found- will not re-run")
 
 def run_checkM(genome_folder,checkm_outf,**kwargs):
     import drep.d_bonus as dBonus
     t = str(kwargs.get('processors','6'))
-    #check_exe = '/home/mattolm/.pyenv/versions/anaconda2-4.1.0/bin/checkm'
-    # loc = shutil.which('checkm')
-    # if loc == None:
-    #     logging.error('Cannot locate the program {0}- make sure its in the system path'\
-    #         .format('checkm'))
-    #     sys.exit()
-    # check_exe = loc
     loc, works = dBonus.find_program('checkm')
     if loc == None:
         logging.error('Cannot locate the program {0}- make sure its in the system path'\
@@ -275,7 +273,12 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
             str(t),'-g','-x','faa']
 
     logging.debug("Running CheckM with command: {0}".format(cmd))
-    dm.run_cmd(cmd,shell=False,quiet=False)
+
+    if 'wd' in kwargs:
+        logdir = kwargs.get('wd').get_dir('cmd_logs')
+    else:
+        logdir = False
+    dm.run_cmd(cmd, shell=False, logdir=logdir)
 
     # Run checkM again for the better table
     if checkm_method == 'taxonomy_wf':
@@ -286,7 +289,12 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     cmd = [check_exe,'qa', lineage, checkm_outf, '-f', desired_file, '-t',\
             str(t), '--tab_table','-o', '2']
     logging.debug("Running CheckM with command: {0}".format(cmd))
-    dm.run_cmd(cmd,shell=False,quiet=False)
+
+    if 'wd' in kwargs:
+        logdir = kwargs.get('wd').get_dir('cmd_logs')
+    else:
+        logdir = False
+    dm.run_cmd(cmd, shell=False, logdir=logdir)
 
     # Load table and return it
     try:
