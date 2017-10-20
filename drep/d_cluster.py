@@ -263,32 +263,16 @@ Filter the Ndb folder in accordance with the kwargs, depending on the algorithm
 '''
 def make_linkage_Ndb(Ndb,algorithm,**kwargs):
     d = Ndb.copy()
+    cov_thresh = float(kwargs.get('cov_thresh',0.5))
 
-    if algorithm == 'ANIn':
-        cov_thresh = float(kwargs.get('cov_thresh',0.5))
+    # Remove values without enough coverage
+    d.loc[d['alignment_coverage'] <= cov_thresh, 'ani'] = 0
 
-        # Remove values without enough coverage
-        d.loc[d['alignment_coverage'] <= cov_thresh, 'ani'] = 0
-
-        # Make a linkagedb by averaging values and setting self-compare to 1
-        #d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
-        add_avani(d)
-        d['dist'] = 1 - d['av_ani']
-        db = d.pivot("reference", "querry", "dist")
-
-    if algorithm == 'gANI':
-        cov_thresh = float(kwargs.get('cov_thresh',0.5))
-
-        # Remove values without enough coverage
-        d.loc[d['alignment_coverage'] < cov_thresh, 'ani'] = 0
-
-        # Make a linkagedb by averaging values and setting self-compare to 1
-        #d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
-        add_avani(d)
-        d['dist'] = 1 - d['av_ani']
-        #print(d[d.duplicated()])
-
-        db = d.pivot("reference", "querry", "dist")
+    # Make a linkagedb by averaging values and setting self-compare to 1
+    #d['av_ani'] = d.apply(lambda row: average_ani (row,d),axis=1)
+    add_avani(d)
+    d['dist'] = 1 - d['av_ani']
+    db = d.pivot("reference", "querry", "dist")
 
     return db
 
@@ -301,8 +285,10 @@ def iteratre_clusters(Bdb, Cdb, id='MASH_cluster'):
 def estimate_time(comps, alg):
     if alg == 'ANIn':
         time = comps * .33
-    if alg == 'gANI':
+    elif alg == 'gANI':
         time = comps * .1
+    elif alg == 'ANImf':
+        time = comps * .5
     return time
 
 def parse_arguments(workDirectory, **kwargs):
@@ -879,6 +865,12 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
         df = run_pairwise_ANIn(genome_list, working_data_folder, **kwargs)
         return df
 
+    elif algorithm == 'ANImf':
+        genome_list = bdb['location'].tolist()
+        working_data_folder = data_folder + 'ANImf_files/'
+        df = run_pairwise_ANImf(genome_list, working_data_folder, **kwargs)
+        return df
+
     elif algorithm == 'gANI':
         working_data_folder = data_folder + 'gANI_files/'
         prod_folder = data_folder + 'prodigal/'
@@ -928,6 +920,51 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
             logdir = False
         dm.thread_cmds(cmds, logdir=logdir)
         #thread_nucmer_cmds_status(cmds,p,verbose=False)
+
+    # Parse output
+    org_lengths = {}
+    for genome in genomes:
+        #logging.debug("getting genome length of {0}".format(genome))
+        org_lengths[get_genome_name_from_fasta(genome)] = dm.fasta_length(genome)
+
+
+    deltafiles = ["{0}.delta".format(file) for file in files]
+    df = process_deltafiles(deltafiles, org_lengths, **kwargs)
+
+    return df
+
+def run_pairwise_ANImf(genome_list, ANIn_folder, **kwargs):
+    p = kwargs.get('processors',6)
+    genomes = genome_list
+
+    # Make folder
+    if not os.path.exists(ANIn_folder):
+        os.makedirs(ANIn_folder)
+
+    # Gen commands
+    cmds = []
+    files = []
+    for g1 in genomes:
+        for g2 in genomes:
+            file_name = "{0}{1}_vs_{2}".format(ANIn_folder, \
+                        get_genome_name_from_fasta(g1),\
+                        get_genome_name_from_fasta(g2))
+            files.append(file_name)
+
+            # If the file doesn't already exist, add it to what needs to be run
+            if not os.path.isfile(file_name + '.delta'):
+                cmds.append(gen_animf_cmd(file_name,g1,g2))
+
+    # Run commands
+    if len(cmds) > 0:
+        for c in cmds:
+            logging.debug(' '.join(c))
+
+        if 'wd' in kwargs:
+            logdir = kwargs.get('wd').get_dir('cmd_logs')
+        else:
+            logdir = False
+        dm.thread_cmds(cmds, shell=True, logdir=logdir)
 
     # Parse output
     org_lengths = {}
@@ -1090,6 +1127,24 @@ def gen_nucmer_cmd(prefix,ref,querry,c='65',noextend=False,maxgap='90',method='m
     cmd = ['nucmer','--' + method,'-p',prefix,'-c',str(c),'-g',str(maxgap)]
     if noextend: cmd.append('--noextend')
     cmd += [ref,querry]
+    return cmd
+
+def gen_animf_cmd(prefix,ref,querry, **kwargs):
+    '''
+    return animf command. It will be a single string, with the format:
+    "nucmer cmd ; filter cmd"
+    '''
+
+    nucmer_cmd = gen_nucmer_cmd(prefix,ref,querry, **kwargs)
+
+    delta = prefix + '.delta'
+    out = delta + '.filtered'
+
+    filter_cmd = gen_filter_cmd(prefix + '.delta', out)
+    return ' '.join(nucmer_cmd) + '; ' + ' '.join(filter_cmd)
+
+def gen_filter_cmd(delta, out):
+    cmd = ["delta-filter", '-r', '-q', delta, '>', out]
     return cmd
 
 def thread_nucmer_cmds(cmds,t=10):

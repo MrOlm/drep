@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [1.4.0] - 2017-10-20
+## Added
+- added ANImf comparison method
+
 ## [1.3.2] - 2017-10-20
 ### Fixed
 - test_suite now works

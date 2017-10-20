@@ -418,14 +418,16 @@ class VerifyCluster():
 
     def run(self):
         self.setUp()
+        self.functional_test_3()
+        self.tearDown()
+
+        self.setUp()
         self.functional_test_2()
         self.tearDown()
 
         self.setUp()
         self.functional_test_1()
         self.tearDown()
-
-        print('functional test 1 passed')
 
         self.setUp()
         self.skipsecondary_test()
@@ -471,6 +473,31 @@ class VerifyCluster():
 
         args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
             'gANI','-g']+genomes)
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Cdb.csv is correct
+        db1 = Swd.get_db('Cdb')
+        del db1['comparison_algorithm']
+        db2 =  wd.get_db('Cdb')
+        del db2['comparison_algorithm']
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
+
+    def functional_test_3(self):
+        '''
+        Cluster the 5 genomes using ANImf
+        '''
+
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
+            'ANImf','-g']+genomes)
         controller = Controller()
         controller.parseArguments(args)
 
@@ -819,9 +846,9 @@ if __name__ == '__main__':
     # test_long()
     #
     #choose_test()
-    analyze_test()
+    #analyze_test()
     #dereplicate_wf_test()
     #taxonomy_test()
-    #cluster_test()
+    cluster_test()
 
     print("Everything seems to be working swimmingly!")
