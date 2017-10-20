@@ -6,7 +6,7 @@ from Bio import SeqIO
 import shutil
 import multiprocessing
 import datetime
-import tqdm
+
 
 # def run_cmd(cmd,dry=False,shell=True,quiet= True):
 #     devnull = open(os.devnull, 'w')

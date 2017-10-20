@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [1.3.2] - 2017-10-20
+### Fixed
+- test_suite now works
+- removed unnecessary import
+
 ## [1.3.1] - 2017-10-19
 ### Changed
 - output of all external commands is now stored in the log directory
