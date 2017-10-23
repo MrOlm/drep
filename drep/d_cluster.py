@@ -972,8 +972,7 @@ def run_pairwise_ANImf(genome_list, ANIn_folder, **kwargs):
         #logging.debug("getting genome length of {0}".format(genome))
         org_lengths[get_genome_name_from_fasta(genome)] = dm.fasta_length(genome)
 
-
-    deltafiles = ["{0}.delta".format(file) for file in files]
+    deltafiles = ["{0}.delta.filtered".format(file) for file in files]
     df = process_deltafiles(deltafiles, org_lengths, **kwargs)
 
     return df
@@ -1091,12 +1090,12 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
     #df['querry'] = [i.replace('.fna.GANI_','') for i in df['querry']]
     #df = df.drop_duplicates()
 
-    # Add self-comparisons if these is only one genome
+    # Add self-comparisons if there is only one genome
     if len(genomes) == 1:
         Table = {'querry':[],'reference':[],'ani':[],'alignment_coverage':[]}
         for g in genomes:
-            Table['reference'].append(g)
-            Table['querry'].append(g)
+            Table['reference'].append(get_genome_name_from_fasta(g))
+            Table['querry'].append(get_genome_name_from_fasta(g))
             Table['ani'].append(1)
             Table['alignment_coverage'].append(1)
         d = pd.DataFrame(Table)

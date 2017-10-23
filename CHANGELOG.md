@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [1.4.1] - 2017-10-23
+## Fixed
+- with gANI, fixed a minor bug with the naming of self-comparisons in Ndb.csv
+- with ANImf, fixed a major bug that was preventing it from working right at all
+
 ## [1.4.0] - 2017-10-20
 ## Added
 - added ANImf comparison method
