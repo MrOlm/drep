@@ -774,17 +774,19 @@ def process_deltafiles(deltafiles, org_lengths, logger=None, **kwargs):
 
     for deltafile in deltafiles:
         qname, sname = os.path.splitext(os.path.split(deltafile)[-1])[0].split('_vs_')
+        # Handle naming of "filtered"
+        if sname.endswith('.delta'):
+            sname = sname[:-6]
+
         tot_length, tot_sim_error = parse_delta(deltafile)
         if tot_length == 0 and logger is not None:
             logging.info("Total alignment length reported in " +
                                "%s is zero!" % deltafile)
         query_cover = float(tot_length) / org_lengths[qname]
         sbjct_cover = float(tot_length) / org_lengths[sname]
-        # Calculate percentage ID of aligned length. This may fail if
-        # total length is zero.
-        # The ZeroDivisionError that would arise should be handled
-        # Common causes are that a NUCmer run failed, or that a very
-        # distant sequence was included in the analysis.
+
+
+
         try:
             perc_id = 1 - float(tot_sim_error) / tot_length
         except ZeroDivisionError:
