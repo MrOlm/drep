@@ -142,7 +142,7 @@ def run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs):
             logdir = kwargs.get('wd').get_dir('cmd_logs')
         else:
             logdir = False
-        dm.thread_cmds(cmds, shell=True, logdir=logdir, t=int(t))
+        dm.thread_cmds(cmds, shell=False, logdir=logdir, t=int(t))
         #drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
 
     else:
