@@ -1,0 +1,15 @@
+1: PREPARING DATA
+2,3: RUNNING mummer AND CREATING CLUSTERS
+# reading input file "/Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Escherichia_coli_Sakai.fna_vs_Escherichia_coli_Sakai.fna.ntref" of length 5498451
+# construct suffix tree for sequence of length 5498451
+# (maximum reference length is 536870908)
+# (maximum query length is 4294967295)
+# process 54984 characters per dot
+#....................................................................................................
+# CONSTRUCTIONTIME /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Escherichia_coli_Sakai.fna_vs_Escherichia_coli_Sakai.fna.ntref 2.19
+# reading input file "/Users/mattolm/Programs/drep/tests/genomes/Escherichia_coli_Sakai.fna" of length 5498450
+# matching query-file "/Users/mattolm/Programs/drep/tests/genomes/Escherichia_coli_Sakai.fna"
+# against subject-file "/Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Escherichia_coli_Sakai.fna_vs_Escherichia_coli_Sakai.fna.ntref"
+# COMPLETETIME /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Escherichia_coli_Sakai.fna_vs_Escherichia_coli_Sakai.fna.ntref 6.25
+# SPACE /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Escherichia_coli_Sakai.fna_vs_Escherichia_coli_Sakai.fna.ntref 10.65
+4: FINISHING DATA

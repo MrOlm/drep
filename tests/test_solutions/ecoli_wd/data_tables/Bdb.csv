@@ -1,6 +1,6 @@
-genome,location,length
-Enterococcus_casseliflavus_EC20.fasta,/home/mattolm/Programs/drep/tests/genomes/Enterococcus_casseliflavus_EC20.fasta,3427276
-Enterococcus_faecalis_T2.fna,/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_T2.fna,3263835
-Enterococcus_faecalis_TX0104.fa,/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_TX0104.fa,3156478
-Enterococcus_faecalis_YI6-1.fna,/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_YI6-1.fna,3030328
-Escherichia_coli_Sakai.fna,/home/mattolm/Programs/drep/tests/genomes/Escherichia_coli_Sakai.fna,5498450
+genome,location
+Enterococcus_casseliflavus_EC20.fasta,/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_casseliflavus_EC20.fasta
+Enterococcus_faecalis_T2.fna,/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_T2.fna
+Enterococcus_faecalis_TX0104.fa,/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_TX0104.fa
+Enterococcus_faecalis_YI6-1.fna,/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_YI6-1.fna
+Escherichia_coli_Sakai.fna,/Users/mattolm/Programs/drep/tests/genomes/Escherichia_coli_Sakai.fna

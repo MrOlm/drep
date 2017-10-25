@@ -1,0 +1,15 @@
+1: PREPARING DATA
+2,3: RUNNING mummer AND CREATING CLUSTERS
+# reading input file "/Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_casseliflavus_EC20.fasta_vs_Enterococcus_casseliflavus_EC20.fasta.ntref" of length 3427277
+# construct suffix tree for sequence of length 3427277
+# (maximum reference length is 536870908)
+# (maximum query length is 4294967295)
+# process 34272 characters per dot
+#....................................................................................................
+# CONSTRUCTIONTIME /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_casseliflavus_EC20.fasta_vs_Enterococcus_casseliflavus_EC20.fasta.ntref 1.27
+# reading input file "/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_casseliflavus_EC20.fasta" of length 3427276
+# matching query-file "/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_casseliflavus_EC20.fasta"
+# against subject-file "/Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_casseliflavus_EC20.fasta_vs_Enterococcus_casseliflavus_EC20.fasta.ntref"
+# COMPLETETIME /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_casseliflavus_EC20.fasta_vs_Enterococcus_casseliflavus_EC20.fasta.ntref 3.74
+# SPACE /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_casseliflavus_EC20.fasta_vs_Enterococcus_casseliflavus_EC20.fasta.ntref 6.64
+4: FINISHING DATA

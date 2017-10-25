@@ -1,0 +1,1 @@
+/usr/local/bin/mash dist /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/MASH_files/ALL.msh /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/MASH_files/ALL.msh > /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/MASH_files/MASH_table.tsv

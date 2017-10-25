@@ -1,134 +1,47 @@
-01-21 18:23 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-01-21 18:23 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/log/logger.log***
-01-21 18:23 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+10-24 15:05 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+10-24 15:05 DEBUG    ***Logger started up at /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/log/logger.log***
+10-24 15:05 DEBUG    Command to run dRep was: /Users/mattolm/.pyenv/versions/anaconda3-2.4.0/bin/py.test
 
-01-21 18:23 DEBUG    Namespace(Chdb=None, MASH_sketch=1000, N50_weight=0.5, P_ani=0.9, S_algorithm='ANIn', S_ani=0.99, SkipMash=False, SkipSecondary=False, cent_index=None, checkM_method='taxonomy_wf', clusterAlg='average', completeness=75, completeness_weight=1, contamination=25, contamination_weight=5, cov_thresh=0.1, dry=False, genomes=['/home/mattolm/Programs/drep/tests/genomes/Enterococcus_casseliflavus_EC20.fasta', '/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_T2.fna', '/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_TX0104.fa', '/home/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_YI6-1.fna', '/home/mattolm/Programs/drep/tests/genomes/Escherichia_coli_Sakai.fna'], length=500000, n_PRESET='normal', operation='dereplicate_wf', overwrite=False, processors=6, run_tax=False, size_weight=0, skipCheckM=False, strain_heterogeneity_weight=1, strain_htr=25, warn_aln=0.25, warn_dist=0.25, warn_sim=0.98, work_directory='/home/mattolm/Programs/drep/tests/../tests/test_backend/ecoli_wd')
-01-21 18:23 DEBUG    Starting the dereplicate_wf operation
-01-21 18:23 INFO     ***************************************************
-    ..:: dRep Step 1. Filter ::..
-***************************************************
-    
-01-21 18:23 DEBUG    Loading work directory in filter
-01-21 18:23 DEBUG    Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
+10-24 15:05 DEBUG    dRep version 1.4.2 was run 
+
+10-24 15:05 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+10-24 15:05 DEBUG    Namespace(MASH_sketch=1000, P_ani=0.9, S_algorithm='ANImf', S_ani=0.99, SkipMash=False, SkipSecondary=False, clusterAlg='average', cov_thresh=0.1, coverage_method='larger', dry=False, genomes=['/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_casseliflavus_EC20.fasta', '/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_T2.fna', '/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_TX0104.fa', '/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_YI6-1.fna', '/Users/mattolm/Programs/drep/tests/genomes/Escherichia_coli_Sakai.fna'], n_PRESET='normal', operation='cluster', overwrite=True, processors=6, work_directory='/Users/mattolm/Programs/drep/tests/../tests/test_backend/ecoli_wd')
+10-24 15:05 DEBUG    Starting the clustering operation
+10-24 15:05 DEBUG    Loading work directory
+10-24 15:05 DEBUG    Located: /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd
 Datatables: []
 Cluster files: []
 Arguments: []
-01-21 18:23 DEBUG    Validating filter arguments
-01-21 18:23 INFO     Will filter the genome list
-01-21 18:23 DEBUG    Filtering genomes by size
-01-21 18:23 INFO     Running CheckM
-01-21 18:25 INFO     Running CheckM with command: ['/home/mattolm/.pyenv/shims/checkm', 'taxonomy_wf', 'domain', 'Bacteria', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/prodigal/', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir/', '-f', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir//results.tsv', '--tab_table', '-t', '6', '-g', '-x', 'faa']
-01-21 18:27 INFO     Running CheckM with command: ['/home/mattolm/.pyenv/shims/checkm', 'qa', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir/Bacteria.ms', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir/', '-f', '/home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/checkM/checkM_outdir/Chdb.tsv', '-t', '6', '--tab_table', '-o', '2']
-01-21 18:27 INFO     ***************************************************
-    ..:: dRep Step 2. Cluster ::..
-***************************************************
-    
-01-21 18:27 INFO     Loading work directory
-01-21 18:27 INFO     Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
-Datatables: ['Bdb', 'Chdb']
-Cluster files: []
-Arguments: []
-01-21 18:27 INFO     Step 1. Parse Arguments
-01-21 18:27 INFO     kwargs: {'processors': 6, 'dry': False, 'cov_thresh': 0.1, 'warn_sim': 0.98, 'contamination': 25, 'SkipMash': False, 'overwrite': False, 'S_ani': 0.99, 'length': 500000, 'clusterAlg': 'average', 'S_algorithm': 'ANIn', 'operation': 'dereplicate_wf', 'MASH_sketch': 1000, 'checkM_method': 'taxonomy_wf', 'cent_index': None, 'skipCheckM': False, 'contamination_weight': 5, 'strain_heterogeneity_weight': 1, 'mash_exe': '/opt/bin/bio/mash', 'n_noextend': False, 'work_directory': '/home/mattolm/Programs/drep/tests/../tests/test_backend/ecoli_wd', 'SkipSecondary': False, 'N50_weight': 0.5, 'n_PRESET': 'normal', 'completeness': 75, 'n_c': 65, 'n_maxgap': 90, 'strain_htr': 25, 'size_weight': 0, 'run_tax': False, 'warn_dist': 0.25, 'completeness_weight': 1, 'n_method': 'mum', 'P_ani': 0.9, 'warn_aln': 0.25}
-01-21 18:27 INFO     Step 2. Perform MASH (primary) clustering
-01-21 18:27 INFO     2a. Run pair-wise MASH clustering
-01-21 18:27 INFO     2b. Cluster pair-wise MASH clustering
-01-21 18:27 INFO     Clustering MASH database
-01-21 18:27 INFO     Saving primary_linkage pickle to /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/Clustering_files/
-01-21 18:27 INFO     3 primary clusters made
-01-21 18:27 INFO     Step 3. Perform secondary clustering
-01-21 18:27 INFO     clobbering /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/
-01-21 18:27 INFO     Clustering ANIn database
-01-21 18:27 INFO     Clustering ANIn database
-01-21 18:27 INFO     Saving secondary_linkage pickle secondary_linkage_cluster_1.pickle to /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/Clustering_files/
-01-21 18:27 INFO     Clustering ANIn database
-01-21 18:27 INFO     Step 4. Return output
-01-21 18:27 INFO     Main program run complete- saving output to /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data_tables/
-01-21 18:27 INFO     ***************************************************
-    ..:: dRep Step 3. Choose ::..
-***************************************************
-    
-01-21 18:27 INFO     Loading work directory
-01-21 18:27 INFO     Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
-Datatables: ['Bdb', 'Chdb', 'Ndb', 'Cdb', 'Mdb']
-Cluster files: ['secondary_linkage_cluster_1', 'primary_linkage']
-Arguments: ['cluster']
-01-21 18:27 INFO     CheckM db found- will use
-01-21 18:27 INFO     Sdb finished
-01-21 18:27 INFO     Wdb finished
-01-21 18:27 INFO     saving dereplicated genomes
-01-21 18:27 INFO     /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd/dereplicated_genomes/ already exists: removing and remaking
-01-21 18:27 INFO     ***************************************************
-    ..:: dRep Step 4. Bonus ::..
-***************************************************
-    
-01-21 18:27 INFO     Loading work directory
-01-21 18:27 INFO     Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
-Datatables: ['Wdb', 'Bdb', 'Ndb', 'Cdb', 'Mdb', 'Sdb', 'Chdb']
-Cluster files: ['secondary_linkage_cluster_1', 'primary_linkage']
-Arguments: ['cluster']
-01-21 18:27 INFO     ***************************************************
-    ..:: dRep Step 5. Evaluate ::..
-***************************************************
-    
-01-21 18:27 INFO     Loading work directory
-01-21 18:27 INFO     Located: /home/mattolm/Programs/drep/tests/test_backend/ecoli_wd
-Datatables: ['Wdb', 'Bdb', 'Ndb', 'Cdb', 'Mdb', 'Sdb', 'Chdb']
-Cluster files: ['secondary_linkage_cluster_1', 'primary_linkage']
-Arguments: ['cluster']
-01-21 18:27 INFO     evaluating ['2', '3']
-01-21 18:27 INFO     will provide warnings about clusters
-01-21 18:27 INFO     will produce Widb (winner information db)
-01-21 18:27 INFO     ***************************************************
-    ..:: dRep Step 6. Analyze ::..
-***************************************************
-    
-01-21 18:27 INFO     calling cluster_vis_wrapper
-01-21 18:27 INFO     making plots ['1', '2', '3', '4', '5', '6']
-03-03 09:29 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-03-03 09:29 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/log/logger.log***
-03-03 09:29 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-03-03 09:29 DEBUG    Namespace(cluster=None, clusterAlg='average', clustering_method='ANIn', dry=False, minimum_coverage=0.1, operation='analyze', overwrite=False, plots=['2'], processors=6, threshold=0.99, work_directory='ecoli_wd/')
-03-03 09:29 DEBUG    Starting the analyze operation
-03-03 09:29 DEBUG    calling cluster_vis_wrapper
-03-03 09:29 INFO     making plots ['2']
-03-03 09:29 INFO     Plotting secondary dendrograms...
-03-03 09:29 DEBUG    !!! Finished the analyze operation !!!
-03-03 09:32 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-03-03 09:32 DEBUG    ***Logger started up at /home/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/log/logger.log***
-03-03 09:32 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-03-03 09:32 DEBUG    Namespace(cluster=None, clusterAlg='average', clustering_method='ANIn', dry=False, minimum_coverage=0.1, operation='analyze', overwrite=False, plots=['2'], processors=6, threshold=0.99, work_directory='ecoli_wd/')
-03-03 09:32 DEBUG    Starting the analyze operation
-03-03 09:32 DEBUG    calling cluster_vis_wrapper
-03-03 09:32 INFO     making plots ['2']
-03-03 09:32 INFO     Plotting secondary dendrograms...
-03-03 09:32 DEBUG    !!! Finished the analyze operation !!!
-03-28 19:18 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-03-28 19:18 DEBUG    ***Logger started up at /Users/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/log/logger.log***
-03-28 19:18 DEBUG    Command to run dRep was: ['/Users/mattolm/.pyenv/versions/anaconda3-2.4.0/bin/dRep', 'cluster', 'ecoli_wd/', '-o']
-
-03-28 19:18 DEBUG    dRep version 0.5.4 was run 
-
-03-28 19:18 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
-
-03-28 19:18 DEBUG    Namespace(MASH_sketch=1000, P_ani=0.9, S_algorithm='ANIn', S_ani=0.99, SkipMash=False, SkipSecondary=False, clusterAlg='average', cov_thresh=0.1, coverage_method='larger', dry=False, genomes=None, n_PRESET='normal', operation='cluster', overwrite=True, processors=6, work_directory='ecoli_wd/')
-03-28 19:18 DEBUG    Starting the clustering operation
-03-28 19:18 DEBUG    Loading work directory
-03-28 19:18 DEBUG    Located: /Users/mattolm/Programs/drep/tests/test_solutions/ecoli_wd
-Datatables: ['Cdb', 'Chdb', 'Ndb_backup', 'Wdb', 'Widb', 'Mdb', 'Bdb', 'Sdb']
-Cluster files: ['secondary_linkage_cluster_1', 'primary_linkage']
-Arguments: ['cluster']
-03-28 19:18 DEBUG    THIS WILL OVERWRITE Cdb
-03-28 19:18 DEBUG    THIS WILL OVERWRITE Mdb
-03-28 19:18 INFO     Step 1. Parse Arguments
-03-28 19:18 DEBUG    kwargs: {'S_ani': 0.99, 'cov_thresh': 0.1, 'n_method': 'mum', 'coverage_method': 'larger', 'work_directory': 'ecoli_wd/', 'operation': 'cluster', 'P_ani': 0.9, 'genomes': None, 'SkipMash': False, 'n_noextend': False, 'n_maxgap': 90, 'mash_exe': '/usr/local/bin/mash', 'overwrite': True, 'n_c': 65, 'dry': False, 'n_PRESET': 'normal', 'clusterAlg': 'average', 'MASH_sketch': 1000, 'S_algorithm': 'ANIn', 'SkipSecondary': False, 'processors': 6}
-03-28 19:18 INFO     Step 2. Perform MASH (primary) clustering
-03-28 19:18 INFO     2a. Run pair-wise MASH clustering
-03-28 19:18 INFO     2b. Cluster pair-wise MASH clustering
-03-28 19:18 DEBUG    Clustering MASH database
-03-28 19:18 DEBUG    Saving primary_linkage pickle to /Users/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/data/Clustering_files/
-03-28 19:18 INFO     3 primary clusters made
-03-28 19:18 INFO     Step 3. Perform secondary clustering
-03-28 19:18 INFO     Running 11 ANIn comparisons- should take ~ 0.6 min
+10-24 15:05 INFO     Step 1. Parse Arguments
+10-24 15:05 DEBUG    kwargs: {'P_ani': 0.9, 'SkipMash': False, 'work_directory': '/Users/mattolm/Programs/drep/tests/../tests/test_backend/ecoli_wd', 'n_c': 65, 'wd': <drep.WorkDirectory.WorkDirectory object at 0x10ea0ff28>, 'dry': False, 'clusterAlg': 'average', 'S_algorithm': 'ANImf', 'coverage_method': 'larger', 'genomes': ['/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_casseliflavus_EC20.fasta', '/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_T2.fna', '/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_TX0104.fa', '/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_YI6-1.fna', '/Users/mattolm/Programs/drep/tests/genomes/Escherichia_coli_Sakai.fna'], 'mash_exe': '/usr/local/bin/mash', 'n_noextend': False, 'n_PRESET': 'normal', 'n_maxgap': 90, 'n_method': 'mum', 'cov_thresh': 0.1, 'MASH_sketch': 1000, 'processors': 6, 'SkipSecondary': False, 'overwrite': True, 'S_ani': 0.99, 'operation': 'cluster'}
+10-24 15:05 INFO     Step 2. Perform MASH (primary) clustering
+10-24 15:05 INFO     2a. Run pair-wise MASH clustering
+10-24 15:05 INFO     2b. Cluster pair-wise MASH clustering
+10-24 15:05 DEBUG    Clustering MASH database
+10-24 15:05 DEBUG    Saving primary_linkage pickle to /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/Clustering_files/
+10-24 15:05 INFO     3 primary clusters made
+10-24 15:05 INFO     Step 3. Perform secondary clustering
+10-24 15:05 INFO     Running 11 ANImf comparisons- should take ~ 0.9 min
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ c a s s e l i f l a v u s _ E C 2 0 . f a s t a _ v s _ E n t e r o c o c c u s _ c a s s e l i f l a v u s _ E C 2 0 . f a s t a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ c a s s e l i f l a v u s _ E C 2 0 . f a s t a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ c a s s e l i f l a v u s _ E C 2 0 . f a s t a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ c a s s e l i f l a v u s _ E C 2 0 . f a s t a _ v s _ E n t e r o c o c c u s _ c a s s e l i f l a v u s _ E C 2 0 . f a s t a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ c a s s e l i f l a v u s _ E C 2 0 . f a s t a _ v s _ E n t e r o c o c c u s _ c a s s e l i f l a v u s _ E C 2 0 . f a s t a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T 2 . f n a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ T X 0 1 0 4 . f a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a _ v s _ E n t e r o c o c c u s _ f a e c a l i s _ Y I 6 - 1 . f n a . d e l t a . f i l t e r e d
+10-24 15:05 DEBUG    n u c m e r   - - m u m   - p   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E s c h e r i c h i a _ c o l i _ S a k a i . f n a _ v s _ E s c h e r i c h i a _ c o l i _ S a k a i . f n a   - c   6 5   - g   9 0   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E s c h e r i c h i a _ c o l i _ S a k a i . f n a   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / g e n o m e s / E s c h e r i c h i a _ c o l i _ S a k a i . f n a ;   d e l t a - f i l t e r   - r   - q   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E s c h e r i c h i a _ c o l i _ S a k a i . f n a _ v s _ E s c h e r i c h i a _ c o l i _ S a k a i . f n a . d e l t a   >   / U s e r s / m a t t o l m / P r o g r a m s / d r e p / t e s t s / t e s t _ b a c k e n d / e c o l i _ w d / d a t a / A N I m f _ f i l e s / E s c h e r i c h i a _ c o l i _ S a k a i . f n a _ v s _ E s c h e r i c h i a _ c o l i _ S a k a i . f n a . d e l t a . f i l t e r e d
+10-24 15:06 DEBUG    clobbering /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/
+10-24 15:06 DEBUG    Clustering ANIn database
+10-24 15:06 DEBUG    Clustering ANIn database
+10-24 15:06 DEBUG    making dictionary for average_ani
+10-24 15:06 DEBUG    list comprehension for average_ani
+10-24 15:06 DEBUG    averageing done
+10-24 15:06 DEBUG    Saving secondary_linkage pickle secondary_linkage_cluster_1.pickle to /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/Clustering_files/
+10-24 15:06 DEBUG    Clustering ANIn database
+10-24 15:06 INFO     Step 4. Return output
+10-24 15:06 DEBUG    Main program run complete- saving output to /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data_tables/
+10-24 15:06 DEBUG    !!! Finished the clustering operation !!!

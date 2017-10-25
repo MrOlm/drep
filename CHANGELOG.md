@@ -4,6 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [1.4.2] - 2017-10-24
+## Changed
+- made ANImf the default comparison algorithm
+- added a little documentation on what ANImf is
+
+## fixed
+- made ANImf not rerun if .delta.filtered is present
+- made bonus call centrifuge using the new calling method
+- made the new calling method actually take into account the number of threads
+- updated tests to account for default ANImf
+
 ## [1.4.1] - 2017-10-23
 ## Fixed
 - with gANI, fixed a minor bug with the naming of self-comparisons in Ndb.csv

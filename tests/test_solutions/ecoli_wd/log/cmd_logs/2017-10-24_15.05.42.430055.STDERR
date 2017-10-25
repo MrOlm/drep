@@ -1,0 +1,15 @@
+1: PREPARING DATA
+2,3: RUNNING mummer AND CREATING CLUSTERS
+# reading input file "/Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_faecalis_TX0104.fa_vs_Enterococcus_faecalis_T2.fna.ntref" of length 3156573
+# construct suffix tree for sequence of length 3156573
+# (maximum reference length is 536870908)
+# (maximum query length is 4294967295)
+# process 31565 characters per dot
+#....................................................................................................
+# CONSTRUCTIONTIME /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_faecalis_TX0104.fa_vs_Enterococcus_faecalis_T2.fna.ntref 1.42
+# reading input file "/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_T2.fna" of length 3263856
+# matching query-file "/Users/mattolm/Programs/drep/tests/genomes/Enterococcus_faecalis_T2.fna"
+# against subject-file "/Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_faecalis_TX0104.fa_vs_Enterococcus_faecalis_T2.fna.ntref"
+# COMPLETETIME /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_faecalis_TX0104.fa_vs_Enterococcus_faecalis_T2.fna.ntref 4.37
+# SPACE /Users/mattolm/Scripts/MUMmer3.23/mummer /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data/ANImf_files/Enterococcus_faecalis_TX0104.fa_vs_Enterococcus_faecalis_T2.fna.ntref 6.21
+4: FINISHING DATA

@@ -575,6 +575,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     dry = kwargs.get('dry',False)
     overwrite = kwargs.get('overwrite', False)
     mash_exe = kwargs.get('mash_exe', 'mash')
+    p = kwargs.get('processors',6)
 
     # set up logdir
     if 'wd' in kwargs:
@@ -603,7 +604,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
 
     if not dry:
         if len(cmds) > 0:
-            dm.thread_cmds(cmds, logdir=logdir)
+            dm.thread_cmds(cmds, logdir=logdir, t=int(p))
 
     # Combine MASH sketches
     cmd = [mash_exe, 'paste', MASH_folder + 'ALL.msh'] + glob.glob(sketch_folder+ '*')
@@ -920,7 +921,7 @@ def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
             logdir = kwargs.get('wd').get_dir('cmd_logs')
         else:
             logdir = False
-        dm.thread_cmds(cmds, logdir=logdir)
+        dm.thread_cmds(cmds, logdir=logdir, t=int(p))
         #thread_nucmer_cmds_status(cmds,p,verbose=False)
 
     # Parse output
@@ -954,7 +955,7 @@ def run_pairwise_ANImf(genome_list, ANIn_folder, **kwargs):
             files.append(file_name)
 
             # If the file doesn't already exist, add it to what needs to be run
-            if not os.path.isfile(file_name + '.delta'):
+            if not os.path.isfile(file_name + '.delta.filtered'):
                 cmds.append(gen_animf_cmd(file_name,g1,g2))
 
     # Run commands
@@ -966,7 +967,7 @@ def run_pairwise_ANImf(genome_list, ANIn_folder, **kwargs):
             logdir = kwargs.get('wd').get_dir('cmd_logs')
         else:
             logdir = False
-        dm.thread_cmds(cmds, shell=True, logdir=logdir)
+        dm.thread_cmds(cmds, shell=True, logdir=logdir, t=int(p))
 
     # Parse output
     org_lengths = {}
@@ -1078,7 +1079,7 @@ def run_pairwise_gANI(bdb, gANI_folder, verbose = False, **kwargs):
             logdir = kwargs.get('wd').get_dir('cmd_logs')
         else:
             logdir = False
-        dm.thread_cmds(cmds, logdir=logdir)
+        dm.thread_cmds(cmds, logdir=logdir, t=int(p))
 
     else:
         if verbose:

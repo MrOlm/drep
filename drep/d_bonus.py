@@ -34,7 +34,7 @@ def run_taxonomy(wd, **kwargs):
     d_filter.run_prodigal(Bdb, prod_dir, **kwargs)
 
     # Run centrifuge
-    run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs)
+    run_centrifuge(Bdb, prod_dir, cent_dir, wd=wd, **kwargs)
 
     # # Call a centrifuge parser that returns Tdb
     # Tdb = parse_centrifuge(Bdb, cent_dir, **kwargs)
@@ -137,7 +137,13 @@ def run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs):
         logging.info('Running Centrifuge')
         for cmd in cmds:
             logging.debug(' '.join(cmd))
-        drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
+
+        if 'wd' in kwargs:
+            logdir = kwargs.get('wd').get_dir('cmd_logs')
+        else:
+            logdir = False
+        dm.thread_cmds(cmds, shell=True, logdir=logdir, t=int(t))
+        #drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
 
     else:
         logging.info('Past centrifuge runs found- will not re-run')

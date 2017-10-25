@@ -28,6 +28,8 @@ The **secondary clustering algorithm** is the program that will calculate the ac
 
 Neither of these algorithms are perfect, especially in repeat-prone genomes. Regions of the genome which are not homologous can align to each other and artificially decrease ANI. In fact, when a genome is compared to itself, ANIm often reports values <100% for this reason. gANI is better about this, but seems to be more sensitive to genome subsetting.
 
+* **ANImf** is very similar to ANIm, but filters the alignment before calculating ANI. This takes slighty 
+
 Minimum secondary ANI
 +++++++++++++++++++++
 
