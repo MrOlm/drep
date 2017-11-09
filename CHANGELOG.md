@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## Un-merged
+## Added
+- API documentation
+
 ## [1.4.3] - 2017-10-24
 ## fixed
 - fixed centrifuge call (shell=False)

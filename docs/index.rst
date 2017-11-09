@@ -27,7 +27,7 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 10
+   :maxdepth: 2
 
    overview
    installation
@@ -36,6 +36,7 @@ Contents
    module_descriptions
    choosing_parameters
    advanced_use
+   source/modules
 
 .. _bioRxiv: https://doi.org/10.1101/108142
 .. _ISME: http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html
