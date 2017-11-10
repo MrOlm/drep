@@ -15,6 +15,7 @@ import logging
 import pandas as pd
 
 import drep as dm
+import drep.d_filter
 from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
@@ -142,6 +143,7 @@ class VerifyFilter():
     def setUp(self):
         self.genomes = load_test_genomes()
         self.wd_loc = load_test_wd_loc()
+        self.s_wd_loc = load_solutions_wd()
 
         logging.shutdown()
         if os.path.isdir(self.wd_loc):
@@ -149,12 +151,115 @@ class VerifyFilter():
 
     def run(self):
         self.setUp()
+
+        # self.test_calc_genome_info()
+        # self.test_validate_genomeInfo()
+        # self.test_chdb_to_genomeInfo()
+
         self.functional_test_1()
+
         self.tearDown()
+
+    def test_chdb_to_genomeInfo(self):
+        '''
+        test drep.d_filter.chdb_to_genomeInfo
+        '''
+        genomes = self.genomes
+        workDirectory = drep.WorkDirectory.WorkDirectory(self.s_wd_loc)
+
+        # Load chdb
+        chdb = workDirectory.get_db('Chdb')
+        # Make bdb
+        bdb = drep.d_cluster.load_genomes(genomes)
+        # Make Gdb
+        Gdb = drep.d_filter.calc_genome_info(genomes)
+
+        # Run
+        Idb = drep.d_filter.chdb_to_genomeInfo(chdb)
+        Tdb = drep.d_filter._validate_genomeInfo(Idb, bdb, Gdb)
+        t = Tdb[Tdb['genome'] == 'Enterococcus_casseliflavus_EC20.fasta']
+        assert t['completeness'].tolist()[0] == 98.28
+        assert t['length'].tolist()[0] == 3427276
+
+    def test_calc_genome_info(self):
+        '''
+        test drep.d_filter.calc_genome_info
+        '''
+        genomes = self.genomes
+        result = drep.d_filter.calc_genome_info(genomes)
+
+        result['g'] = [os.path.basename(l) for l in result[\
+            'location']]
+        d = result[result['g'] == 'Enterococcus_faecalis_T2.fna']
+        n = d['N50'].tolist()[0]
+        l = d['length'].tolist()[0]
+
+        assert n == 774663
+        assert l == 3263835
+
+    def test_validate_genomeInfo(self):
+        '''
+        test drep.d_filter._validate_genomeInfo
+
+        1) Make sure it can load a proper file
+
+        2) Make sure it crashes on an unproper file
+        '''
+        # Make proper Idb
+        genomes = self.genomes
+        table = {}
+        atts = ['completeness', 'contamination', 'strain_heterogeneity']
+        for a in atts:
+            table[a] = []
+        table['genome'] = []
+        table['location'] = []
+        for g in genomes:
+            table['genome'].append(os.path.basename(g))
+            table['location'].append(g)
+            for a in atts:
+                table[a].append(10)
+        Idb = pd.DataFrame(table)
+        # Make bdb
+        bdb = drep.d_cluster.load_genomes(genomes)
+        # Make Gdb
+        Gdb = drep.d_filter.calc_genome_info(genomes)
+
+        # Run as correct
+        Tdb = drep.d_filter._validate_genomeInfo(Idb, bdb, Gdb)
+        t = Tdb[Tdb['genome'] == 'Enterococcus_casseliflavus_EC20.fasta']
+        assert t['completeness'].tolist()[0] == 10.0
+        assert t['length'].tolist()[0] == 3427276
+
+        # Run wihout one of the genomes
+        idb = Idb[Idb['genome'] != 'Enterococcus_casseliflavus_EC20.fasta']
+        try:
+            tdb = drep.d_filter._validate_genomeInfo(idb, bdb, Gdb)
+            assert False
+        except:
+            pass
+
+        # Run without completeness
+        idb = Idb.copy()
+        del idb['completeness']
+        try:
+            tdb = drep.d_filter._validate_genomeInfo(idb, bdb, Gdb)
+            assert False
+        except:
+            pass
+
+        # Run without the genome info
+        idb = Idb.copy()
+        idb['genome'] = idb['location']
+        tdb = drep.d_filter._validate_genomeInfo(idb, bdb, Gdb)
+        t = Tdb[Tdb['genome'] == 'Enterococcus_casseliflavus_EC20.fasta']
+        assert t['completeness'].tolist()[0] == 10.0
+        assert t['length'].tolist()[0] == 3427276
 
     def functional_test_1(self):
         '''
         Call filter on 'Escherichia_coli_Sakai.fna'
+
+        Should call both prodigal and checkM
         '''
         genomes = self.genomes
         wd_loc  = self.wd_loc
@@ -165,10 +270,13 @@ class VerifyFilter():
         controller.parseArguments(args)
 
         # Confirm Chdb.csv is correct
-        assert True
+        wd = drep.WorkDirectory.WorkDirectory(wd_loc)
+        chdb = wd.get_db('Chdb')
+        assert chdb['Completeness'].tolist()[0] == 100.0
 
         # Confirm genome is in Bdb.csv
-        assert True
+        Gdb = wd.get_db('genomeInfo')
+        assert Gdb['completeness'].tolist()[0] == 100.0
 
     def tearDown(self):
         logging.shutdown()
@@ -840,6 +948,7 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
+    filter_test()
     #test_unit()
     #test_quick()
     #test_short()
@@ -849,6 +958,6 @@ if __name__ == '__main__':
     #analyze_test()
     #dereplicate_wf_test()
     #taxonomy_test()
-    cluster_test()
+    #cluster_test()
 
     print("Everything seems to be working swimmingly!")

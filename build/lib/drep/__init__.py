@@ -101,3 +101,9 @@ def clobber_dir(outdirname,dry=False,overwrite=False):
                             format(outdirname)
     else:
         os.makedirs(outdirname)
+
+def fasta_length(fasta):
+    total = 0
+    for seq_record in SeqIO.parse(fasta, "fasta"):
+        total += len(seq_record)
+    return total

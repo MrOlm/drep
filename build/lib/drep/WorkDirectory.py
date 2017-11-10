@@ -200,15 +200,6 @@ class WorkDirectory(object):
                                 name, self.location)
 
     def get_dir(self, dir):
-        '''
-        Get the location of one of the named directory types
-
-        Args:
-            dir: Name of directory to find
-
-        Returns:
-            string: Location of requested directory
-        '''
         d = None
         if dir == 'prodigal':
             d = self.location + '/data/prodigal/'
@@ -222,11 +213,6 @@ class WorkDirectory(object):
             d = self.location + '/log/cmd_logs/'
         elif dir == 'MASH':
             d = self.location + '/data/MASH_files/'
-        elif dir == 'checkM':
-            d = self.location + '/data/checkM/'
-
-        if d == None:
-            assert False, "{0} is not a directory I know about".format(dir)
 
         if not os.path.exists(d):
             os.makedirs(d)

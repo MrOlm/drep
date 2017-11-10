@@ -69,7 +69,7 @@ def parse_args(args):
 
     Bflags = parent_parser.add_argument_group('SYSTEM PARAMETERS')
     Bflags.add_argument('-p','--processors',help='threads',default=6,type=int)
-    Bflags.add_argument('-d','--debug',help='make extra debugging output',default=False,
+    Bflags.add_argument('-d','--dry',help='dry run- dont do anything',default=False,
                         action= "store_true")
     Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
                         default=False, action= "store_true")
@@ -88,9 +88,8 @@ def parse_args(args):
                             default = 25, type = float)
     # fiflags.add_argument("-str","--strain_htr", help="Maximum strain heterogeneity",
     #                         default = 25, type = float)
-    fiflags.add_argument("--noQualityFiltering", help="Don't run checkM or do any \
-            quality filtering- will ignore con and comp settings if genomeInfo.csv \
-            not also provided. NOT RECOMMENDED! See docs for details", \
+    fiflags.add_argument("--skipCheckM", help="Don't run checkM- will ignore con and "\
+                            + "comp settings if genomeInfo not also provided", \
                             action='store_true')
 
     #
@@ -200,10 +199,8 @@ def parse_args(args):
     Iflags = filter_parser.add_argument_group('I/O PARAMETERS')
     Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to filter in .fasta format.\
                         Not necessary if Bdb or Wdb already exist')
-    Iflags.add_argument('--genomeInfo',help='location of .csv file containing quality \
-            information on the genomes. Must contain: ["genome"(basename of .fasta file \
-            of that genome), "completeness"(0-100 value for completeness of the genome), \
-            "contamination"(0-100 value of the contamination of the genome)]')
+    Iflags.add_argument('--Chdb',help='checkM run already completed. Must be in \
+                        --tab_table format.')
     Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
                             + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
                             default = 'lineage_wf')

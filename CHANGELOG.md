@@ -5,31 +5,36 @@ The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
 ## Un-merged
-## Added
+### Added (general)
 - API documentation
 
+### Added to d_filter
+- Complete API coverage
+- Ability to include genome information from other sources more easily
+- More tests
+
 ## [1.4.3] - 2017-10-24
-## fixed
+### fixed
 - fixed centrifuge call (shell=False)
 
 ## [1.4.2] - 2017-10-24
-## Changed
+### Changed
 - made ANImf the default comparison algorithm
 - added a little documentation on what ANImf is
 
-## fixed
+### fixed
 - made ANImf not rerun if .delta.filtered is present
 - made bonus call centrifuge using the new calling method
 - made the new calling method actually take into account the number of threads
 - updated tests to account for default ANImf
 
 ## [1.4.1] - 2017-10-23
-## Fixed
+### Fixed
 - with gANI, fixed a minor bug with the naming of self-comparisons in Ndb.csv
 - with ANImf, fixed a major bug that was preventing it from working right at all
 
 ## [1.4.0] - 2017-10-20
-## Added
+### Added
 - added ANImf comparison method
 
 ## [1.3.2] - 2017-10-20
