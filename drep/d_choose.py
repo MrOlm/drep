@@ -59,7 +59,7 @@ def d_choose_wrapper(wd,**kwargs):
         logging.info("Chdb (CheckM information) not found- running CheckM now")
 
         bdb = workDirectory.get_db('Bdb')
-        Chdb = drep.d_filter.run_checkM_wrapper(bdb, workDirectory, **kwargs)
+        Chdb = drep.d_filter._run_checkM_wrapper(bdb, workDirectory, **kwargs)
 
     # Call a method with Cdb and Chdb, returning Sdb (scored db) and Wdb (winner db)
     Sdb, Wdb = choose_winners(Cdb,Chdb,**kwargs)
@@ -112,7 +112,7 @@ def make_dummy_Chdb(bdb):
     blanks = ['Completeness', 'Contamination', 'Strain heterogeneity']
     for b in blanks:
         chdb[b] = 0
-    chdb = drep.d_filter.fix_chdb(chdb, bdb)
+    chdb = drep.d_filter._fix_chdb(chdb, bdb)
 
     return chdb
 

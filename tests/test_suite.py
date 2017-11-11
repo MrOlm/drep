@@ -131,12 +131,12 @@ class VerifyDereplicateWf():
         self.wd_loc = load_test_wd_loc()
         self.s_wd_loc = load_solutions_wd()
 
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
 
     def tearDown(self):
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
 
@@ -149,7 +149,7 @@ class VerifyFilter():
         self.wd_loc = load_test_wd_loc()
         self.s_wd_loc = load_solutions_wd()
 
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
 
@@ -283,7 +283,7 @@ class VerifyFilter():
         assert Gdb['completeness'].tolist()[0] == 100.0
 
     def tearDown(self):
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
 
@@ -303,7 +303,7 @@ class VerifyCluster():
             os.mkdir(self.test_dir)
 
     def tearDown(self):
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
         if os.path.isdir(self.test_dir):
@@ -570,7 +570,7 @@ class VerifyAnalyze():
             assert os.path.getsize(fig) > 0
 
     def tearDown(self):
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.working_wd_loc):
             shutil.rmtree(self.working_wd_loc)
 
@@ -655,7 +655,7 @@ class VerifyChoose():
             assert (s > 0) & (s < 5)
 
     def tearDown(self):
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.working_wd_loc):
             shutil.rmtree(self.working_wd_loc)
 
@@ -750,7 +750,7 @@ class VerifyTaxonomy():
         assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Tdb')
 
     def tearDown(self):
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
 
@@ -934,7 +934,7 @@ class QuickTests():
         assert len(glob.glob(log_folder + '*')) == 3
 
     def tearDown(self):
-        logging.shutdown()
+        #logging.shutdown()
         if os.path.isdir(self.working_wd_loc):
             shutil.rmtree(self.working_wd_loc)
 
@@ -1041,8 +1041,6 @@ def test_long():
 
 @pytest.mark.short
 def test_short():
-    cluster_test()
-    rerun_test()
     taxonomy_test()
 
 @pytest.mark.quick
@@ -1054,16 +1052,16 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
+    test_unit()
+    test_quick()
+    test_short()
+    test_long()
+
     #filter_test()
-    #test_unit()
-    #test_quick()
-    #test_short()
-    # test_long()
-    #
     #choose_test()
     #analyze_test()
     #dereplicate_wf_test()
     #taxonomy_test()
-    cluster_test()
+    #cluster_test()
 
     print("Everything seems to be working swimmingly!")
