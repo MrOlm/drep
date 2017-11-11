@@ -13,6 +13,12 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 - Ability to include genome information from other sources more easily
 - More tests
 
+### Added to d_cluster
+- argument parsing broken up into more groups
+- more tests
+- complete API coverage
+- ANImf, gANI, and ANIn now make folders in the output, so that it doesnt have too many files in one dir
+
 ## [1.4.3] - 2017-10-24
 ### fixed
 - fixed centrifuge call (shell=False)

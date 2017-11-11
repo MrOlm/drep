@@ -98,14 +98,27 @@ def parse_args(args):
     #
     cluster_parent = argparse.ArgumentParser(add_help=False)
     # Comparison Parameters
+    Clustflags = cluster_parent.add_argument_group('GENOME COMPARISON PARAMETERS')
+    Clustflags.add_argument("-ms","--MASH_sketch",help="MASH sketch size", default=1000)
+    Clustflags.add_argument("--S_algorithm", help="R|Algorithm for secondary clustering comaprisons:\n" \
+        + "ANImf = (RECOMMENDED) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
+        + "ANIn  = Align whole genomes with nucmer; compare aligned regions\n" \
+        + "gANI  = Identify and align ORFs; compare aligned ORFS\n", \
+                        default='ANImf', choices={'ANIn','gANI','ANImf'})
+    Clustflags.add_argument("-n_PRESET", help= "R|Presets to pass to nucmer\n" \
+        + "tight   = only align highly conserved regions\n" \
+        + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')
+
+    # Clustering Parameters
     Compflags = cluster_parent.add_argument_group('CLUSTERING PARAMETERS')
-    Compflags.add_argument("-ms","--MASH_sketch",help="MASH sketch size", default=1000)
     Compflags.add_argument("-pa","--P_ani",help="ANI threshold to form primary (MASH) clusters",
                         default=0.9, type = float)
-    Compflags.add_argument("--S_algorithm", help="Algorithm for secondary clustering comaprisons",
-                        default='ANImf', choices={'ANIn','gANI','ANImf'})
     Compflags.add_argument("-sa", "--S_ani", help="ANI threshold to form secondary clusters",
                         default=0.99, type = float)
+    Compflags.add_argument("--SkipMash",help="Skip MASH clustering,\
+                        just do secondary clustering on all genomes",action='store_true')
+    Compflags.add_argument("--SkipSecondary", help="Skip secondary clustering, just perform MASH\
+                        clustering", action='store_true')
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
         genomes when doing secondary comparisons", default=0.1, type=float)
     Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \
@@ -113,15 +126,13 @@ def parse_args(args):
         + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
         + "larger  = max((aligned length / genome 1), (aligned_length / genome2)",
                         choices=['total', 'larger'], default='larger')
-    Compflags.add_argument("-n_PRESET", help= "R|Presets to pass to nucmer\n" \
-        + "tight   = only align highly conserved regions\n" \
-        + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage",default='average')
-    Compflags.add_argument("--SkipMash",help="Skip MASH clustering,\
-                        just do secondary clustering on all genomes",action='store_true')
-    Compflags.add_argument("--SkipSecondary", help="Skip secondary clustering, just perform MASH\
-                        clustering", action='store_true')
+
+
+    # Additional parser for genome comparisons
+    #
+    #
 
     #
     # Make a parent parser for scoring

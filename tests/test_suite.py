@@ -28,6 +28,10 @@ def load_test_wd_loc():
     loc = os.path.join(str(os.getcwd()),'../tests/test_backend/ecoli_wd')
     return loc
 
+def load_random_test_dir():
+    loc = os.path.join(str(os.getcwd()),'../tests/test_backend/test_dir')
+    return loc
+
 def load_solutions_wd():
     loc = os.path.join(str(os.getcwd()),'../tests/test_solutions/ecoli_wd')
     return loc
@@ -283,6 +287,243 @@ class VerifyFilter():
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
 
+class VerifyCluster():
+    def __init__(self):
+        pass
+
+    def setUp(self):
+        self.genomes = load_test_genomes()
+        self.wd_loc = load_test_wd_loc()
+        self.test_dir = load_random_test_dir()
+        self.s_wd_loc = load_solutions_wd()
+
+        if os.path.isdir(self.wd_loc):
+            shutil.rmtree(self.wd_loc, ignore_errors=True)
+        if not os.path.isdir(self.test_dir):
+            os.mkdir(self.test_dir)
+
+    def tearDown(self):
+        logging.shutdown()
+        if os.path.isdir(self.wd_loc):
+            shutil.rmtree(self.wd_loc)
+        if os.path.isdir(self.test_dir):
+            shutil.rmtree(self.test_dir)
+
+    def run(self):
+        self.setUp()
+        self.test_all_vs_all_mash()
+        self.tearDown()
+
+        self.setUp()
+        self.test_cluster_mash_database()
+        self.tearDown()
+
+        self.setUp()
+        self.test_compare_genomes()
+        self.tearDown()
+
+        self.setUp()
+        self.test_genome_hierarchical_clustering()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_3()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_2()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.skipsecondary_test()
+        self.tearDown()
+
+    def test_genome_hierarchical_clustering(self):
+        '''
+        Test d_cluster.test_genome_hierarchical_clustering
+        '''
+        wdS = drep.WorkDirectory.WorkDirectory(self.s_wd_loc)
+        Ndb = wdS.get_db('Ndb')
+
+        # Run clustering on Ndb
+        Cdb, c2ret = drep.d_cluster._cluster_Ndb(Ndb, comp_method='ANImf')
+        g2c = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+        assert g2c['Enterococcus_faecalis_T2.fna'] != g2c['Enterococcus_faecalis_TX0104.fa']
+        assert g2c['Enterococcus_faecalis_T2.fna'] == g2c['Enterococcus_faecalis_YI6-1.fna']
+
+        # Make sure storage is correct
+        wd = drep.WorkDirectory.WorkDirectory(self.wd_loc)
+        wd.store_special('secondary_linkages', c2ret)
+        wd.load_cached()
+        got = wd.get_cluster('secondary_linkage_cluster_1')
+        assert len(got) == 3
+
+    def test_compare_genomes(self):
+        '''
+        Test d_cluster.compare_genomes
+        '''
+        bdb = drep.d_cluster.load_genomes(self.genomes)
+        data_folder = self.test_dir
+
+        # Try ANImf
+        Ndb = drep.d_cluster.compare_genomes(bdb, 'ANImf', data_folder)
+        db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+            & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+        assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
+
+        # Try ANIn
+        Ndb = drep.d_cluster.compare_genomes(bdb, 'ANIn', data_folder)
+        db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+            & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+        assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
+
+        # Try gANI
+        loc, works = drep.d_bonus.find_program('ANIcalculator')
+        if works:
+            Ndb = drep.d_cluster.compare_genomes(bdb, 'gANI', data_folder, \
+                prod_folder = os.path.join(data_folder + 'prodigal'))
+            db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+                & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+            assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
+
+    def test_all_vs_all_mash(self):
+        '''
+        Test d_cluster.all_vs_all_MASH
+        '''
+        bdb = drep.d_cluster.load_genomes(self.genomes)
+        data_folder = self.test_dir
+
+        # Run it
+        Mdb = drep.d_cluster.all_vs_all_MASH(bdb, data_folder)
+        db = Mdb[(Mdb['genome1'] == 'Enterococcus_faecalis_T2.fna') & \
+            (Mdb['genome2'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+        d = float(db['dist'].tolist()[0])
+        assert (d > .2) & (d < .3)
+
+    def test_cluster_mash_database(self):
+        '''
+        Test d_cluster.cluster_mash_database
+        '''
+        wdS = drep.WorkDirectory.WorkDirectory(self.s_wd_loc)
+        Mdb = wdS.get_db('Mdb')
+
+        # Make sure clustering is correct
+        Cdb, cluster_ret = drep.d_cluster.cluster_mash_database(Mdb)
+        g2c = Cdb.set_index('genome')['primary_cluster'].to_dict()
+        assert g2c['Enterococcus_faecalis_T2.fna'] == g2c['Enterococcus_faecalis_TX0104.fa']
+        assert g2c['Enterococcus_faecalis_T2.fna'] != g2c['Enterococcus_casseliflavus_EC20.fasta']
+
+        # Make sure storage is correct
+        wd = drep.WorkDirectory.WorkDirectory(self.wd_loc)
+        wd.store_special('primary_linkage', cluster_ret)
+        wd.load_cached()
+        got = wd.get_cluster('primary_linkage')
+        assert len(got) == 3
+
+    def functional_test_1(self):
+        '''
+        Cluster the 5 genomes using default settings
+        '''
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'-g']+genomes)
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Cdb.csv is correct
+        db1 = Swd.get_db('Cdb')
+        db2 =  wd.get_db('Cdb')
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
+
+    def functional_test_2(self):
+        '''
+        Cluster the 5 genomes using gANI
+        '''
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        # Make sure gANI is installed
+        loc, works = find_program('ANIcalculator')
+        if (loc == None or works == False):
+            print('Cannot locate the program {0}- skipping related tests'\
+                .format('ANIcalculator (for gANI)'))
+            return
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
+            'gANI','-g']+genomes)
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Cdb.csv is correct
+        db1 = Swd.get_db('Cdb')
+        del db1['comparison_algorithm']
+        db2 =  wd.get_db('Cdb')
+        del db2['comparison_algorithm']
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
+
+    def functional_test_3(self):
+        '''
+        Cluster the 5 genomes using ANImf
+        '''
+
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
+            'ANImf','-g']+genomes)
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Cdb.csv is correct
+        db1 = Swd.get_db('Cdb')
+        del db1['comparison_algorithm']
+        db2 =  wd.get_db('Cdb')
+        del db2['comparison_algorithm']
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
+
+    def skipsecondary_test(self):
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'-g'] +genomes \
+                + ['--SkipSecondary','-o'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Mdb.csv is correct
+        db1 = Swd.get_db('Mdb')
+        db2 =  wd.get_db('Mdb')
+        #assert compare_dfs(db1, db2), "{0} is not the same!".format('Mdb')
+
+        # Confirm Ndb.csv doesn't exist
+        db2 = wd.get_db('Ndb')
+        assert db2.empty, 'Ndb is not empty'
+
 class VerifyAnalyze():
     def __init__(self):
         pass
@@ -507,141 +748,6 @@ class VerifyTaxonomy():
         tdbS = Swd.get_db('TdbP')
         tdb = wd.get_db('Tdb')
         assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Tdb')
-
-    def tearDown(self):
-        logging.shutdown()
-        if os.path.isdir(self.wd_loc):
-            shutil.rmtree(self.wd_loc)
-
-class VerifyCluster():
-    def __init__(self):
-        pass
-
-    def setUp(self):
-        self.genomes = load_test_genomes()
-        self.wd_loc = load_test_wd_loc()
-        if os.path.isdir(self.wd_loc):
-            shutil.rmtree(self.wd_loc, ignore_errors=True)
-        self.s_wd_loc = load_solutions_wd()
-
-    def run(self):
-        self.setUp()
-        self.functional_test_3()
-        self.tearDown()
-
-        self.setUp()
-        self.functional_test_2()
-        self.tearDown()
-
-        self.setUp()
-        self.functional_test_1()
-        self.tearDown()
-
-        self.setUp()
-        self.skipsecondary_test()
-        self.tearDown()
-
-        print('skip secondary test passed')
-
-    def functional_test_1(self):
-        '''
-        Cluster the 5 genomes using default settings
-        '''
-        genomes = self.genomes
-        wd_loc  = self.wd_loc
-        s_wd_loc = self.s_wd_loc
-
-        args = argumentParser.parse_args(['cluster',wd_loc,'-g']+genomes)
-        controller = Controller()
-        controller.parseArguments(args)
-
-        # Verify
-        Swd = WorkDirectory(s_wd_loc)
-        wd   = WorkDirectory(wd_loc)
-
-        # Confirm Cdb.csv is correct
-        db1 = Swd.get_db('Cdb')
-        db2 =  wd.get_db('Cdb')
-        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
-
-    def functional_test_2(self):
-        '''
-        Cluster the 5 genomes using gANI
-        '''
-        genomes = self.genomes
-        wd_loc  = self.wd_loc
-        s_wd_loc = self.s_wd_loc
-
-        # Make sure gANI is installed
-        loc, works = find_program('ANIcalculator')
-        if (loc == None or works == False):
-            print('Cannot locate the program {0}- skipping related tests'\
-                .format('ANIcalculator (for gANI)'))
-            return
-
-        args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
-            'gANI','-g']+genomes)
-        controller = Controller()
-        controller.parseArguments(args)
-
-        # Verify
-        Swd = WorkDirectory(s_wd_loc)
-        wd   = WorkDirectory(wd_loc)
-
-        # Confirm Cdb.csv is correct
-        db1 = Swd.get_db('Cdb')
-        del db1['comparison_algorithm']
-        db2 =  wd.get_db('Cdb')
-        del db2['comparison_algorithm']
-        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
-
-    def functional_test_3(self):
-        '''
-        Cluster the 5 genomes using ANImf
-        '''
-
-        genomes = self.genomes
-        wd_loc  = self.wd_loc
-        s_wd_loc = self.s_wd_loc
-
-        args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
-            'ANImf','-g']+genomes)
-        controller = Controller()
-        controller.parseArguments(args)
-
-        # Verify
-        Swd = WorkDirectory(s_wd_loc)
-        wd   = WorkDirectory(wd_loc)
-
-        # Confirm Cdb.csv is correct
-        db1 = Swd.get_db('Cdb')
-        del db1['comparison_algorithm']
-        db2 =  wd.get_db('Cdb')
-        del db2['comparison_algorithm']
-        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
-
-    def skipsecondary_test(self):
-        genomes = self.genomes
-        wd_loc  = self.wd_loc
-        s_wd_loc = self.s_wd_loc
-
-        args = argumentParser.parse_args(['cluster',wd_loc,'-g'] +genomes \
-                + ['--SkipSecondary','-o'])
-        controller = Controller()
-        controller.parseArguments(args)
-
-        # Verify
-        Swd = WorkDirectory(s_wd_loc)
-        wd   = WorkDirectory(wd_loc)
-
-        # Confirm Mdb.csv is correct
-        db1 = Swd.get_db('Mdb')
-        db2 =  wd.get_db('Mdb')
-        #assert compare_dfs(db1, db2), "{0} is not the same!".format('Mdb')
-
-        # Confirm Ndb.csv doesn't exist
-        db2 = wd.get_db('Ndb')
-        assert db2.empty, 'Ndb is not empty'
 
     def tearDown(self):
         logging.shutdown()
@@ -948,7 +1054,7 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    filter_test()
+    #filter_test()
     #test_unit()
     #test_quick()
     #test_short()
@@ -958,6 +1064,6 @@ if __name__ == '__main__':
     #analyze_test()
     #dereplicate_wf_test()
     #taxonomy_test()
-    #cluster_test()
+    cluster_test()
 
     print("Everything seems to be working swimmingly!")

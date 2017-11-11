@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+'''
+d_filter - a subset of drep
+
+Filter genomes based on genome length or quality. Also can run prodigal and checkM
+'''
 
 import logging
 import glob
@@ -29,6 +34,7 @@ def d_filter_wrapper(wd, **kwargs):
 
         processors: Threads to use with checkM / prodigal
         overwrite: Overwrite existing data in the work folder
+        debug: If True, make extra output when running external scripts
 
         length: minimum genome length when filtering
         completeness: minimum genome completeness when filtering
@@ -371,9 +377,7 @@ def run_prodigal(genome_list, out_dir, **kwargs):
     t = kwargs.get('processors','6')
     loc = kwargs.get('exe_loc', None)
     if loc == None:
-        loc, works = drep.d_bonus.find_program('prodigal')
-        if works == False:
-            assert False, "Prodigal isn't working- make sure its installed"
+        loc = drep.get_exe('prodigal')
 
     # Make list of commands
     cmds = []
