@@ -80,27 +80,8 @@ def d_filter_wrapper(wd, **kwargs):
     if kwargs.get('noQualityFiltering', False):
         logging.debug("Skipping all quality-based filtering")
 
-    elif kwargs.get('genomeInfo', None) != None:
-        logging.debug("Loading provided genome quality information")
-        Idb = pd.read_csv(kwargs.get('genomeInfo'))
-        Gdb = _validate_genomeInfo(Idb, bdb, Gdb)
-
-    elif workDirectory.hasDb('genomeInfo'):
-        logging.debug("Loading genomeInfo.csv from work directory")
-        Idb = workDirectory.get_db('genomeInfo')
-        Gdb = _validate_genomeInfo(Idb, bdb, Gdb)
-
-    elif workDirectory.hasDb('Chdb'):
-        logging.debug("Loading Chdb.csv from work directory")
-        Chdb = workDirectory.get_db('Chdb')
-        Idb = chdb_to_genomeInfo(Chdb)
-        Gdb = _validate_genomeInfo(Idb, bdb, Gdb)
-
     else:
-        logging.debug("Running CheckM")
-        Chdb = _run_checkM_wrapper(bdb, workDirectory, **kwargs)
-        Idb = chdb_to_genomeInfo(Chdb)
-        Gdb = _validate_genomeInfo(Idb, bdb, Gdb)
+        Gdb = _get_run_genomeInfo(wd, bdb, **kwargs)
 
     # Filter
     if not kwargs.get('noQualityFiltering', False):
@@ -114,14 +95,58 @@ def d_filter_wrapper(wd, **kwargs):
     if not kwargs.get('noQualityFiltering', False):
         workDirectory.store_db(Gdb, 'genomeInfo')
 
-def _validate_genomeInfo(Idb, bdb, Gdb):
+def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
+    '''
+    Through kwargs and the wd, get genomeInfo
+
+    Args:
+        wd: workDirectory
+        bdb: current bdb
+        kwrags: keyword arguments
+
+    Returns:
+        DataFrame: genomeInfo
+    '''
+    if kwargs.get('genomeInfo', None) != None:
+        logging.debug("Loading provided genome quality information")
+        try:
+            Idb = pd.read_csv(kwargs.get('genomeInfo'))
+            Tdb = _validate_genomeInfo(Idb, bdb)
+            Gdb = _add_lengthN50(Tdb, bdb)
+        except:
+            Idb = pd.read_table(kwargs.get('genomeInfo'))
+            Tdb = _validate_genomeInfo(Idb, bdb)
+            Gdb = _add_lengthN50(Tdb, bdb)
+
+    elif workDirectory.hasDb('genomeInfo'):
+        logging.debug("Loading genomeInfo.csv from work directory")
+        Idb = workDirectory.get_db('genomeInfo')
+        Tdb = _validate_genomeInfo(Idb, bdb)
+        Gdb = _add_lengthN50(Tdb, bdb)
+
+    elif workDirectory.hasDb('Chdb'):
+        logging.debug("Loading Chdb.csv from work directory")
+        Chdb = workDirectory.get_db('Chdb')
+        Idb = chdb_to_genomeInfo(Chdb)
+        Tdb = _validate_genomeInfo(Idb, bdb)
+        Gdb = _add_lengthN50(Tdb, bdb)
+
+    else:
+        logging.debug("Running CheckM")
+        Chdb = _run_checkM_wrapper(bdb, workDirectory, **kwargs)
+        Idb = chdb_to_genomeInfo(Chdb)
+        Tdb = _validate_genomeInfo(Idb, bdb)
+        Gdb = _add_lengthN50(Tdb, bdb)
+
+    return Gdb
+
+def _validate_genomeInfo(Idb, bdb):
     '''
     Validate genomeinfo file; merge in Gdb if needed
 
     Args:
         genomeInfo: DataFrame of genome info
         bdb: DataFrame with genomes to confirm
-        Gdb: DataFrame with genome, length, N50
 
     Returns:
         DataFrame: Validated genomeInfo
@@ -152,11 +177,26 @@ def _validate_genomeInfo(Idb, bdb, Gdb):
     # Throw warnings if you think this is weird
     for r in ['completeness', 'contamination', 'strain_heterogeneity']:
         if r in Idb:
-            if Idb[r].max() <= 1:
+            if (Idb[r].max() <= 1) & (Idb[r].min() > 0):
                 logging.warning("GenomeInfo has no values over 1 for {0}".format(r) + \
                     "- these should be 0-100, not 0-1!")
 
-    # Add Gdb if needed
+    return Idb
+
+def _add_lengthN50(Idb, bdb):
+    '''
+    If Gdb doesn't have length or N50, add it
+    '''
+    # Figure out if you need to add them
+    add = False
+    for r in ['length', 'N50']:
+        if r not in Idb:
+            add = True
+
+    if not add:
+        return Idb
+
+    Gdb = calc_genome_info(bdb['location'].tolist())
     for r in ['length', 'N50']:
         if r not in Idb:
             Idb[r] = Idb['genome'].map(Gdb.set_index('genome')[r].to_dict())

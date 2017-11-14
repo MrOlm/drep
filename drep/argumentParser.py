@@ -129,11 +129,6 @@ def parse_args(args):
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage",default='average')
 
-
-    # Additional parser for genome comparisons
-    #
-    #
-
     #
     # Make a parent parser for scoring
     #
@@ -243,8 +238,14 @@ def parse_args(args):
     Oflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
                             + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
                             default = 'lineage_wf')
-    Oflags.add_argument("--skipCheckM", help="Don't run checkM- will ignore comp and con "\
-                            + "scores", action='store_true')
+    Oflags.add_argument('--genomeInfo',help='location of .csv file containing quality \
+            information on the genomes. Must contain: ["genome"(basename of .fasta file \
+            of that genome), "completeness"(0-100 value for completeness of the genome), \
+            "contamination"(0-100 value of the contamination of the genome)]')
+    Oflags.add_argument("--noQualityFiltering", help="Don't run checkM or do any \
+            quality filtering- will ignore con and comp settings if genomeInfo.csv \
+            not also provided. NOT RECOMMENDED! Will only choose based on length and N50.\
+                    See docs for details", action='store_true')
 
     '''
     ####### Arguments for analyze operation ######

@@ -156,9 +156,9 @@ class VerifyFilter():
     def run(self):
         self.setUp()
 
-        # self.test_calc_genome_info()
-        # self.test_validate_genomeInfo()
-        # self.test_chdb_to_genomeInfo()
+        self.test_calc_genome_info()
+        self.test_validate_genomeInfo()
+        self.test_chdb_to_genomeInfo()
 
         self.functional_test_1()
 
@@ -180,7 +180,8 @@ class VerifyFilter():
 
         # Run
         Idb = drep.d_filter.chdb_to_genomeInfo(chdb)
-        Tdb = drep.d_filter._validate_genomeInfo(Idb, bdb, Gdb)
+        Tdb = drep.d_filter._validate_genomeInfo(Idb, bdb)
+        Tdb = drep.d_filter._add_lengthN50(Tdb, bdb)
         t = Tdb[Tdb['genome'] == 'Enterococcus_casseliflavus_EC20.fasta']
         assert t['completeness'].tolist()[0] == 98.28
         assert t['length'].tolist()[0] == 3427276
@@ -229,7 +230,8 @@ class VerifyFilter():
         Gdb = drep.d_filter.calc_genome_info(genomes)
 
         # Run as correct
-        Tdb = drep.d_filter._validate_genomeInfo(Idb, bdb, Gdb)
+        Tdb = drep.d_filter._validate_genomeInfo(Idb, bdb)
+        Tdb = drep.d_filter._add_lengthN50(Tdb, bdb)
         t = Tdb[Tdb['genome'] == 'Enterococcus_casseliflavus_EC20.fasta']
         assert t['completeness'].tolist()[0] == 10.0
         assert t['length'].tolist()[0] == 3427276
@@ -254,7 +256,8 @@ class VerifyFilter():
         # Run without the genome info
         idb = Idb.copy()
         idb['genome'] = idb['location']
-        tdb = drep.d_filter._validate_genomeInfo(idb, bdb, Gdb)
+        tdb = drep.d_filter._validate_genomeInfo(idb, bdb)
+        tdb = drep.d_filter._add_lengthN50(tdb, bdb)
         t = Tdb[Tdb['genome'] == 'Enterococcus_casseliflavus_EC20.fasta']
         assert t['completeness'].tolist()[0] == 10.0
         assert t['length'].tolist()[0] == 3427276
@@ -543,7 +546,6 @@ class VerifyAnalyze():
         shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
             os.path.join(self.working_wd_loc, 'log'))
 
-
     def run(self):
         self.setUp()
         self.unit_test_1()
@@ -623,7 +625,7 @@ class VerifyChoose():
 
         Swd  = WorkDirectory(self.s_wd_loc)
         wd   = WorkDirectory(self.working_wd_loc)
-        for db in ['Chdb']:
+        for db in ['Chdb', 'genomeInformation']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
             assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
@@ -639,13 +641,13 @@ class VerifyChoose():
         os.remove(wd_loc + '/data_tables/Wdb.csv')
 
         # Run choose with --skipCheckM
-        args = argumentParser.parse_args(['choose', wd_loc, '--skipCheckM'])
+        args = argumentParser.parse_args(['choose', wd_loc, '--noQualityFiltering'])
         controller = Controller()
         controller.parseArguments(args)
 
         Swd  = WorkDirectory(self.s_wd_loc)
         wd   = WorkDirectory(self.working_wd_loc)
-        for db in ['Chdb', 'Sdb', 'Wdb']:
+        for db in ['Sdb', 'Wdb', 'genomeInformation']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
             assert not compare_dfs(db1, db2), "{0} is the same!".format(db)
@@ -1045,12 +1047,12 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    test_unit()
-    test_quick()
-    test_short()
-    test_long()
+    # test_unit()
+    # test_quick()
+    # test_short()
+    # test_long()
 
-    #filter_test()
+    filter_test()
     #choose_test()
     #analyze_test()
     #dereplicate_wf_test()

@@ -1,13 +1,4 @@
 #!/usr/bin/env python3
-
-import os
-import logging
-import pandas as pd
-import pickle
-import json
-import sys
-import glob
-
 """
 This is the file that maintains the integrity of the work directory
 
@@ -43,6 +34,17 @@ The data tables
 Bdb = sequence names and sequence locations
 
 """
+
+import os
+import logging
+import pandas as pd
+import pickle
+import json
+import sys
+import shutil
+import glob
+
+import drep
 
 class WorkDirectory(object):
     firstLevels = ['data','figures','data_tables','dereplicated_genomes','log']
@@ -216,6 +218,8 @@ class WorkDirectory(object):
             d = self.location + '/data/'
         elif dir == 'clustering':
             d = self.location + '/data/Clustering_files/'
+        elif dir == 'dereplicated_genomes':
+            d = self.location + '/dereplicated_genomes/'
 
         if d == None:
             assert False, "{0} is not a directory I know about".format(dir)
@@ -271,6 +275,18 @@ class WorkDirectory(object):
                     pickle.dump(cluster_ret[0], handle)
                     pickle.dump(cluster_ret[1],handle)
                     pickle.dump(cluster_ret[2],handle)
+
+        elif name == 'dereplicated_genomes':
+            output_folder = self.get_dir('dereplicated_genomes')
+            if os.path.exists(output_folder):
+                #logging.debug("{0} already exists: removing and remaking".format(output_folder))
+                shutil.rmtree(output_folder)
+            os.makedirs(output_folder)
+
+            for loc in thing:
+                genome = os.path.basename(loc)
+                shutil.copy2(loc, "{0}{1}".format(output_folder,genome))
+            #logging.info("Done! Dereplicated genomes saved at {0}".format(output_folder))
 
         elif name == 'cluster_log':
             cluster_log = os.path.join(self.get_dir('log') + 'cluster_arguments.json')
