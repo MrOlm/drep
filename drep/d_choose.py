@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+'''
+d_choose - a subset of drep
+
+Choose best genome from each cluster
+'''
 
 import logging
 import glob
@@ -8,36 +13,35 @@ import sys
 import shutil
 import numpy as np
 
-import drep.WorkDirectory
-import drep as dm
 import drep
 import drep.d_cluster
 import drep.d_filter
+import drep.WorkDirectory
 
+def d_choose_wrapper(wd, **kwargs):
+    '''
+    Controller for the dRep choose operation
 
-'''
-##################################################################
-                A NOTE ABOUT PYTHON VERSIONS
+    Args:
+        wd (WorkDirectory): The current workDirectory
+        **kwargs: Command line arguments
 
+    Keyword args:
+        pass
 
-For this to work you need to be able to call both python3 and python2.
-To set this up on pyenv, I ran:
-
-pyenv local anaconda2-4.1.0 anaconda3-4.1.0
-##################################################################
-'''
-
-'''
-
-'''
-def d_choose_wrapper(wd,**kwargs):
+    Returns:
+        pass
+    '''
     # Load the WorkDirectory.
     logging.info("Loading work directory")
     workDirectory = drep.WorkDirectory.WorkDirectory(wd)
     logging.debug(str(workDirectory))
 
     # Make sure you have Cdb
-    Cdb = validate_arguments(workDirectory, **kwargs)
+    Cdb = _validate_choose_arguments(workDirectory, **kwargs)
+
+    # If you have genome info, validate it
+    if workDirectory.hasDb('genomeInfo')
 
     # If Chdb already exists, validate it
     if workDirectory.hasDb('Chdb'):
@@ -129,7 +133,6 @@ def pick_winners(Sdb, Cdb):
     Wdb = pd.DataFrame(Table)
     return Wdb
 
-
 def score_genomes(genomes, Chdb, **kwargs):
     Table = {'genome':[],'score':[]}
     for genome in genomes:
@@ -159,7 +162,13 @@ def score_row(row, **kwargs):
     return score
 
 
-def validate_arguments(wd, **kwargs):
+def _validate_choose_arguments(wd, **kwargs):
+    '''
+    Validate choose arguments
+
+    Args:
+        wd: WorkDirectory
+    '''
     if not wd.hasDb('Cdb'):
         logging.error("Can't find Cdb- quitting")
         logging.error("Cdb is not found in the work directory- you must run cluster before you ",
@@ -173,9 +182,3 @@ def validate_Chdb(Chdb, Cdb):
         if genome not in Chdb['Bin Id'].tolist():
             logging.error("{0} is missing from Chdb- I'm going to crash now".format(genome))
             sys.exit()
-
-def test_choose():
-    print("Write this you lazy bum")
-
-if __name__ == '__main__':
-	test_choose()

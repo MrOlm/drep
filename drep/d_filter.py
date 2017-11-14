@@ -252,6 +252,10 @@ def _filter_bdb_length(bdb, Gdb, min_length):
 def validate_chdb(Chdb, bdb):
     '''
     Make sure all files are in Chdb
+
+    Args:
+        Chdb
+        bdb
     '''
     quit = False
     b_genomes = bdb['genome'].tolist()

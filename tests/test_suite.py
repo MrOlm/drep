@@ -968,12 +968,6 @@ class UnitTests():
 
         assert not compare_dfs(df1, df3)
 
-    def test2(self):
-        '''
-        test bonus debug
-        '''
-        pass
-
     def test3(self):
         '''
         test N50 calculation
@@ -1028,7 +1022,6 @@ def taxonomy_test():
     '''
     Test taxonomy methods
     '''
-
     VerifyTaxonomy().run()
 
 @pytest.mark.long
