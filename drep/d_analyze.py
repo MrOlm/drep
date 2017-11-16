@@ -107,6 +107,90 @@ def mash_dendrogram_from_wd(wd, plot_dir=False):
     plot_MASH_dendrogram(Mdb, Cdb, Plinkage, threshold = PL_thresh,\
                     plot_dir = plot_dir)
 
+def plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs):
+    '''
+    From the wd and kwargs, make the secondary dendrograms
+
+    Args:
+        wd: WorkDirectory
+        plot_dir (optional): Location to store figure
+
+    Returns:
+        Makes plot
+    '''
+
+    # Initialize a .pdf
+    if plot_dir != False:
+        pp = PdfPages(plot_dir + 'Secondary_clustering_dendrograms.pdf')
+        save = True
+    else:
+        save = False
+
+    # Load required databases
+    try:
+        Ndb = wd.get_db('Ndb', return_none=False)
+        Cdb = wd.get_db('Cdb', return_none=False)
+    except:
+        logging.error("Skipping plot 2 - you don't have all required dataframes")
+        return
+    logging.info("Plotting secondary dendrograms")
+
+    # Load winner database if it exists
+    if wd.hasDb('Wdb'):
+        Wdb = wd.get_db('Wdb')
+        winners = Wdb['genome'].unique()
+        kwargs['winners'] = winners
+
+    # Load genome 2 taxonomy if it exists
+    genome2taxonomy = _get_genome2taxonomy(wd)
+    kwargs['genome2taxonomy'] = genome2taxonomy
+
+    # For every cluster:
+    for cluster in sorted(Cdb['primary_cluster'].unique()):
+        d = Cdb[Cdb['primary_cluster'] == cluster]
+
+        # Skip if it's a singleton
+        if len(d['genome'].unique()) == 1:
+            continue
+
+        # Load the linkage information
+        linkI = wd.get_cluster("secondary_linkage_cluster_{0}".format(cluster))
+        db = linkI['db']
+        linkage = linkI['linkage']
+        args = linkI['arguments']
+        threshold = args['linkage_cutoff']
+        alg = args['comparison_algorithm']
+        clust_alg = args['linkage_method']
+        min_cov = args['minimum_coverage']
+
+        kwargs['threshold'] = threshold
+        kwargs['title_string'] = 'Primary cluster {0}'.format(cluster)
+        kwargs['subtitle_string'] = "Comp method: {0}    ".format(alg) +\
+                "Clust method: {0}    Min cov: {1}".format(clust_alg, min_cov)
+
+        # Get name2cluster
+        names = list(db.columns)
+        name2cluster = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+        for name in names: # Handle the case where you deleted a secondary cluster
+            if name not in Cdb['genome'].tolist():
+                name2cluster[name] = '0_0'
+        kwargs['name2cluster'] = name2cluster
+
+        kwargs['self_thresh'] = get_highest_self(Ndb, names)
+
+        # Make the dendrogram
+        _make_special_dendrogram(linkage, names, **kwargs)
+
+        # Save the file
+        fig = plt.gcf()
+        if save == True:
+            pp.savefig(fig)
+        plt.show()
+        plt.close(fig)
+
+    pp.close()
+    plt.close('all')
+
 def plot_secondary_mds_from_wd(wd, plot_dir, **kwargs):
     '''
     Make a .pdf of MDS of each cluster
@@ -176,6 +260,30 @@ def plot_secondary_mds_from_wd(wd, plot_dir, **kwargs):
     pp.close()
     plt.close('all')
 
+def plot_scatterplots_from_wd(wd, plot_dir, **kwargs):
+    '''
+    From the wd and kwargs, call plot_scatterplots
+
+    Args:
+        wd: WorkDirectory
+        plot_dir (optional): Location to store figure
+
+    Returns:
+        Shows plot, makes a plot in the plot_dir
+    '''
+    # Load the required data
+    try:
+        Ndb = wd.get_db('Ndb', return_none=False)
+        Mdb = wd.get_db('Mdb', return_none=False)
+        Cdb = wd.get_db('Cdb', return_none=False)
+    except:
+        logging.error("Skipping plot 4 - you don't have all required dataframes")
+        return
+
+    # Make the plot
+    logging.info("Plotting scatterplots")
+    plot_scatterplots(Mdb, Ndb, Cdb, plot_dir = plot_dir)
+
 def plot_binscoring_from_wd(wd, plot_dir, **kwargs):
     '''
     From the wd and kwargs, call plot_winner_scoring_complex
@@ -204,64 +312,36 @@ def plot_binscoring_from_wd(wd, plot_dir, **kwargs):
     logging.info("Plotting bin scorring plot")
     plot_winner_scoring_complex(Wdb, Sdb, Cdb, Gdb, plot_dir = plot_dir, **kwargs)
 
-def _parse_plot_options(options, args):
+def plot_winners_from_wd(wd, plot_dir, **kwargs):
     '''
-    Read user input and figure out a list of plots to make
-
-    Args:
-        options: list of possible plots to make (default [1-6])
-        args: the command line passed in
-
-    Returns:
-        list: list of ints in the args
-    '''
-    to_plot = []
-
-    if args[0] in ['all','a']:
-        to_plot += options
-
-    elif args == None:
-        logging.error("No plots given!")
-        sys.exit()
-        return None
-
-    else:
-        for arg in args:
-            if arg in options:
-                to_plot.append(arg)
-            else:
-                for letter in arg:
-                    if letter in options:
-                        to_plot.append(letter)
-                    else:
-                        logging.error("Can't interpret plotting argument {0}! quitting".format(arg))
-                        sys.exit()
-
-    return to_plot
-
-def plot_scatterplots_from_wd(wd, plot_dir, **kwargs):
-    '''
-    From the wd and kwargs, call plot_scatterplots
+    From the wd and kwargs, call plot_winners
 
     Args:
         wd: WorkDirectory
-        plot_dir (optional): Location to store figure
+        plot_dir: Location to store figure
 
     Returns:
         Shows plot, makes a plot in the plot_dir
     '''
     # Load the required data
     try:
-        Ndb = wd.get_db('Ndb', return_none=False)
-        Mdb = wd.get_db('Mdb', return_none=False)
-        Cdb = wd.get_db('Cdb', return_none=False)
+        Wdb = wd.get_db('Wdb', return_none=False)
+        Bdb = wd.get_db('Bdb', return_none=False)
     except:
-        logging.error("Skipping plot 4 - you don't have all required dataframes")
+        logging.error("Skipping plot 6 - you don't have all required dataframes")
         return
 
+    # Deal with genome quality
+    Gdb = drep.d_filter._get_run_genomeInfo(wd, Bdb, no_run=True)
+
+    # Get optional data
+    Wndb = wd.get_db('Wndb')
+    Wmdb = wd.get_db('Wmdb')
+    Widb = wd.get_db('Widb')
+
     # Make the plot
-    logging.info("Plotting scatterplots")
-    plot_scatterplots(Mdb, Ndb, Cdb, plot_dir = plot_dir)
+    logging.info("Plotting winning genomes plot...")
+    plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir = plot_dir, **kwargs)
 
 def plot_scatterplots(Mdb, Ndb, Cdb, plot_dir=False):
     '''
@@ -506,7 +586,7 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
 
     # Adjust the figure size
     fig = plt.gcf()
-    fig.set_size_inches(10,x_fig_size(len(names),factor=.2))
+    fig.set_size_inches(10,_x_fig_size(len(names),factor=.2))
     plt.subplots_adjust(left=0.3)
 
     # Adjust the x labels
@@ -531,249 +611,6 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
             format="pdf", transparent=True, bbox_inches='tight')
     plt.show()
     plt.close('all')
-
-def plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs):
-    '''
-    From the wd and kwargs, make the secondary dendrograms
-
-    Args:
-        wd: WorkDirectory
-        plot_dir (optional): Location to store figure
-
-    Returns:
-        Makes plot
-    '''
-
-    # Initialize a .pdf
-    if plot_dir != False:
-        pp = PdfPages(plot_dir + 'Secondary_clustering_dendrograms.pdf')
-        save = True
-    else:
-        save = False
-
-    # Load required databases
-    try:
-        Ndb = wd.get_db('Ndb', return_none=False)
-        Cdb = wd.get_db('Cdb', return_none=False)
-    except:
-        logging.error("Skipping plot 2 - you don't have all required dataframes")
-        return
-    logging.info("Plotting secondary dendrograms")
-
-    # Load winner database if it exists
-    if wd.hasDb('Wdb'):
-        Wdb = wd.get_db('Wdb')
-        winners = Wdb['genome'].unique()
-        kwargs['winners'] = winners
-
-    # Load genome 2 taxonomy if it exists
-    genome2taxonomy = _get_genome2taxonomy(wd)
-    kwargs['genome2taxonomy'] = genome2taxonomy
-
-    # For every cluster:
-    for cluster in sorted(Cdb['primary_cluster'].unique()):
-        d = Cdb[Cdb['primary_cluster'] == cluster]
-
-        # Skip if it's a singleton
-        if len(d['genome'].unique()) == 1:
-            continue
-
-        # Load the linkage information
-        linkI = wd.get_cluster("secondary_linkage_cluster_{0}".format(cluster))
-        db = linkI['db']
-        linkage = linkI['linkage']
-        args = linkI['arguments']
-        threshold = args['linkage_cutoff']
-        alg = args['comparison_algorithm']
-        clust_alg = args['linkage_method']
-        min_cov = args['minimum_coverage']
-
-        kwargs['threshold'] = threshold
-        kwargs['title_string'] = 'Primary cluster {0}'.format(cluster)
-        kwargs['subtitle_string'] = "Comp method: {0}    ".format(alg) +\
-                "Clust method: {0}    Min cov: {1}".format(clust_alg, min_cov)
-
-        # Get name2cluster
-        names = list(db.columns)
-        name2cluster = Cdb.set_index('genome')['secondary_cluster'].to_dict()
-        for name in names: # Handle the case where you deleted a secondary cluster
-            if name not in Cdb['genome'].tolist():
-                name2cluster[name] = '0_0'
-        kwargs['name2cluster'] = name2cluster
-
-        kwargs['self_thresh'] = get_highest_self(Ndb, names)
-
-        # Make the dendrogram
-        _make_special_dendrogram(linkage, names, **kwargs)
-
-        # Save the file
-        fig = plt.gcf()
-        if save == True:
-            pp.savefig(fig)
-        plt.show()
-        plt.close(fig)
-
-    pp.close()
-    plt.close('all')
-
-def plot_winners_from_wd(wd, plot_dir, **kwargs):
-    '''
-    From the wd and kwargs, call plot_winners
-
-    Args:
-        wd: WorkDirectory
-        plot_dir: Location to store figure
-
-    Returns:
-        Shows plot, makes a plot in the plot_dir
-    '''
-    # Load the required data
-    try:
-        Wdb = wd.get_db('Wdb', return_none=False)
-        Bdb = wd.get_db('Bdb', return_none=False)
-    except:
-        logging.error("Skipping plot 6 - you don't have all required dataframes")
-        return
-
-    # Deal with genome quality
-    Gdb = drep.d_filter._get_run_genomeInfo(wd, Bdb, no_run=True)
-
-    # Get optional data
-    Wndb = wd.get_db('Wndb')
-    Wmdb = wd.get_db('Wmdb')
-    Widb = wd.get_db('Widb')
-
-    # Make the plot
-    logging.info("Plotting winning genomes plot...")
-    plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir = plot_dir, **kwargs)
-
-def _get_genome2taxonomy(wd):
-    '''
-    Return dictionary: genome -> taxonomy
-
-    All based on Bdb at the moment
-
-    Return False if can't do it
-    '''
-    try:
-        Bdb = wd.get_db('Bdb')
-        if 'taxonomy' in Bdb:
-            genome2taxonomy = Bdb.set_index('genome')['taxonomy'].to_dict()
-        return genome2taxonomy
-    except:
-        return False
-
-'''
-names can be gotten like:
-db = db.pivot("reference","querry","ani")
-names = list(db.columns)
-'''
-def _make_dendrogram(linkage, names, **kwargs):
-    threshold = kwargs.get('threshold',False)
-    title = kwargs.get('title',False)
-
-    # Make the dendrogram
-    g = fancy_dendrogram(linkage,names,threshold=threshold)
-    plt.title(title)
-    plt.xlabel(kwargs.get('xlabel','ANI'))
-    if threshold != False:
-        plt.xlim([0,2*threshold])
-
-    # Adjust the figure size
-    fig = plt.gcf()
-    fig.set_size_inches(10,x_fig_size(len(names),factor=.2))
-    plt.subplots_adjust(left=0.3)
-
-    # Adjust the x labels
-    plt.tick_params(axis='both', which='major', labelsize=8)
-    axes = plt.gca()
-    labels = axes.xaxis.get_majorticklocs()
-    for i, label in enumerate(labels):
-        labels[i] = (1 - float(label)) * 100
-    axes.set_xticklabels(labels)
-
-
-def _make_special_dendrogram(linkage, names, **kwargs):
-    '''
-    Make the dendrogram used in plot 2
-
-    names can be gotten like:
-        db = db.pivot("reference","querry","ani")
-        names = list(db.columns)
-
-    Args:
-        linkage: result of scipy.cluster.hierarchy.linkage
-        names: names of the linkage
-
-    Kwargs:
-        name2cluster: dict
-        self_thresh: x-axis for soft line
-        threshold: x-axis for hard line
-        title_sting: title of the plot
-        subtitle_string: subtitle of the plot
-        winners: list of "winning" genomes (to be marked with star)
-        genome2taxonomy: dictionary to add taxonomy information
-
-    Returns:
-        Matplotlib primed with a figure
-    '''
-    # Load possible kwargs
-    name2cluster = kwargs.get('name2cluster',False)
-    self_thresh = kwargs.get('self_thresh',False)
-    threshold = kwargs.get('threshold',False)
-    title_string = kwargs.get('title_string','')
-    subtitle_string = kwargs.get('subtitle_string','')
-    winners = kwargs.get('winners',False)
-    genome2taxonomy = kwargs.get('genome2taxonomy',False)
-
-    # Make special things
-    if name2cluster != False:
-        name2color = gen_color_dictionary(names, name2cluster)
-    else:
-        name2color = False
-
-    # Make the dendrogram
-    sns.set_style('whitegrid')
-    g = fancy_dendrogram(linkage,names,name2color,threshold=threshold,self_thresh =\
-                        self_thresh)
-
-    # Add the title and subtitle
-    plt.suptitle(title_string, y=1, fontsize=18)
-    plt.title(subtitle_string, fontsize=10)
-
-    # Adjust the x-axis
-    plt.xlabel('Average Nucleotide Identity (ANI)')
-    if threshold != False:
-        plt.xlim([0,3*threshold])
-    plt.tick_params(axis='both', which='major', labelsize=12)
-    axes = plt.gca()
-    labels = axes.xaxis.get_majorticklocs()
-    for i, label in enumerate(labels):
-        labels[i] = (1 - float(label)) * 100
-    axes.set_xticklabels(labels)
-    plt.gca().yaxis.grid(False)
-
-    # Adjust the figure size
-    fig = plt.gcf()
-    fig.set_size_inches(10,x_fig_size(len(names),factor=.5))
-    plt.subplots_adjust(left=0.5)
-
-    # Mark winning ones
-    if type(winners) is not bool:
-        ax = plt.gca()
-        labels = [item.get_text() for item in ax.get_yticklabels()]
-        for i, label in enumerate(labels):
-            if label in winners: labels[i] = label + ' *'
-        ax.set_yticklabels(labels)
-
-    # Add taxonomy
-    if genome2taxonomy != False:
-        g2t = genome2taxonomy
-        axes = plt.gca()
-        labels = [item.get_text() for item in axes.get_yticklabels()]
-        for i, label in enumerate(labels):
-            labels[i] = "{0}\n{1}".format(label, g2t[label.replace(' *','')])
-        axes.set_yticklabels(labels)
 
 """
 WINNER PLOTS
@@ -810,7 +647,7 @@ def plot_winner_scoring_complex(Wdb, Sdb, Cdb, Gdb, plot_dir= False, **kwargs):
     # Get winners
     winners = list(Wdb['genome'].unique())
 
-    for cluster in sorted(Cdb['secondary_cluster'].unique(), key=lambda x: comp_cluster(x)):
+    for cluster in sorted(Cdb['secondary_cluster'].unique(), key=lambda x: _comp_cluster(x)):
         # Make a db for this cluster
         d = Cdb[Cdb['secondary_cluster'] == cluster]
         d = d.merge(Sdb, how='left', on= 'genome')
@@ -856,7 +693,7 @@ def plot_winner_scoring_complex(Wdb, Sdb, Cdb, Gdb, plot_dir= False, **kwargs):
             axes.set_yticklabels(labels)
 
         fig = plt.gcf()
-        fig.set_size_inches(12,x_fig_size(len(labels), factor=1))
+        fig.set_size_inches(12,_x_fig_size(len(labels), factor=1))
         plt.subplots_adjust(left=0.5)
 
         if save == True:
@@ -867,58 +704,6 @@ def plot_winner_scoring_complex(Wdb, Sdb, Cdb, Gdb, plot_dir= False, **kwargs):
     if save:
         pp.close()
     plt.close('all')
-
-def _get_toshow(Gdb):
-    '''
-    From Gdb, figure out what columns you can show.
-    '''
-    cols = list(Gdb.columns)
-    cols.remove('genome')
-    return cols
-
-'''
-db is the database to plot- must contain 'genome' and all columns listed in 'bars'
-bars is all of the columns in the database to become bars
-for taxonomy, put genome2taxonomy in kwargs
-'''
-def _make_scoring_plot(db, bars,**kwargs):
-    sns.reset_orig()
-
-    # Make the normalized bar plot
-    nd = normalize(db)
-    d = pd.melt(nd, id_vars=['genome'], value_vars=bars)
-    g = sns.barplot(data=d, y='genome', x='value', hue='variable')
-
-    # Get a list of the un-normalized values
-    x = pd.melt(db, id_vars=['genome'], value_vars=bars)
-    vals = []
-    for variable in x['variable'].unique():
-        vals += [v for v in x['value'][x['variable'] == variable].tolist()]
-
-    # Add un-normalized values to barplots
-    i = 0
-    for p in g.patches:
-        g.annotate("{0:.1f}".format(vals[i]), (p.get_width(), p.get_y()+(p.get_height()/1.1) ), fontsize=8)
-        i += 1
-
-    # Add taxonomy if available
-    axes = plt.gca()
-    labels = [item.get_text() for item in axes.get_yticklabels()]
-    if kwargs.get('genome2taxonomy',False) != False:
-        g2t = kwargs.get('genome2taxonomy')
-        for i, label in enumerate(labels):
-            labels[i] = "{0}\n{1}".format(label, g2t[label.replace(' *','')])
-        axes.set_yticklabels(labels)
-
-    # Adjust labels
-    plt.xlabel('Normalized Score')
-    plt.legend(loc='lower right')
-    plt.tick_params(axis='both', which='major', labelsize=8)
-
-    # Adjust figure size
-    fig = plt.gcf()
-    fig.set_size_inches(12,x_fig_size(len(labels), factor=1))
-    plt.subplots_adjust(left=0.5)
 
 def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
     '''
@@ -944,7 +729,7 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         d = Widb[Widb['completeness_metric'] == com]
         labels.append(com)
         sizes.append(len(d['genome'].unique()))
-    labels = annotate_labels(labels,'comp')
+    labels = _annotate_labels(labels,'comp')
     _make_piechart(labels,sizes)
     plt.title('Overall Winner Completeness')
 
@@ -961,7 +746,7 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         d = Widb[Widb['contamination_metric'] == com]
         labels.append(com)
         sizes.append(len(d['genome'].unique()))
-    labels = annotate_labels(labels,'con')
+    labels = _annotate_labels(labels,'con')
     _make_piechart(labels,sizes)
     plt.title('Overall Winner Contamination')
 
@@ -1060,8 +845,484 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
     plt.close('all')
 
 def calc_dist(x1, y1, x2, y2):
+    '''
+    Return distance from two points
+
+    Args: self explainatory
+
+    Returns:
+        int: distance
+    '''
     dist = math.hypot(x2 - x1, y2 - y1)
     return dist
+
+def get_highest_self(db, genomes, min = 1.0e-4):
+    '''
+    Return the highest ANI value resulting from comparing a genome to itself
+    '''
+    d = db[db['reference'].isin(genomes)]
+    self_thresh = 1 - d['ani'][d['reference'] == d['querry']].min()
+
+    # Because 0s don't show up on the graph
+    if self_thresh == float(0):
+        self_thresh =  min
+    return self_thresh
+
+def _make_piechart(labels,sizes):
+    '''
+    Used by winner plot
+    '''
+    plt.pie(sizes,labels=labels,startangle=45,\
+            autopct=_make_autopct(sizes),\
+            shadow = True)
+    plt.axis('equal')
+
+def _make_autopct(values):
+    '''
+    Used by winner plot
+    '''
+    def my_autopct(pct):
+        total = sum(values)
+        val = int(round(pct*total/100.0))
+        return '{p:.2f}%  ({v:d})'.format(p=pct,v=val)
+    return my_autopct
+
+def _annotate_labels(labels,how):
+    '''
+    Used by winner plot
+    '''
+    if how == 'comp':
+        labs = []
+        for label in labels:
+            if label == 'near':
+                labs.append('near (>90%)')
+            if label == 'perfect':
+                labs.append('perfect (100%)')
+            if label == 'substantial':
+                labs.append('substantial (>70%)')
+            if label == 'moderate':
+                labs.append('moderate (>50%)')
+            if label == 'partial':
+                labs.append('partial (<50%)')
+        return labs
+
+    if how == 'con':
+        labs = []
+        for label in labels:
+            if label == 'low':
+                labs.append('low (<5%)')
+            if label == 'none':
+                labs.append('none (0%)')
+            if label == 'medium':
+                labs.append('medium (<10%)')
+            if label == 'high':
+                labs.append('high (<15%)')
+            if label == 'very high':
+                labs.append('very high (>15%)')
+        return labs
+
+def _x_fig_size(points, factor= .07, min= 8):
+    '''
+    Calculate how big the x of the figure should be
+    '''
+    size = points * factor
+    return max([size,min])
+
+def fancy_dendrogram(linkage,names,name2color=False,threshold=False,self_thresh=False):
+    '''
+    Make a fancy dendrogram
+    '''
+    # Make the dendrogram
+    if threshold == False:
+        scipy.cluster.hierarchy.dendrogram(linkage,labels=names,orientation='right')
+    else:
+        scipy.cluster.hierarchy.dendrogram(linkage,labels=names, color_threshold=threshold,\
+                                            orientation='right')
+
+    # Color the names
+    if name2color != False:
+        ax = plt.gca()
+        xlbls = ax.get_ymajorticklabels()
+        for lbl in xlbls:
+            lbl.set_color(name2color[lbl.get_text()])
+
+    # Add the threshold
+    if threshold:
+        plt.axvline(x=threshold, c='k', linestyle='dotted')
+    if self_thresh != False:
+        plt.axvline(x=self_thresh, c='red', linestyle='dotted', lw=1)
+
+    g = plt.gcf()
+    return g
+
+def normalize(df):
+    '''
+    Normalize all columns in df to 0-1 except 'genome' or 'location'
+
+    Args:
+        df: DataFrame
+
+    Return:
+        DataFrame: Nomralized
+    '''
+    result = df.copy()
+    for feature_name in df.columns:
+        if feature_name in ['genome', 'location']:
+            continue
+        max_value = max(df[feature_name].max(),0)
+        result[feature_name] = [max((x / max_value) if max_value != 0 else 0,0) for x in result[feature_name].tolist()]
+
+    return result
+
+def gen_color_list(names,name2cluster):
+    '''
+    Make a list of colors the same length as names, based on their cluster
+    '''
+    cm = plt.get_cmap('gist_rainbow')
+
+    # 1. generate cluster to color
+    cluster2color = {}
+    clusters = set(name2cluster.values())
+    NUM_COLORS = len(clusters)
+    for cluster in clusters:
+        try:
+            cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
+        except:
+            cluster2color[cluster] = cm(1.*int(str(cluster).split('_')[1])/NUM_COLORS)
+
+    #2. generate list of colors
+    colors = []
+    for name in names:
+        colors.append(cluster2color[name2cluster[name]])
+
+    return colors
+
+def gen_color_dictionary(names, name2cluster):
+    '''
+    Make the dictionary name2color
+
+    Args:
+        names: key in the returned dictionary
+        name2cluster: a dictionary of name to it's cluster
+
+    Returns:
+        dict: name -> color
+    '''
+    cm = _rand_cmap(len(set(name2cluster.values()))+1,type='bright')
+
+    # 1. generate cluster to color
+    cluster2color = {}
+    clusters = set(name2cluster.values())
+    NUM_COLORS = len(clusters)
+    for cluster in clusters:
+        try:
+
+            cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
+        except:
+            cluster2color[cluster] = cm(1.*int(str(cluster).split('_')[1])/NUM_COLORS)
+
+    #2. name to color
+    name2color = {}
+    for name in names:
+        name2color[name] = cluster2color[name2cluster[name]]
+
+    return name2color
+
+def _comp_cluster(c):
+    '''
+    Used in secondary dendrogram creation
+    '''
+    first = int(c.split('_')[0])
+    dec = float(c.split('_')[1])
+    return first + dec/100
+
+def _rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=False, verbose=False):
+    """
+    Creates a random colormap to be used together with matplotlib. Useful for segmentation tasks
+    :param nlabels: Number of labels (size of colormap)
+    :param type: 'bright' for strong colors, 'soft' for pastel colors
+    :param first_color_black: Option to use first color as black, True or False
+    :param last_color_black: Option to use last color as black, True or False
+    :param verbose: Prints the number of labels and shows the colormap. True or False
+    :return: colormap for matplotlib
+    """
+    from matplotlib.colors import LinearSegmentedColormap
+    import colorsys
+    import numpy as np
+
+
+    if type not in ('bright', 'soft'):
+        print ('Please choose "bright" or "soft" for type')
+        return
+
+    if verbose:
+        print('Number of labels: ' + str(nlabels))
+
+    # Generate color map for bright colors, based on hsv
+    if type == 'bright':
+        randHSVcolors = [(np.random.uniform(low=0.0, high=1),
+                          np.random.uniform(low=0.2, high=1),
+                          np.random.uniform(low=0.9, high=1)) for i in range(nlabels)]
+
+        # Convert HSV list to RGB
+        randRGBcolors = []
+        for HSVcolor in randHSVcolors:
+            randRGBcolors.append(colorsys.hsv_to_rgb(HSVcolor[0], HSVcolor[1], HSVcolor[2]))
+
+        if first_color_black:
+            randRGBcolors[0] = [0, 0, 0]
+
+        if last_color_black:
+            randRGBcolors[-1] = [0, 0, 0]
+
+        random_colormap = LinearSegmentedColormap.from_list('new_map', randRGBcolors, N=nlabels)
+
+    # Generate soft pastel colors, by limiting the RGB spectrum
+    if type == 'soft':
+        low = 0.6
+        high = 0.95
+        randRGBcolors = [(np.random.uniform(low=low, high=high),
+                          np.random.uniform(low=low, high=high),
+                          np.random.uniform(low=low, high=high)) for i in range(nlabels)]
+
+        if first_color_black:
+            randRGBcolors[0] = [0, 0, 0]
+
+        if last_color_black:
+            randRGBcolors[-1] = [0, 0, 0]
+        random_colormap = LinearSegmentedColormap.from_list('new_map', randRGBcolors, N=nlabels)
+
+    # Display colorbar
+    if verbose:
+        from matplotlib import colors, colorbar
+        from matplotlib import pyplot as plt
+        fig, ax = plt.subplots(1, 1, figsize=(15, 0.5))
+
+        bounds = np.linspace(0, nlabels, nlabels + 1)
+        norm = colors.BoundaryNorm(bounds, nlabels)
+
+        cb = colorbar.ColorbarBase(ax, cmap=random_colormap, norm=norm, spacing='proportional', ticks=None,
+                                   boundaries=bounds, format='%1i', orientation=u'horizontal')
+
+    return random_colormap
+
+
+def _parse_plot_options(options, args):
+    '''
+    Read user input and figure out a list of plots to make
+
+    Args:
+        options: list of possible plots to make (default [1-6])
+        args: the command line passed in
+
+    Returns:
+        list: list of ints in the args
+    '''
+    to_plot = []
+
+    if args[0] in ['all','a']:
+        to_plot += options
+
+    elif args == None:
+        logging.error("No plots given!")
+        sys.exit()
+        return None
+
+    else:
+        for arg in args:
+            if arg in options:
+                to_plot.append(arg)
+            else:
+                for letter in arg:
+                    if letter in options:
+                        to_plot.append(letter)
+                    else:
+                        logging.error("Can't interpret plotting argument {0}! quitting".format(arg))
+                        sys.exit()
+    return to_plot
+
+def _get_genome2taxonomy(wd):
+    '''
+    Return dictionary: genome -> taxonomy
+
+    All based on Bdb at the moment
+
+    Return False if can't do it
+    '''
+    try:
+        Bdb = wd.get_db('Bdb')
+        if 'taxonomy' in Bdb:
+            genome2taxonomy = Bdb.set_index('genome')['taxonomy'].to_dict()
+        return genome2taxonomy
+    except:
+        return False
+
+def _make_dendrogram(linkage, names, **kwargs):
+    '''
+    Currently used by winner plot
+
+    names can be gotten like:
+    db = db.pivot("reference","querry","ani")
+    names = list(db.columns)
+    '''
+    threshold = kwargs.get('threshold',False)
+    title = kwargs.get('title',False)
+
+    # Make the dendrogram
+    g = fancy_dendrogram(linkage,names,threshold=threshold)
+    plt.title(title)
+    plt.xlabel(kwargs.get('xlabel','ANI'))
+    if threshold != False:
+        plt.xlim([0,2*threshold])
+
+    # Adjust the figure size
+    fig = plt.gcf()
+    fig.set_size_inches(10,_x_fig_size(len(names),factor=.2))
+    plt.subplots_adjust(left=0.3)
+
+    # Adjust the x labels
+    plt.tick_params(axis='both', which='major', labelsize=8)
+    axes = plt.gca()
+    labels = axes.xaxis.get_majorticklocs()
+    for i, label in enumerate(labels):
+        labels[i] = (1 - float(label)) * 100
+    axes.set_xticklabels(labels)
+
+def _make_special_dendrogram(linkage, names, **kwargs):
+    '''
+    Make the dendrogram used in plot 2
+
+    names can be gotten like:
+        db = db.pivot("reference","querry","ani")
+        names = list(db.columns)
+
+    Args:
+        linkage: result of scipy.cluster.hierarchy.linkage
+        names: names of the linkage
+
+    Kwargs:
+        name2cluster: dict
+        self_thresh: x-axis for soft line
+        threshold: x-axis for hard line
+        title_sting: title of the plot
+        subtitle_string: subtitle of the plot
+        winners: list of "winning" genomes (to be marked with star)
+        genome2taxonomy: dictionary to add taxonomy information
+
+    Returns:
+        Matplotlib primed with a figure
+    '''
+    # Load possible kwargs
+    name2cluster = kwargs.get('name2cluster',False)
+    self_thresh = kwargs.get('self_thresh',False)
+    threshold = kwargs.get('threshold',False)
+    title_string = kwargs.get('title_string','')
+    subtitle_string = kwargs.get('subtitle_string','')
+    winners = kwargs.get('winners',False)
+    genome2taxonomy = kwargs.get('genome2taxonomy',False)
+
+    # Make special things
+    if name2cluster != False:
+        name2color = gen_color_dictionary(names, name2cluster)
+    else:
+        name2color = False
+
+    # Make the dendrogram
+    sns.set_style('whitegrid')
+    g = fancy_dendrogram(linkage,names,name2color,threshold=threshold,self_thresh =\
+                        self_thresh)
+
+    # Add the title and subtitle
+    plt.suptitle(title_string, y=1, fontsize=18)
+    plt.title(subtitle_string, fontsize=10)
+
+    # Adjust the x-axis
+    plt.xlabel('Average Nucleotide Identity (ANI)')
+    if threshold != False:
+        plt.xlim([0,3*threshold])
+    plt.tick_params(axis='both', which='major', labelsize=12)
+    axes = plt.gca()
+    labels = axes.xaxis.get_majorticklocs()
+    for i, label in enumerate(labels):
+        labels[i] = (1 - float(label)) * 100
+    axes.set_xticklabels(labels)
+    plt.gca().yaxis.grid(False)
+
+    # Adjust the figure size
+    fig = plt.gcf()
+    fig.set_size_inches(10,_x_fig_size(len(names),factor=.5))
+    plt.subplots_adjust(left=0.5)
+
+    # Mark winning ones
+    if type(winners) is not bool:
+        ax = plt.gca()
+        labels = [item.get_text() for item in ax.get_yticklabels()]
+        for i, label in enumerate(labels):
+            if label in winners: labels[i] = label + ' *'
+        ax.set_yticklabels(labels)
+
+    # Add taxonomy
+    if genome2taxonomy != False:
+        g2t = genome2taxonomy
+        axes = plt.gca()
+        labels = [item.get_text() for item in axes.get_yticklabels()]
+        for i, label in enumerate(labels):
+            labels[i] = "{0}\n{1}".format(label, g2t[label.replace(' *','')])
+        axes.set_yticklabels(labels)
+
+def _get_toshow(Gdb):
+    '''
+    From Gdb, figure out what columns you can show.
+    '''
+    cols = list(Gdb.columns)
+    cols.remove('genome')
+    return cols
+
+def _make_scoring_plot(db, bars,**kwargs):
+    '''
+    Used by winner plot
+
+    db is the database to plot- must contain 'genome' and all columns listed in 'bars'
+    bars is all of the columns in the database to become bars
+    for taxonomy, put genome2taxonomy in kwargs
+    '''
+    sns.reset_orig()
+
+    # Make the normalized bar plot
+    nd = normalize(db)
+    d = pd.melt(nd, id_vars=['genome'], value_vars=bars)
+    g = sns.barplot(data=d, y='genome', x='value', hue='variable')
+
+    # Get a list of the un-normalized values
+    x = pd.melt(db, id_vars=['genome'], value_vars=bars)
+    vals = []
+    for variable in x['variable'].unique():
+        vals += [v for v in x['value'][x['variable'] == variable].tolist()]
+
+    # Add un-normalized values to barplots
+    i = 0
+    for p in g.patches:
+        g.annotate("{0:.1f}".format(vals[i]), (p.get_width(), p.get_y()+(p.get_height()/1.1) ), fontsize=8)
+        i += 1
+
+    # Add taxonomy if available
+    axes = plt.gca()
+    labels = [item.get_text() for item in axes.get_yticklabels()]
+    if kwargs.get('genome2taxonomy',False) != False:
+        g2t = kwargs.get('genome2taxonomy')
+        for i, label in enumerate(labels):
+            labels[i] = "{0}\n{1}".format(label, g2t[label.replace(' *','')])
+        axes.set_yticklabels(labels)
+
+    # Adjust labels
+    plt.xlabel('Normalized Score')
+    plt.legend(loc='lower right')
+    plt.tick_params(axis='both', which='major', labelsize=8)
+
+    # Adjust figure size
+    fig = plt.gcf()
+    fig.set_size_inches(12,_x_fig_size(len(labels), factor=1))
+    plt.subplots_adjust(left=0.5)
 
 def _make_mds_plot(name, dist, names, **kwargs):
     '''
@@ -1153,249 +1414,7 @@ def _shepard_plot(coords, dist, names):
     adb = pd.DataFrame(table)
     sns.regplot(data=adb, x='ani_dist', y='mds_dist')
 
-"""
-OTHER
-"""
 
-def get_highest_self(db, genomes, min = 1.0e-4):
-    d = db[db['reference'].isin(genomes)]
-    self_thresh = 1 - d['ani'][d['reference'] == d['querry']].min()
-
-    # Because 0s don't show up on the graph
-    if self_thresh == float(0):
-        self_thresh =  min
-    return self_thresh
-
-def _make_piechart(labels,sizes):
-    plt.pie(sizes,labels=labels,startangle=45,\
-            autopct=make_autopct(sizes),\
-            shadow = True)
-    plt.axis('equal')
-
-def make_autopct(values):
-    def my_autopct(pct):
-        total = sum(values)
-        val = int(round(pct*total/100.0))
-        return '{p:.2f}%  ({v:d})'.format(p=pct,v=val)
-    return my_autopct
-
-def annotate_labels(labels,how):
-    if how == 'comp':
-        labs = []
-        for label in labels:
-            if label == 'near':
-                labs.append('near (>90%)')
-            if label == 'perfect':
-                labs.append('perfect (100%)')
-            if label == 'substantial':
-                labs.append('substantial (>70%)')
-            if label == 'moderate':
-                labs.append('moderate (>50%)')
-            if label == 'partial':
-                labs.append('partial (<50%)')
-        return labs
-
-    if how == 'con':
-        labs = []
-        for label in labels:
-            if label == 'low':
-                labs.append('low (<5%)')
-            if label == 'none':
-                labs.append('none (0%)')
-            if label == 'medium':
-                labs.append('medium (<10%)')
-            if label == 'high':
-                labs.append('high (<15%)')
-            if label == 'very high':
-                labs.append('very high (>15%)')
-        return labs
-
-def x_fig_size(points, factor= .07, min= 8):
-    size = points * factor
-    return max([size,min])
-
-def fancy_dendrogram(linkage,names,name2color=False,threshold=False,self_thresh=False):
-
-    # Make the dendrogram
-    if threshold == False:
-        scipy.cluster.hierarchy.dendrogram(linkage,labels=names,orientation='right')
-    else:
-        scipy.cluster.hierarchy.dendrogram(linkage,labels=names, color_threshold=threshold,\
-                                            orientation='right')
-
-    # Color the names
-    if name2color != False:
-        ax = plt.gca()
-        xlbls = ax.get_ymajorticklabels()
-        for lbl in xlbls:
-            lbl.set_color(name2color[lbl.get_text()])
-
-    # Add the threshold
-    if threshold:
-        plt.axvline(x=threshold, c='k', linestyle='dotted')
-    if self_thresh != False:
-        plt.axvline(x=self_thresh, c='red', linestyle='dotted', lw=1)
-
-    g = plt.gcf()
-    return g
-
-def normalize(df):
-    '''
-    Normalize all columns in df to 0-1 except 'genome' or 'location'
-
-    Args:
-        df: DataFrame
-
-    Return:
-        DataFrame: Nomralized
-    '''
-    result = df.copy()
-    for feature_name in df.columns:
-        if feature_name in ['genome', 'location']:
-            continue
-        max_value = max(df[feature_name].max(),0)
-        result[feature_name] = [max((x / max_value) if max_value != 0 else 0,0) for x in result[feature_name].tolist()]
-
-    return result
-
-def gen_color_list(names,name2cluster):
-    '''
-    Make a list of colors the same length as names, based on their cluster
-    '''
-    cm = plt.get_cmap('gist_rainbow')
-
-    # 1. generate cluster to color
-    cluster2color = {}
-    clusters = set(name2cluster.values())
-    NUM_COLORS = len(clusters)
-    for cluster in clusters:
-        try:
-            cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
-        except:
-            cluster2color[cluster] = cm(1.*int(str(cluster).split('_')[1])/NUM_COLORS)
-
-    #2. generate list of colors
-    colors = []
-    for name in names:
-        colors.append(cluster2color[name2cluster[name]])
-
-    return colors
-
-def gen_color_dictionary(names, name2cluster):
-    '''
-    Make the dictionary name2color
-
-    Args:
-        names: key in the returned dictionary
-        name2cluster: a dictionary of name to it's cluster
-
-    Returns:
-        dict: name -> color
-    '''
-    cm = rand_cmap(len(set(name2cluster.values()))+1,type='bright')
-
-    # 1. generate cluster to color
-    cluster2color = {}
-    clusters = set(name2cluster.values())
-    NUM_COLORS = len(clusters)
-    for cluster in clusters:
-        try:
-
-            cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
-        except:
-            cluster2color[cluster] = cm(1.*int(str(cluster).split('_')[1])/NUM_COLORS)
-
-    #2. name to color
-    name2color = {}
-    for name in names:
-        name2color[name] = cluster2color[name2cluster[name]]
-
-    return name2color
-
-def gen_colors(name2cluster):
-    name2color = {}
-    NUM_COLORS = len(name2cluster)
-    cm = plt.get_cmap('gist_rainbow')
-
-    for i,tax in enumerate(taxa):
-        t2c[tax] = cm(1.*i/NUM_COLORS)
-
-    return t2c
-
-def comp_cluster(c):
-    first = int(c.split('_')[0])
-    dec = float(c.split('_')[1])
-    return first + dec/100
-
-def rand_cmap(nlabels, type='bright', first_color_black=True, last_color_black=False, verbose=False):
-    """
-    Creates a random colormap to be used together with matplotlib. Useful for segmentation tasks
-    :param nlabels: Number of labels (size of colormap)
-    :param type: 'bright' for strong colors, 'soft' for pastel colors
-    :param first_color_black: Option to use first color as black, True or False
-    :param last_color_black: Option to use last color as black, True or False
-    :param verbose: Prints the number of labels and shows the colormap. True or False
-    :return: colormap for matplotlib
-    """
-    from matplotlib.colors import LinearSegmentedColormap
-    import colorsys
-    import numpy as np
-
-
-    if type not in ('bright', 'soft'):
-        print ('Please choose "bright" or "soft" for type')
-        return
-
-    if verbose:
-        print('Number of labels: ' + str(nlabels))
-
-    # Generate color map for bright colors, based on hsv
-    if type == 'bright':
-        randHSVcolors = [(np.random.uniform(low=0.0, high=1),
-                          np.random.uniform(low=0.2, high=1),
-                          np.random.uniform(low=0.9, high=1)) for i in range(nlabels)]
-
-        # Convert HSV list to RGB
-        randRGBcolors = []
-        for HSVcolor in randHSVcolors:
-            randRGBcolors.append(colorsys.hsv_to_rgb(HSVcolor[0], HSVcolor[1], HSVcolor[2]))
-
-        if first_color_black:
-            randRGBcolors[0] = [0, 0, 0]
-
-        if last_color_black:
-            randRGBcolors[-1] = [0, 0, 0]
-
-        random_colormap = LinearSegmentedColormap.from_list('new_map', randRGBcolors, N=nlabels)
-
-    # Generate soft pastel colors, by limiting the RGB spectrum
-    if type == 'soft':
-        low = 0.6
-        high = 0.95
-        randRGBcolors = [(np.random.uniform(low=low, high=high),
-                          np.random.uniform(low=low, high=high),
-                          np.random.uniform(low=low, high=high)) for i in range(nlabels)]
-
-        if first_color_black:
-            randRGBcolors[0] = [0, 0, 0]
-
-        if last_color_black:
-            randRGBcolors[-1] = [0, 0, 0]
-        random_colormap = LinearSegmentedColormap.from_list('new_map', randRGBcolors, N=nlabels)
-
-    # Display colorbar
-    if verbose:
-        from matplotlib import colors, colorbar
-        from matplotlib import pyplot as plt
-        fig, ax = plt.subplots(1, 1, figsize=(15, 0.5))
-
-        bounds = np.linspace(0, nlabels, nlabels + 1)
-        norm = colors.BoundaryNorm(bounds, nlabels)
-
-        cb = colorbar.ColorbarBase(ax, cmap=random_colormap, norm=norm, spacing='proportional', ticks=None,
-                                   boundaries=bounds, format='%1i', orientation=u'horizontal')
-
-    return random_colormap
 '''
 ****************************    DEPREICATED   *******************************
 
