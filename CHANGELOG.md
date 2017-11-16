@@ -17,11 +17,16 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 - argument parsing broken up into more groups
 - more tests
 - complete API coverage
-- ANImf, gANI, and ANIn now make folders in the output, so that it doesnt have too many files in one dir
+- ANImf, gANI, and ANIn now make folders in the output, so that it doesnt have too
+many files in one dir
 
 ### Added to d_choose
 - full API coverage
 - ability to make / generate genomeInfo better
+
+### Added to d_analyze
+- full API coverage
+- deleted the whole re-cluster thing
 
 ## [1.4.3] - 2017-10-24
 ### fixed

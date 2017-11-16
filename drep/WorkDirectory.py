@@ -220,6 +220,8 @@ class WorkDirectory(object):
             d = self.location + '/data/Clustering_files/'
         elif dir == 'dereplicated_genomes':
             d = self.location + '/dereplicated_genomes/'
+        elif dir == 'figures':
+            d = self.location + '/figures/'
 
         if d == None:
             assert False, "{0} is not a directory I know about".format(dir)

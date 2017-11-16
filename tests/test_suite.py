@@ -534,11 +534,13 @@ class VerifyAnalyze():
     def setUp(self):
         self.s_wd_loc = load_solutions_wd()
         self.working_wd_loc = load_test_wd_loc()
+        self.test_dir = load_random_test_dir()
 
         self.tearDown()
 
         # copy over the data from solutions directory
         os.mkdir(self.working_wd_loc)
+        os.mkdir(self.test_dir)
         shutil.copytree(os.path.join(self.s_wd_loc, 'data'), \
             os.path.join(self.working_wd_loc, 'data'))
         shutil.copytree(os.path.join(self.s_wd_loc, 'data_tables'), \
@@ -546,14 +548,93 @@ class VerifyAnalyze():
         shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
             os.path.join(self.working_wd_loc, 'log'))
 
+    def tearDown(self):
+        #logging.shutdown()
+        if os.path.isdir(self.working_wd_loc):
+            shutil.rmtree(self.working_wd_loc)
+        if os.path.isdir(self.test_dir):
+            shutil.rmtree(self.test_dir)
+
     def run(self):
         self.setUp()
-        self.unit_test_1()
+        self.plot_1_test_1()
         self.tearDown()
 
-    def unit_test_1(self):
+        self.setUp()
+        self.plot_5_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.plot_5_test_2()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_2()
+        self.tearDown()
+
+    def plot_1_test_1(self):
         '''
-        Ensure analyze produces plots
+        Test drep.d_analyze.mash_dendrogram_from_wd
+        '''
+        wd_loc = self.working_wd_loc
+        wd = drep.WorkDirectory.WorkDirectory(wd_loc)
+        test_dir = self.test_dir
+
+        # Make sure it works
+        assert len(glob.glob(test_dir + '/*')) == 0
+        drep.d_analyze.mash_dendrogram_from_wd(wd, plot_dir=test_dir)
+        assert len(glob.glob(test_dir + '/*')) == 1
+        for f in glob.glob(test_dir + '/*'):
+            assert os.path.getsize(f) > 0
+
+        # Make sure it crashes gracefully if can't make plot
+        os.remove(os.path.join(wd.get_dir('data_tables'), 'Mdb.csv'))
+        wd = drep.WorkDirectory.WorkDirectory(wd_loc)
+        drep.d_analyze.mash_dendrogram_from_wd(wd, plot_dir=test_dir)
+
+    def plot_5_test_1(self):
+        '''
+        Test drep.d_analyze.plot_binscoring_from_wd
+
+        Make sure it works without any genomeInfo
+        '''
+        wd_loc = self.working_wd_loc
+        wd = drep.WorkDirectory.WorkDirectory(wd_loc)
+        test_dir = self.test_dir
+
+        assert len(glob.glob(test_dir + '/*')) == 0
+        drep.d_analyze.plot_binscoring_from_wd(wd, plot_dir=test_dir)
+        assert len(glob.glob(test_dir + '/*')) == 1
+        for f in glob.glob(test_dir + '/*'):
+            assert os.path.getsize(f) > 0
+
+    def plot_5_test_2(self):
+        '''
+        Test drep.d_analyze.plot_binscoring_from_wd
+
+        Make sure it works without any genomeInfo
+        '''
+        wd_loc = self.working_wd_loc
+        wd = drep.WorkDirectory.WorkDirectory(wd_loc)
+        test_dir = self.test_dir
+
+        # Make sure it works whithout any genome info
+        os.remove(os.path.join(wd.get_dir('data_tables'), 'Chdb.csv'))
+        wd = drep.WorkDirectory.WorkDirectory(wd_loc)
+
+        assert len(glob.glob(test_dir + '/*')) == 0
+        drep.d_analyze.plot_binscoring_from_wd(wd, plot_dir=test_dir)
+        assert len(glob.glob(test_dir + '/*')) == 1
+        for f in glob.glob(test_dir + '/*'):
+            assert os.path.getsize(f) > 0
+
+    def functional_test_1(self):
+        '''
+        Ensure analyze produces all plots
         '''
         args = argumentParser.parse_args(['analyze',self.working_wd_loc,'-pl'] + \
             ['a'])
@@ -571,10 +652,20 @@ class VerifyAnalyze():
         for fig in glob.glob(fig_dir + '*'):
             assert os.path.getsize(fig) > 0
 
-    def tearDown(self):
-        #logging.shutdown()
-        if os.path.isdir(self.working_wd_loc):
-            shutil.rmtree(self.working_wd_loc)
+    def functional_test_2(self):
+        '''
+        Ensure analyze crashes gracefully
+        '''
+        wd_loc = self.working_wd_loc
+        wd = drep.WorkDirectory.WorkDirectory(wd_loc)
+        os.remove(os.path.join(wd.get_dir('data_tables'), 'Mdb.csv'))
+        os.remove(os.path.join(wd.get_dir('data_tables'), 'Cdb.csv'))
+        os.remove(os.path.join(wd.get_dir('data_tables'), 'Bdb.csv'))
+
+        args = argumentParser.parse_args(['analyze',self.working_wd_loc,'-pl'] + \
+            ['a'])
+        controller = Controller()
+        controller.parseArguments(args)
 
 class VerifyChoose():
     def __init__(self):
@@ -1052,9 +1143,9 @@ if __name__ == '__main__':
     # test_short()
     # test_long()
 
-    filter_test()
+    #filter_test()
     #choose_test()
-    #analyze_test()
+    analyze_test()
     #dereplicate_wf_test()
     #taxonomy_test()
     #cluster_test()

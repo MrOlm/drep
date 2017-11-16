@@ -104,6 +104,9 @@ def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
         bdb: current bdb
         kwrags: keyword arguments
 
+    Keyword arguments:
+        no_run: if True, don't run any programs and return None if genomeInfo can't be made
+
     Returns:
         DataFrame: genomeInfo
     '''
@@ -130,6 +133,11 @@ def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
         Idb = chdb_to_genomeInfo(Chdb)
         Tdb = _validate_genomeInfo(Idb, bdb)
         Gdb = _add_lengthN50(Tdb, bdb)
+
+    elif kwargs.get('no_run', False):
+        logging.debug("Making basic genomeInfo")
+        Gdb = calc_genome_info(bdb['location'].tolist())
+        del Gdb['location']
 
     else:
         logging.debug("Running CheckM")
