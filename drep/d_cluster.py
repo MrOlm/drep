@@ -904,7 +904,7 @@ def run_pairwise_gANI(bdb, gANI_folder, prod_folder, **kwargs):
         gANI_folder: folder to store gANI output
         prod_folder: folder containing prodigal output from genomes (will run if needed)
 
-    Keywords arguments:
+    Keyword arguments:
         debug: log all of the commands
         wd: if you want to log commands, you also need the wd
         processors: threads to use

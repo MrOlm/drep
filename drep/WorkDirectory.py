@@ -1,37 +1,32 @@
 #!/usr/bin/env python3
 """
-This is the file that maintains the integrity of the work directory
+This module provides access to the workDirectory
 
-The directory layout
-########################################
-workDirectory
-./data
-...../MASH_files/
-...../ANIn_files/
-...../gANI_files/
-...../Clustering_files/
-...../checkM/
-........./genomes/
-........./checkM_outdir/
-...../prodigal/
-./figures
-./data_tables
-...../Bdb.csv  # Sequence locations and filenames
-...../Mdb.csv  # Raw results of MASH comparisons
-...../Ndb.csv  # Raw results of ANIn comparisons
-...../Cdb.csv  # Genomes and cluster designations
-...../Chdb.csv # CheckM results for Bdb
-...../Sdb.csv  # Scoring information
-...../Wdb.csv  # Winning genomes
-./dereplicated_genomes
-./log
-...../logger.log
-...../cluster_arguments.json
+The directory layout::
 
-
-The data tables
-########################################
-Bdb = sequence names and sequence locations
+    workDirectory
+    ./data
+    ...../MASH_files/
+    ...../ANIn_files/
+    ...../gANI_files/
+    ...../Clustering_files/
+    ...../checkM/
+    ........./genomes/
+    ........./checkM_outdir/
+    ...../prodigal/
+    ./figures
+    ./data_tables
+    ...../Bdb.csv  # Sequence locations and filenames
+    ...../Mdb.csv  # Raw results of MASH comparisons
+    ...../Ndb.csv  # Raw results of ANIn comparisons
+    ...../Cdb.csv  # Genomes and cluster designations
+    ...../Chdb.csv # CheckM results for Bdb
+    ...../Sdb.csv  # Scoring information
+    ...../Wdb.csv  # Winning genomes
+    ./dereplicated_genomes
+    ./log
+    ...../logger.log
+    ...../cluster_arguments.json
 
 """
 
@@ -47,6 +42,14 @@ import glob
 import drep
 
 class WorkDirectory(object):
+    '''
+    Object to interact with the workDirectory
+
+    Args:
+        location (str): location to make the workDirectory
+
+
+    '''
     firstLevels = ['data','figures','data_tables','dereplicated_genomes','log']
 
     def __init__(self, location):
@@ -70,9 +73,6 @@ class WorkDirectory(object):
     def make_fileStructure(self):
         '''
         Make the top level file structure
-
-        TO DO:
-            make self aware
         '''
         location = self.location
 
@@ -86,7 +86,7 @@ class WorkDirectory(object):
 
     def load_cached(self):
         '''
-        The wrapper to load everything it has
+        The wrapper to load everything it has into attributes
         '''
         # Import data_tables
         loc = self.get_dir('data_tables')
@@ -150,7 +150,15 @@ class WorkDirectory(object):
         return (db in self.data_tables)
 
     def get_cluster(self, name):
+        '''
+        Get the cluster passed in
 
+        Args:
+            name: name of the cluster
+
+        Returns:
+            cluster
+        '''
         # If the whole cluster name is passed in
         if name in self.clusters:
             return self.clusters[name]
@@ -166,10 +174,23 @@ class WorkDirectory(object):
         sys.exit()
 
     def get_primary_linkage(self):
+        '''
+        Get the primary linkage cluster
+        '''
         return self.clusters['primary_linkage']
 
     def store_db(self,db,name,overwrite=False):
-        loc = self.location + '/data_tables/'
+        '''
+        Store a dataframe in the workDirectory
+
+        Will make a physical copy in the datatables folder
+
+        Args:
+            db: pandas dataframe to store
+            name: name to store it under (will add .csv automatically)
+            overwrite: if True, overwrite if DataFrame with same name already exists
+        '''
+        loc = self.get_dir('data_tables')
 
         if os.path.isfile(loc + name + '.csv'):
             assert overwrite == True, "data_table {0} already exists".format(name)
@@ -178,6 +199,13 @@ class WorkDirectory(object):
         self.data_tables[name] = db
 
     def get_db(self, name, return_none=True):
+        '''
+        Get database from self.data_tables
+
+        Args:
+            name: name of dataframe
+            return_none: if True will return None if database not found; otherwise assert False
+        '''
         if name in self.data_tables:
             return self.data_tables[name]
         else:

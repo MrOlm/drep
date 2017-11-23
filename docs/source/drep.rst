@@ -1,82 +1,9 @@
-drep package
+dRep API
 ============
 
-Submodules
-----------
+This allows you to call the internal methods of dRep using your own python program
 
-drep.WorkDirectory module
--------------------------
-
-.. automodule:: drep.WorkDirectory
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.argumentParser module
---------------------------
-
-.. automodule:: drep.argumentParser
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.controller module
-----------------------
-
-.. automodule:: drep.controller
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.d_adjust module
---------------------
-
-.. automodule:: drep.d_adjust
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.d_analyze module
----------------------
-
-.. automodule:: drep.d_analyze
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.d_bonus module
--------------------
-
-.. automodule:: drep.d_bonus
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.d_choose module
---------------------
-
-.. automodule:: drep.d_choose
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.d_cluster module
----------------------
-
-.. automodule:: drep.d_cluster
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.d_evaluate module
-----------------------
-
-.. automodule:: drep.d_evaluate
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
-drep.d_filter module
+drep.d_filter
 --------------------
 
 .. automodule:: drep.d_filter
@@ -84,19 +11,42 @@ drep.d_filter module
     :undoc-members:
     :show-inheritance:
 
-drep.d_workflows module
------------------------
+drep.d_cluster
+---------------------
 
-.. automodule:: drep.d_workflows
+.. automodule:: drep.d_cluster
     :members:
     :undoc-members:
     :show-inheritance:
 
+drep.d_choose
+--------------------
 
-Module contents
----------------
+.. automodule:: drep.d_choose
+    :members:
+    :undoc-members:
+    :show-inheritance:
 
-.. automodule:: drep
+drep.d_analyze
+---------------------
+
+.. automodule:: drep.d_analyze
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+drep.d_bonus
+-------------------
+
+.. automodule:: drep.d_bonus
+    :members:
+    :undoc-members:
+    :show-inheritance:
+
+drep.WorkDirectory
+-------------------------
+
+.. automodule:: drep.WorkDirectory
     :members:
     :undoc-members:
     :show-inheritance:

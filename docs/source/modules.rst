@@ -1,4 +1,4 @@
-drep
+dRep API
 ====
 
 .. toctree::

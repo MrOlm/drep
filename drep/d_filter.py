@@ -44,10 +44,7 @@ def d_filter_wrapper(wd, **kwargs):
         checkM_method: Either lineage_wf (more accurate) or taxonomy_wf (faster)
 
     Returns:
-        Bdb.csv: A dataframe of filtered genomes in the workDirectory
-        Chdb.csv: A dataframe of raw checkM results in the workDirectory
-        GenomeInfo.csv: A dataframe of genome information in the workDirectory
-
+        Nothing: stores Bdb.csv, Chdb.csv, and GenomeInfo.csv in the work directory
     '''
     # Load the WorkDirectory.
     logging.debug("Loading work directory in filter")
@@ -299,11 +296,11 @@ def _filter_bdb_length(bdb, Gdb, min_length):
 
 def validate_chdb(Chdb, bdb):
     '''
-    Make sure all files are in Chdb
+    Make sure all genomes in bdb are in Chdb
 
     Args:
-        Chdb
-        bdb
+        Chdb: dataframe of checkM information
+        bdb: dataframe with ['genome']
     '''
     quit = False
     b_genomes = bdb['genome'].tolist()
@@ -460,8 +457,7 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     it being run on prodigal output
 
     Args:
-        genome_folder: location of folder to run checkM on - should be full of
-        files ending in .faa (result of prodigal)
+        genome_folder: location of folder to run checkM on - should be full of files ending in .faa (result of prodigal)
         checkm_outf: location of folder to store checkM output
 
     Keyword args:
