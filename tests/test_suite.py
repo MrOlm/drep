@@ -300,6 +300,9 @@ class VerifyCluster():
         self.test_dir = load_random_test_dir()
         self.s_wd_loc = load_solutions_wd()
 
+        if os.path.isdir(self.test_dir):
+            shutil.rmtree(self.test_dir)
+
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc, ignore_errors=True)
         if not os.path.isdir(self.test_dir):
@@ -317,33 +320,33 @@ class VerifyCluster():
         self.test_all_vs_all_mash()
         self.tearDown()
 
-        self.setUp()
-        self.test_cluster_mash_database()
-        self.tearDown()
-
-        self.setUp()
-        self.test_compare_genomes()
-        self.tearDown()
-
-        self.setUp()
-        self.test_genome_hierarchical_clustering()
-        self.tearDown()
-
-        self.setUp()
-        self.functional_test_3()
-        self.tearDown()
-
-        self.setUp()
-        self.functional_test_2()
-        self.tearDown()
-
-        self.setUp()
-        self.functional_test_1()
-        self.tearDown()
-
-        self.setUp()
-        self.skipsecondary_test()
-        self.tearDown()
+        # self.setUp()
+        # self.test_cluster_mash_database()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.test_compare_genomes()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.test_genome_hierarchical_clustering()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.functional_test_3()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.functional_test_2()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.functional_test_1()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.skipsecondary_test()
+        # self.tearDown()
 
     def test_genome_hierarchical_clustering(self):
         '''
@@ -400,12 +403,30 @@ class VerifyCluster():
         bdb = drep.d_cluster.load_genomes(self.genomes)
         data_folder = self.test_dir
 
-        # Run it
+        # Run it under normal conditions
         Mdb = drep.d_cluster.all_vs_all_MASH(bdb, data_folder)
+        assert len(Mdb) == 25
         db = Mdb[(Mdb['genome1'] == 'Enterococcus_faecalis_T2.fna') & \
             (Mdb['genome2'] == 'Enterococcus_casseliflavus_EC20.fasta')]
         d = float(db['dist'].tolist()[0])
         assert (d > .2) & (d < .3)
+        assert len(glob.glob(data_folder + '/MASH_files/sketches/*')) == 1
+        assert len(glob.glob(data_folder + '/MASH_files/sketches/*/*')) == 6
+
+        # Start over
+        shutil.rmtree(self.test_dir)
+        os.mkdir(self.test_dir)
+
+        # Run it under reduced chuck size
+        Mdb = drep.d_cluster.all_vs_all_MASH(bdb, data_folder, groupSize=2)
+
+        assert len(Mdb) == 25
+        db = Mdb[(Mdb['genome1'] == 'Enterococcus_faecalis_T2.fna') & \
+            (Mdb['genome2'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+        d = float(db['dist'].tolist()[0])
+        assert (d > .2) & (d < .3)
+        assert len(glob.glob(data_folder + '/MASH_files/sketches/*')) == 3
+        assert len(glob.glob(data_folder + '/MASH_files/sketches/*/*')) == 8
 
     def test_cluster_mash_database(self):
         '''
@@ -1145,9 +1166,9 @@ if __name__ == '__main__':
 
     #filter_test()
     #choose_test()
-    analyze_test()
+    #analyze_test()
     #dereplicate_wf_test()
     #taxonomy_test()
-    #cluster_test()
+    cluster_test()
 
     print("Everything seems to be working swimmingly!")

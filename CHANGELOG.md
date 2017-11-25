@@ -19,6 +19,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 - complete API coverage
 - ANImf, gANI, and ANIn now make folders in the output, so that it doesnt have too
 many files in one dir
+- mash paste now goes in chunks, so that it will work if you have huge numbers of genomes (getting around OSError: [Errno 7] Argument list too long)
 
 ### Added to d_choose
 - full API coverage

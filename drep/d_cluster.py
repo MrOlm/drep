@@ -446,7 +446,8 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
         dry: dont actually run anything
         processors: number of processors to multithread with
         mash_exe: location of mash excutible (will try and find with shutil if not provided)
-        debug: log all of the commands
+        groupSize: max number of mash sketches to hold in each folder
+        debug: if True, log all of the commands
         wd: if you want to log commands, you also need the wd
     """
 
@@ -455,6 +456,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     overwrite = kwargs.get('overwrite', False)
     mash_exe = kwargs.get('mash_exe', None)
     p = kwargs.get('processors',6)
+    groupSize = kwargs.get('groupSize', 1000)
 
     # set up logdir
     if ('wd' in kwargs) and (kwargs.get('debug', False) == True):
@@ -476,26 +478,50 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     if not os.path.exists(sketch_folder):
         os.makedirs(sketch_folder)
 
+    # Make chunks
+    l2g = Bdb.set_index('location')['genome'].to_dict()
+    locations = list(Bdb['location'].unique())
+    chunks = [locations[x:x+groupSize] for x in range(0, len(locations), groupSize)]
+
     # Make the MASH sketches
     cmds = []
-    for fasta in Bdb['location'].unique():
-        genome = Bdb['genome'][Bdb['location'] == fasta].tolist()[0]
-        file = sketch_folder + genome
-        if not os.path.isfile(file + '.msh'):
-            cmd = [mash_exe, 'sketch', fasta, '-s', str(MASH_s), '-o',
-                file]
-            cmds.append(cmd)
+    chunk_folders = []
+    for i, chunk in enumerate(chunks):
+        chunk_folder = os.path.join(sketch_folder, "chunk_{0}".format(i))
+        chunk_folders.append(chunk_folder)
+        if not os.path.exists(chunk_folder):
+            os.makedirs(chunk_folder)
+        for fasta in chunk:
+            genome = l2g[fasta]
+            file = os.path.join(chunk_folder, genome)
+            if not os.path.isfile(file + '.msh'):
+                cmd = [mash_exe, 'sketch', fasta, '-s', str(MASH_s), '-o',
+                    file]
+                cmds.append(cmd)
 
     if not dry:
         if len(cmds) > 0:
             drep.thread_cmds(cmds, logdir=logdir, t=int(p))
 
-    # Combine MASH sketches
-    cmd = [mash_exe, 'paste', MASH_folder + 'ALL.msh'] + glob.glob(sketch_folder+ '*')
+    # Combine MASH sketches within chunk
+    cmds = []
+    alls = []
+    for chunk_folder in chunk_folders:
+        all_file = os.path.join(chunk_folder, 'chunk_all.msh')
+        cmd = [mash_exe, 'paste', all_file] \
+                + glob.glob(os.path.join(chunk_folder, '*'))
+        cmds.append(cmd)
+        alls.append(all_file)
+    if not dry:
+        if len(cmds) > 0:
+            drep.thread_cmds(cmds, logdir=logdir, t=int(p))
+
+    # Combine MASH sketches of all chunks
+    all_file = os.path.join(MASH_folder, 'ALL.msh')
+    cmd = [mash_exe, 'paste', all_file] + alls
     drep.run_cmd(cmd, dry, shell=False, logdir=logdir)
 
     # Calculate distances
-    all_file = MASH_folder + 'ALL.msh'
     cmd = [mash_exe, 'dist', all_file, all_file, '>', MASH_folder
             + 'MASH_table.tsv']
     cmd = ' '.join(cmd)
