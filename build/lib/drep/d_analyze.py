@@ -17,10 +17,9 @@ import math
 
 from sklearn import manifold
 
-import drep as dm
 import drep
-import drep.d_cluster as dClust
-import drep.d_filter as dFilter
+import drep.d_cluster
+import drep.d_filter
 
 """#############################################################################
                             MODULE ARCHITECTURE
@@ -265,21 +264,21 @@ def cluster_test_wrapper(wd, **kwargs):
         kwargs['genome2taxonomy'] = genome2taxonomy
 
     # Make the comparison database
-    Xdb = dClust.compare_genomes(bdb,comp_method,wd,**kwargs)
+    Xdb = drep.d_cluster.compare_genomes(bdb,comp_method,wd,**kwargs)
 
     # Remove values without enough coverage
     if comp_method == 'ANIn':
         Xdb.loc[Xdb['alignment_coverage'] <= cov_thresh, 'ani'] = 0
 
     # Make it symmetrical
-    Xdb['av_ani'] = Xdb.apply(lambda row: dClust.average_ani (row,Xdb),axis=1)
+    Xdb['av_ani'] = Xdb.apply(lambda row: drep.d_cluster.average_ani (row,Xdb),axis=1)
     Xdb['dist'] = 1 - Xdb['av_ani']
     db = Xdb.pivot("reference","querry","dist")
 
     # Cluster it
     if threshold == None:
         threshold = float(0)
-    cdb, linkage = dClust.cluster_hierarchical(db, linkage_method = clust_method, \
+    cdb, linkage = drep.d_cluster.cluster_hierarchical(db, linkage_method = clust_method, \
                             linkage_cutoff = threshold)
 
     # Make the plot
@@ -1054,7 +1053,7 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         db['dist'] = 1 - db['similarity']
         linkage_db = db.pivot("genome1","genome2","dist")
         names = list(linkage_db.columns)
-        Cdb, linkage = dClust.cluster_hierarchical(linkage_db, linkage_method= 'average', \
+        Cdb, linkage = drep.d_cluster.cluster_hierarchical(linkage_db, linkage_method= 'average', \
                                     linkage_cutoff= 0)
 
         # Make the MASH dendrogram
@@ -1071,11 +1070,11 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
     if Wndb is not None:
         # Make a ANIn linkage for the dendrogram
         d = Wndb.copy()
-        d['av_ani'] = d.apply(lambda row: dClust.average_ani (row,d),axis=1)
+        d['av_ani'] = d.apply(lambda row: drep.d_cluster.average_ani (row,d),axis=1)
         d['dist'] = 1 - d['av_ani']
         db = d.pivot("reference", "querry", "dist")
         names = list(db.columns)
-        Cdb, linkage = dClust.cluster_hierarchical(db, linkage_method= 'average', \
+        Cdb, linkage = drep.d_cluster.cluster_hierarchical(db, linkage_method= 'average', \
                                     linkage_cutoff= 0)
 
         # Make the ANIn dendrogram
@@ -1092,11 +1091,11 @@ def plot_winners(Wdb, Chdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         # Make a ANIn linkage for the filtered dendrogram
         d = Wndb.copy()
         d.loc[d['alignment_coverage'] <= 0.1, 'ani'] = 0
-        d['av_ani'] = d.apply(lambda row: dClust.average_ani (row,d),axis=1)
+        d['av_ani'] = d.apply(lambda row: drep.d_cluster.average_ani (row,d),axis=1)
         d['dist'] = 1 - d['av_ani']
         db = d.pivot("reference", "querry", "dist")
         names = list(db.columns)
-        Cdb, linkage = dClust.cluster_hierarchical(db, linkage_method= 'average', \
+        Cdb, linkage = drep.d_cluster.cluster_hierarchical(db, linkage_method= 'average', \
                                     linkage_cutoff= 0)
 
         # Make the ANIn dendrogram

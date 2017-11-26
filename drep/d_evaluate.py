@@ -5,11 +5,11 @@ import os
 import pandas as pd
 import sys
 
+import drep
 import drep.WorkDirectory
-import drep as dm
-import drep.d_filter as d_filter
-import drep.d_cluster as dClust
-import drep.d_analyze as dAnal
+import drep.d_filter
+import drep.d_cluster
+import drep.d_analyze
 
 def d_evaluate_wrapper(wd,**kwargs):
 
@@ -20,7 +20,7 @@ def d_evaluate_wrapper(wd,**kwargs):
     # Determine what to evaluate
     evs = kwargs.get('evaluate')
     options = ['1','2','3']
-    to_eval = dAnal.parse_options(options, evs)
+    to_eval = drep.d_analyze._parse_plot_options(options, evs)
     logging.debug("evaluating {0}".format(to_eval))
 
     # 1) Evaluate de-replicated genome similarity
@@ -64,10 +64,10 @@ def compare_winners(wd, **kwargs):
     comp_method = kwargs.get('comp_method','ANIn')
 
     # Generate MASH db
-    Wmdb = dClust.all_vs_all_MASH(Bdb,data_folder)
+    Wmdb = drep.d_cluster.all_vs_all_MASH(Bdb,data_folder)
 
     # Generate ANIn db
-    Wndb = dClust.compare_genomes(Bdb,comp_method,wd,**kwargs)
+    Wndb = drep.d_cluster.compare_genomes(Bdb,comp_method,wd,**kwargs)
 
     return Wmdb, Wndb
 
@@ -137,7 +137,7 @@ def evaluate_warnings(wd, **kwargs):
                     warnings.append(warning)
 
         # Find cases where you have a high self comparison
-        self_thresh = (1-dAnal.get_highest_self(Ndb, names))*100
+        self_thresh = (1-drep.d_analyze.get_highest_self(Ndb, names))*100
         if self_thresh <= threshold + warn_dist:
             warning = "CLUSTERING WARNING: Primary cluster {0} has a high self-comparison value".\
                             format(cluster)

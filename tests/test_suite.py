@@ -14,8 +14,9 @@ import logging
 
 import pandas as pd
 
-import drep as dm
+import drep
 import drep.d_filter
+
 from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
@@ -103,7 +104,7 @@ class VerifyDereplicateWf():
     def run(self):
         self.setUp()
         self.functional_test_1()
-        #self.tearDown()
+        self.tearDown()
 
     def functional_test_1(self):
         genomes  = self.genomes
@@ -1043,7 +1044,7 @@ class QuickTests():
         cmd = [mash_exe, 'dist', all_file, all_file, '>', MASH_folder
             + 'MASH_table.tsv']
         cmd = ' '.join(cmd)
-        dm.run_cmd(cmd, shell=True, logdir=log_folder)
+        drep.run_cmd(cmd, shell=True, logdir=log_folder)
 
         assert len(glob.glob(log_folder + '*')) == 3
 
@@ -1167,8 +1168,8 @@ if __name__ == '__main__':
     #filter_test()
     #choose_test()
     #analyze_test()
-    #dereplicate_wf_test()
+    dereplicate_wf_test()
     #taxonomy_test()
-    cluster_test()
+    #cluster_test()
 
     print("Everything seems to be working swimmingly!")
