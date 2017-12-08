@@ -1,11 +1,42 @@
 # dRep
-De-replication of microbial genomes.
 
-Manual and installation instructions available at ReadTheDocs:
-[link to documentation](http://drep.readthedocs.io/en/master/)
+dRep is a program for rapidly comparing large numbers of genomes. dRep can also "de-replicate" a genome set by identifying groups of highly similar genomes and choosing the best representative genome for each genome set.
 
-Publication available at ISMEJ:
-[link to publication](http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html)
+Manual, installation instructions, and API are at available at
+[ReadTheDocs](http://drep.readthedocs.io/en/master/)
 
-Open source pre-print available at bioRxiv:
-[link to pre-print](https://doi.org/10.1101/108142)
+Publication is available at
+[ISMEJ](http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html)
+
+Open source pre-print publication is available at
+[bioRxiv](https://doi.org/10.1101/108142)
+
+## Installation with pip
+```
+$ pip install drep
+```
+
+## Quick start
+
+### Genome comparison:
+```
+$ dRep compare_wf output_directory -g path/to/genomes/*.fasta
+```
+
+### Genome de-replication:
+```
+$ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
+```
+
+## Dependencies
+### Required
+* [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x) is used to repadily compare all genomes in a pair-wise manner
+* [MUMmer](http://mummer.sourceforge.net/) is used to perform more actuate comparisons between genomes which are shown to be similar with Mash
+
+### Recommended
+* [CheckM](http://ecogenomics.github.io/CheckM/) is used to determine the contamination and completeness of genomes (used during de-replication)
+* [gANI (aka ANIcalculator)](https://ani.jgi-psf.org/html/download.php?) is an optional alternative to MUMmer
+* [Prodigal](http://prodigal.ornl.gov/) is a dependency of both checkM and gANI
+
+### Accessory
+* [Centrifuge](https://omictools.com/centrifuge-tool) can be used to perform rough taxonomic assignment of bins
