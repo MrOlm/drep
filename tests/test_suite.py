@@ -50,8 +50,8 @@ def ensure_identicle(Swd, wd, skip = None):
         if d in skip:
             continue
 
-        db1 = Swd.get_db(d)
-        db2 =  wd.get_db(d)
+        db1 = Swd.get_db(d, return_none=False)
+        db2 =  wd.get_db(d, return_none=False)
 
         assert compare_dfs(db1, db2), "{0} is not the same!".format(d)
 
@@ -106,26 +106,9 @@ class VerifyDereplicateWf():
         self.functional_test_1()
         self.tearDown()
 
-    def functional_test_1(self):
-        genomes  = self.genomes
-        wd_loc   = self.wd_loc
-        s_wd_loc = self.s_wd_loc
-
-        sanity_check(WorkDirectory(s_wd_loc))
-
-        args = argumentParser.parse_args(['dereplicate_wf',wd_loc,'-g'] + genomes \
-            + ['--checkM_method', 'taxonomy_wf'])
-        controller = Controller()
-        controller.parseArguments(args)
-
-        # Verify
-        s_wd = WorkDirectory(s_wd_loc)
-        wd   = WorkDirectory(wd_loc)
-        ensure_identicle(s_wd, wd, skip=['Bdb', 'Mdb'])
-
-        # Perform sanity check to make sure solutions directiory isn't
-        # being overwritten
-        sanity_check(s_wd)
+        self.setUp()
+        self.functional_test_2()
+        self.tearDown()
 
     def setUp(self):
         self.genomes = load_test_genomes()
@@ -140,6 +123,48 @@ class VerifyDereplicateWf():
         #logging.shutdown()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
+
+    def functional_test_1(self):
+        genomes  = self.genomes
+        wd_loc   = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        sanity_check(WorkDirectory(s_wd_loc))
+
+        args = argumentParser.parse_args(['dereplicate',wd_loc,'-g'] + genomes \
+            + ['--checkM_method', 'taxonomy_wf'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        s_wd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+        ensure_identicle(s_wd, wd, skip=['Bdb', 'Mdb'])
+
+        # Perform sanity check to make sure solutions directiory isn't
+        # being overwritten
+        sanity_check(s_wd)
+
+    def functional_test_2(self):
+        genomes  = self.genomes
+        wd_loc   = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        sanity_check(WorkDirectory(s_wd_loc))
+
+        args = argumentParser.parse_args(['compare',wd_loc,'-g'] + genomes)
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        s_wd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+        ensure_identicle(s_wd, wd, skip=['Bdb', 'Chdb', 'Sdb', 'Wdb', 'Widb',\
+            'genomeInformation'])
+
+        # Perform sanity check to make sure solutions directiory isn't
+        # being overwritten
+        sanity_check(s_wd)
 
 class VerifyFilter():
     def __init__(self):
@@ -468,6 +493,7 @@ class VerifyCluster():
         # Confirm Cdb.csv is correct
         db1 = Swd.get_db('Cdb')
         db2 =  wd.get_db('Cdb')
+
         assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
 
     def functional_test_2(self):
@@ -1120,8 +1146,8 @@ def choose_test():
     verifyChoose= VerifyChoose()
     verifyChoose.run()
 
-def dereplicate_wf_test():
-    ''' test the dereplicate_wf operation '''
+def dereplicate_test():
+    ''' test the dereplicate operation '''
     verifyDereplicateWf = VerifyDereplicateWf()
     verifyDereplicateWf.run()
 
@@ -1141,7 +1167,7 @@ def taxonomy_test():
 
 @pytest.mark.long
 def test_long():
-    dereplicate_wf_test()
+    dereplicate_test()
     filter_test()
     cluster_test()
     choose_test()
@@ -1168,7 +1194,7 @@ if __name__ == '__main__':
     #filter_test()
     #choose_test()
     #analyze_test()
-    dereplicate_wf_test()
+    dereplicate_test()
     #taxonomy_test()
     #cluster_test()
 

@@ -41,11 +41,11 @@ def printHelp():
     print('''\
 
   Choose one of the operations below for more detailed help.
-  Example: dRep dereplicate_wf -h
+  Example: dRep dereplicate -h
 
   Workflows:
-    dereplicate_wf  -> Combine several of the operations below to de-replicate a genome list
-    compare_wf      -> Simply compare a list of genomes
+    dereplicate  -> Combine several of the operations below to de-replicate a genome list
+    compare      -> Simply compare a list of genomes
 
   Single operations:
     filter          -> Filter a genome list based on size, completeness, and/or contamination
@@ -313,12 +313,12 @@ def parse_args(args):
                         nargs='*')
 
     '''
-    ####### Arguments for dereplicate_wf ######
+    ####### Arguments for dereplicate ######
     '''
-    dereplicate_parser = subparsers.add_parser("dereplicate_wf",formatter_class=SmartFormatter,\
+    dereplicate_parser = subparsers.add_parser("dereplicate",formatter_class=SmartFormatter,\
                         parents=[parent_parser, filter_parent, cluster_parent, scoring_parent,\
                         tax_parent, evaluate_parent], add_help=False, epilog=\
-                        "Example: dRep dereplicate_wf output_dir/ -g /path/to/genomes/*.fasta")
+                        "Example: dRep dereplicate output_dir/ -g /path/to/genomes/*.fasta")
 
     # I/O
     Iflags = dereplicate_parser.add_argument_group('I/O PARAMETERS')
@@ -330,12 +330,12 @@ def parse_args(args):
                         --tab_table format.')
 
     '''
-    ####### Arguments for compare_wf ######
+    ####### Arguments for compare ######
     '''
-    dereplicate_parser = subparsers.add_parser("compare_wf",formatter_class=SmartFormatter,\
+    dereplicate_parser = subparsers.add_parser("compare",formatter_class=SmartFormatter,\
                         parents=[parent_parser, cluster_parent, tax_parent, evaluate_parent],\
                          add_help=False, epilog=\
-                        "Example: dRep compare_wf output_dir/ -g /path/to/genomes/*.fasta")
+                        "Example: dRep compare output_dir/ -g /path/to/genomes/*.fasta")
 
     # I/O
     Iflags = dereplicate_parser.add_argument_group('I/O PARAMETERS')

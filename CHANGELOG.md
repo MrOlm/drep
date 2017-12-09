@@ -8,6 +8,10 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ### Added (general)
 - API documentation
 
+### Changed (general)
+- dereplicate_wf to dereplicate
+- compare_wf to compare
+
 ### Added to d_filter
 - Complete API coverage
 - Ability to include genome information from other sources more easily

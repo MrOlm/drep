@@ -81,15 +81,15 @@ class Controller():
         drep.d_evaluate.d_evaluate_wrapper(kwargs['work_directory'],**kwargs)
         logging.debug("!!! Finished the evaluate operation !!!")
 
-    def dereplicate_wf_operation(self, **kwargs):
-        logging.debug("Starting the dereplicate_wf operation")
+    def dereplicate_operation(self, **kwargs):
+        logging.debug("Starting the dereplicate operation")
         drep.d_workflows.dereplicate_wrapper(kwargs['work_directory'],**kwargs)
-        logging.debug("Finished the dereplicate_wf operation!")
+        logging.debug("Finished the dereplicate operation!")
 
-    def compare_wf_operation(self, **kwargs):
-        logging.debug("Starting the compare_wf operation")
+    def compare_operation(self, **kwargs):
+        logging.debug("Starting the compare operation")
         drep.d_workflows.compare_wrapper(kwargs['work_directory'],**kwargs)
-        logging.debug("!!! Finished the compare_wf operation !!!")
+        logging.debug("!!! Finished the compare operation !!!")
 
         '''
     def makeload_logger(wd):
@@ -140,10 +140,10 @@ class Controller():
         logging.debug(str(args))
 
         # Call the appropriate workflow
-        if args.operation == "dereplicate_wf":
-            self.dereplicate_wf_operation(**vars(args))
-        if args.operation == "compare_wf":
-            self.compare_wf_operation(**vars(args))
+        if args.operation == "dereplicate":
+            self.dereplicate_operation(**vars(args))
+        if args.operation == "compare":
+            self.compare_operation(**vars(args))
 
         if args.operation == "filter":
             self.filter_operation(**vars(args))
