@@ -28,6 +28,11 @@ $ dRep compare_wf output_directory -g path/to/genomes/*.fasta
 $ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
 ```
 
+### Make sure dependencies are properly installed:
+```
+$ drep bonus output_directory --check_dependencies
+```
+
 ## Dependencies
 ### Required
 * [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x) is used to repadily compare all genomes in a pair-wise manner
