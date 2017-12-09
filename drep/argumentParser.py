@@ -44,8 +44,8 @@ def printHelp():
   Example: dRep dereplicate -h
 
   Workflows:
-    dereplicate  -> Combine several of the operations below to de-replicate a genome list
-    compare      -> Simply compare a list of genomes
+    dereplicate     -> Combine several of the operations below to de-replicate a genome list
+    compare         -> Simply compare a list of genomes
 
   Single operations:
     filter          -> Filter a genome list based on size, completeness, and/or contamination
