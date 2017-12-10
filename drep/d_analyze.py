@@ -16,6 +16,7 @@ import pandas as pd
 import seaborn as sns
 import scipy.cluster.hierarchy
 from sklearn import manifold
+import numpy as np
 
 from matplotlib import pyplot as plt
 import matplotlib.ticker as ticker
@@ -1008,7 +1009,10 @@ def gen_color_dictionary(names, name2cluster):
     Returns:
         dict: name -> color
     '''
-    cm = _rand_cmap(len(set(name2cluster.values()))+1,type='bright')
+    #cm = _rand_cmap(len(set(name2cluster.values()))+1,type='bright')
+    vals = np.linspace(0,1,len(set(name2cluster.values()))+1)
+    np.random.shuffle(vals)
+    cm = plt.cm.colors.ListedColormap(plt.cm.jet(vals))
 
     # 1. generate cluster to color
     cluster2color = {}
@@ -1016,7 +1020,6 @@ def gen_color_dictionary(names, name2cluster):
     NUM_COLORS = len(clusters)
     for cluster in clusters:
         try:
-
             cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
         except:
             cluster2color[cluster] = cm(1.*int(str(cluster).split('_')[1])/NUM_COLORS)

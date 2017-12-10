@@ -1193,8 +1193,8 @@ if __name__ == '__main__':
 
     #filter_test()
     #choose_test()
-    #analyze_test()
-    dereplicate_test()
+    analyze_test()
+    #dereplicate_test()
     #taxonomy_test()
     #cluster_test()
 
