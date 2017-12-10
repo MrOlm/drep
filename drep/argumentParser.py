@@ -44,17 +44,16 @@ def printHelp():
   Example: dRep dereplicate -h
 
   Workflows:
-    dereplicate     -> Combine several of the operations below to de-replicate a genome list
-    compare         -> Simply compare a list of genomes
+    compare         -> Perform rapid pair-wise comparison on a list of genomes
+    dereplicate     -> De-replicate a list of genomes
 
   Single operations:
     filter          -> Filter a genome list based on size, completeness, and/or contamination
     cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
-    adjust          -> Adjust genome clusters
     choose          -> Choose the best genome from each genome cluster
     evaluate        -> Evaluate genome de-replication
-    bonus           -> Other random operations (determine taxonomy / debug dependencies)
-    analyze         -> Make figures related to the above operations; test alternative clustering
+    bonus           -> Other random operations (determine taxonomy / check dependencies)
+    analyze         -> Make figures
     ''')
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=SmartFormatter)
@@ -122,9 +121,9 @@ def parse_args(args):
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
         genomes when doing secondary comparisons", default=0.1, type=float)
     Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \
-        + "(for ANIn only; gANI can only do larger method)\n"
+        + "(for ANIn/ANImf only; gANI can only do larger method)\n"
         + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
-        + "larger  = max((aligned length / genome 1), (aligned_length / genome2)",
+        + "larger  = max((aligned length / genome 1), (aligned_length / genome2)\n",
                         choices=['total', 'larger'], default='larger')
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage",default='average')
@@ -252,7 +251,7 @@ def parse_args(args):
     '''
 
     analyze_parser = subparsers.add_parser("analyze",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, adjust_parent], add_help=False)
+                    parents = [parent_parser], add_help=False)
 
     # Plotting
     Caflags = analyze_parser.add_argument_group('PLOTTING')
@@ -270,15 +269,15 @@ def parse_args(args):
     ####### Arguments for adjust operation ######
     '''
 
-    adjust_parser = subparsers.add_parser("adjust",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, adjust_parent], add_help=False)
-
-    # Remove clusters
-    Rflags = adjust_parser.add_argument_group('CLUSTER REMOVAL')
-    Rflags.add_argument("--rm_cluster",help='cluster(s) to be removed. Can be primary ' +\
-                        "or secondary cluster(s). Will delete cluster from " +\
-                        "Cdb, linkage (if primary cluster), Wdb, and ./dereplicated_genomes",
-                        nargs='*')
+    # adjust_parser = subparsers.add_parser("adjust",formatter_class=SmartFormatter,\
+    #                 parents = [parent_parser, adjust_parent], add_help=False)
+    #
+    # # Remove clusters
+    # Rflags = adjust_parser.add_argument_group('CLUSTER REMOVAL')
+    # Rflags.add_argument("--rm_cluster",help='cluster(s) to be removed. Can be primary ' +\
+    #                     "or secondary cluster(s). Will delete cluster from " +\
+    #                     "Cdb, linkage (if primary cluster), Wdb, and ./dereplicated_genomes",
+    #                     nargs='*')
 
     '''
     ####### Arguments for bonus operation ######

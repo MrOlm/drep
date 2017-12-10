@@ -11,6 +11,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ### Changed (general)
 - dereplicate_wf to dereplicate
 - compare_wf to compare
+- removed adjust (simply removed reference to it in the argument parser; easy to bring back if desired)
 
 ### Added to d_filter
 - Complete API coverage
