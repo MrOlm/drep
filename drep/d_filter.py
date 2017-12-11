@@ -1,4 +1,9 @@
 #!/usr/bin/env python3
+'''
+d_filter - a subset of drep
+
+Filter genomes based on genome length or quality. Also can run prodigal and checkM
+'''
 
 import logging
 import glob
@@ -7,112 +12,281 @@ import os
 import sys
 import shutil
 import multiprocessing
+from Bio import SeqIO
 
-
+import drep
 import drep.WorkDirectory
-import drep as dm
 import drep.d_cluster
 import drep.d_choose
+import drep.d_bonus
 
+def d_filter_wrapper(wd, **kwargs):
+    '''
+    Controller for the dRep filter operation
 
-'''
-##################################################################
-                A NOTE ABOUT PYTHON VERSIONS
+    Args:
+        wd (WorkDirectory): The current workDirectory
+        **kwargs: Command line arguments
 
+    Keyword Args:
+        genomes: genomes to filter in .fasta format
+        genomeInfo: location of .csv file with the columns: ["genome"(basename of .fasta file of that genome), "completeness"(0-100 value for completeness of the genome), "contamination"(0-100 value of the contamination of the genome)]
 
-For this to work you need to be able to call both python3 and python2.
-To set this up on pyenv, I ran:
+        processors: Threads to use with checkM / prodigal
+        overwrite: Overwrite existing data in the work folder
+        debug: If True, make extra output when running external scripts
 
-pyenv local anaconda2-4.1.0 anaconda3-4.1.0
-##################################################################
-'''
+        length: minimum genome length when filtering
+        completeness: minimum genome completeness when filtering
+        contamination: maximum genome contamination when filtering
 
-'''
-genomes         = list of genomes to filter
+        noQualityFiltering: Don't run checkM or do any quality-based filtering (not recommended)
+        checkM_method: Either lineage_wf (more accurate) or taxonomy_wf (faster)
 
-length          = minimum length requirement
-
-completeness     = minimum completeness measurement
-contamination   = maximum contamination of checkM
-
-Chdb = already done Chdb
-'''
-
-def d_filter_wrapper(wd,**kwargs):
-
+    Returns:
+        Nothing: stores Bdb.csv, Chdb.csv, and GenomeInfo.csv in the work directory
+    '''
     # Load the WorkDirectory.
     logging.debug("Loading work directory in filter")
     workDirectory = drep.WorkDirectory.WorkDirectory(wd)
     logging.debug(str(workDirectory))
+    wd = workDirectory
 
-    # Validate arguments; figure out what you're going to filter
+    # Validate arguments
     logging.debug("Validating filter arguments")
-    bdb, saveAs = validate_arguments(workDirectory, **kwargs)
+    _validate_arguments(workDirectory, **kwargs)
 
-    # Filter by size
-    logging.debug("Filtering genomes by size")
+    # Get the thing to filter - bdb (columns = genome, location)
+    if wd.hasDb('Bdb'):
+        logging.info("Will filter Bdb")
+        bdb = wd.get_db('Bdb')
+    else:
+        logging.info("Will filter the genome list")
+        bdb = drep.d_cluster.load_genomes(kwargs['genomes'])
+
+    # Calculate the length and N50 of all genomes
+    logging.info("Calculating genome info of genomes")
+    Gdb = calc_genome_info(bdb['location'].tolist())
+
+    # Filter by size if need be
     if kwargs.get('length', 0) > 1:
-        bdb = filter_bdb_length(bdb, kwargs['length'], verbose=True)
+        logging.debug("Filtering genomes by size")
+        bdb = _filter_bdb_length(bdb, Gdb, kwargs['length'])
 
-    # If not skipping CheckM...
-    if (not kwargs.get('skipCheckM',False)):
+    # Get comp/con information
+    if kwargs.get('noQualityFiltering', False):
+        logging.debug("Skipping all quality-based filtering")
 
-        # Run checkM
-        if kwargs.get('Chdb',None) != None:
-            logging.debug("Loading provided CheckM data...")
-            Chdb = kwargs.get('Chdb')
-            Chdb = pd.read_csv(Chdb)
-            validate_chdb(Chdb, bdb)
+    else:
+        Gdb = _get_run_genomeInfo(wd, bdb, **kwargs)
 
-        elif workDirectory.hasDb('Chdb'):
-            logging.debug("Loading CheckM data from work directory...")
-            Chdb = workDirectory.get_db('Chdb')
-            validate_chdb(Chdb, bdb)
+    # Filter
+    if not kwargs.get('noQualityFiltering', False):
+        logging.debug("Filtering genomes")
+        bdb = filter_bdb(bdb, Gdb, **kwargs)
 
-        else:
-            logging.debug("Running CheckM")
-            Chdb = run_checkM_wrapper(bdb, workDirectory, **kwargs)
+    # Save Bdb and genomeInfo
+    logging.debug("Storing resulting files")
 
-        # Filter bdb
-        bdb = filter_bdb(bdb, Chdb, **kwargs)
+    workDirectory.store_db(bdb, 'Bdb')
+    if not kwargs.get('noQualityFiltering', False):
+        workDirectory.store_db(Gdb, 'genomeInfo')
 
-    # Save Bdb or the new Wdb, depending on arguments above
-    loc = workDirectory.location + '/data_tables/'
-    if saveAs == 'Bdb':
-        bdb.to_csv(loc + 'Bdb.csv',index=False)
-        workDirectory.data_tables['Bdb'] = bdb
-
+def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
     '''
-    elif saveAs == 'Wdb':
-        bdb.to_csv(loc + 'Wdb.csv')
-        workDirectory.data_tables['Wdb'] = bdb
-    '''
+    Through kwargs and the wd, get genomeInfo
 
-def filter_bdb(bdb, chdb, **kwargs):
+    Args:
+        wd: workDirectory
+        bdb: current bdb
+        kwrags: keyword arguments
+
+    Keyword arguments:
+        no_run: if True, don't run any programs and return None if genomeInfo can't be made
+
+    Returns:
+        DataFrame: genomeInfo
+    '''
+    if kwargs.get('genomeInfo', None) != None:
+        logging.debug("Loading provided genome quality information")
+        try:
+            Idb = pd.read_csv(kwargs.get('genomeInfo'))
+            Tdb = _validate_genomeInfo(Idb, bdb)
+            Gdb = _add_lengthN50(Tdb, bdb)
+        except:
+            Idb = pd.read_table(kwargs.get('genomeInfo'))
+            Tdb = _validate_genomeInfo(Idb, bdb)
+            Gdb = _add_lengthN50(Tdb, bdb)
+
+    elif workDirectory.hasDb('genomeInfo'):
+        logging.debug("Loading genomeInfo.csv from work directory")
+        Idb = workDirectory.get_db('genomeInfo')
+        Tdb = _validate_genomeInfo(Idb, bdb)
+        Gdb = _add_lengthN50(Tdb, bdb)
+
+    elif workDirectory.hasDb('Chdb'):
+        logging.debug("Loading Chdb.csv from work directory")
+        Chdb = workDirectory.get_db('Chdb')
+        Idb = chdb_to_genomeInfo(Chdb)
+        Tdb = _validate_genomeInfo(Idb, bdb)
+        Gdb = _add_lengthN50(Tdb, bdb)
+
+    elif kwargs.get('no_run', False):
+        logging.debug("Making basic genomeInfo")
+        Gdb = calc_genome_info(bdb['location'].tolist())
+        del Gdb['location']
+
+    else:
+        logging.debug("Running CheckM")
+        Chdb = _run_checkM_wrapper(bdb, workDirectory, **kwargs)
+        Idb = chdb_to_genomeInfo(Chdb)
+        Tdb = _validate_genomeInfo(Idb, bdb)
+        Gdb = _add_lengthN50(Tdb, bdb)
+
+    return Gdb
+
+def _validate_genomeInfo(Idb, bdb):
+    '''
+    Validate genomeinfo file; merge in Gdb if needed
+
+    Args:
+        genomeInfo: DataFrame of genome info
+        bdb: DataFrame with genomes to confirm
+
+    Returns:
+        DataFrame: Validated genomeInfo
+    '''
+    # Make sure it has required columns
+    for r in ['completeness', 'contamination', 'genome']:
+        assert r in Idb.columns, "{0} missing from GenomeInfo".format(r)
+
+    # Make sure correct datatypes
+    for r in ['completeness', 'contamination', 'strain_heterogeneity']:
+        if r in Idb:
+            Idb[r] = Idb[r].astype(float)
+
+    # See if full path was used
+    for genome in list(bdb['genome'].unique()):
+        if genome not in Idb['genome'].tolist():
+            if os.path.basename(genome) in [os.path.basename(x) for x in Idb['genome']]:
+                logging.warning("Provided genome info has full genome path- correcting")
+                Idb['location'] = Idb['genome']
+                Idb['genome'] = [os.path.basename(x) for x in Idb['location']]
+                break
+
+    # Make sure it matchs up with bdb
+    for genome in list(bdb['genome'].unique()):
+        if genome not in Idb['genome'].tolist():
+            assert genome in Idb['genome'].tolist(), "{0} missing from GenomeInfo".format(genome)
+
+    # Throw warnings if you think this is weird
+    for r in ['completeness', 'contamination', 'strain_heterogeneity']:
+        if r in Idb:
+            if (Idb[r].max() <= 1) & (Idb[r].min() > 0):
+                logging.warning("GenomeInfo has no values over 1 for {0}".format(r) + \
+                    "- these should be 0-100, not 0-1!")
+
+    return Idb
+
+def _add_lengthN50(Idb, bdb):
+    '''
+    If Gdb doesn't have length or N50, add it
+    '''
+    # Figure out if you need to add them
+    add = False
+    for r in ['length', 'N50']:
+        if r not in Idb:
+            add = True
+
+    if not add:
+        return Idb
+
+    Gdb = calc_genome_info(bdb['location'].tolist())
+    for r in ['length', 'N50']:
+        if r not in Idb:
+            Idb[r] = Idb['genome'].map(Gdb.set_index('genome')[r].to_dict())
+
+    return Idb
+
+def calc_genome_info(genomes: list):
+    '''
+    Calculate the length and N50 of a list of genome locations
+
+    Args:
+        genomes: list of locations of genomes
+
+    Returns:
+        DataFrame: pandas dataframe with ["location", "length", "N50", "genome"]
+    '''
+    table = {}
+    for att in ['location', 'length', 'N50', 'genome']:
+        table[att] = []
+
+    for loc in genomes:
+        table['location'].append(loc)
+        table['genome'].append(os.path.basename(loc))
+        table['length'].append(calc_fasta_length(loc))
+        table['N50'].append(calc_n50(loc))
+
+    return pd.DataFrame(table)
+
+
+def filter_bdb(bdb, Gdb, **kwargs):
+    '''
+    Filter bdb based on Gdb
+
+    Args:
+        bdb: DataFrame with ["genome"]
+        Gdb: DataFrame with ["genome", "completeness", "contamination"]
+
+    Keyword args:
+        min_comp: Minimum genome completeness (%)
+        max_con: Maximum genome contamination (%)
+
+    Returns:
+        DataFrame: bdb filtered based on completeness and contamination
+    '''
+    # Get kwargs set up
     min_comp = kwargs.get('completeness',False)
     max_con = kwargs.get('contamination',False)
-    # min_strain_htr = kwargs.get('strain_htr',False)
+
+    # log the number of staring genomes
     start_genomes = list(bdb['genome'].unique())
     assert len(start_genomes) > 0
 
-    db = chdb.copy()
-
+    # Filter Gdb based on the required metrics
+    db = Gdb.copy()
     if min_comp != False:
-        db = db[(db['Completeness'] >= min_comp)]
+        db = db[(db['completeness'] >= min_comp)]
     if max_con != False:
-        db = db[db['Contamination'] <= max_con]
-    # if min_strain_htr != False:
-    #     db = db[db['Strain heterogeneity'] <= min_strain_htr]
-    keep_genomes = list(db['Bin Id'].unique())
+        db = db[db['contamination'] <= max_con]
+
+    # Make a list of the remaining genomes
+    keep_genomes = list(db['genome'].unique())
+
+    # filter bdb according to these genomes
     bdb = bdb[bdb['genome'].isin(keep_genomes)]
 
-    logging.info("{0:.2f}% of genomes passed checkM filtering".format((len(keep_genomes)/len(start_genomes))*100))
-
+    logging.info("{0:.2f}% of genomes passed checkM filtering".format(\
+            (len(keep_genomes)/len(start_genomes))*100))
     return bdb
 
-def filter_bdb_length(bdb, min_length, verbose=False):
+def _filter_bdb_length(bdb, Gdb, min_length):
+    '''
+    Filter bdb (['genome', 'location']) based on the minimum length in Gdb
+    (['location', 'length', 'N50'])
+
+    Args:
+        bdb: DataFrame
+        Gdb: DataFrame
+        min_length: length to filter on
+
+    Returns:
+        DataFrame: bdb filtered by length
+    '''
+
     start = len(bdb['location'].unique())
-    bdb['length'] =  bdb['location'].map(dm.fasta_length)
+    bdb['length'] =  bdb['location'].map(Gdb.set_index('location')['length'].to_dict())
     x = bdb[bdb['length'] >= min_length]
     end = len(x['location'].unique())
 
@@ -121,6 +295,13 @@ def filter_bdb_length(bdb, min_length, verbose=False):
     return x
 
 def validate_chdb(Chdb, bdb):
+    '''
+    Make sure all genomes in bdb are in Chdb
+
+    Args:
+        Chdb: dataframe of checkM information
+        bdb: dataframe with ['genome']
+    '''
     quit = False
     b_genomes = bdb['genome'].tolist()
     for genome in b_genomes:
@@ -132,23 +313,24 @@ def validate_chdb(Chdb, bdb):
         sys.exit()
     return
 
-def validate_arguments(wd,**kwargs):
+def _validate_arguments(wd,**kwargs):
     '''
-    Make sure you either have a genome list, Bdb, or Wdb to filter
+    Validate arguments to the filter wrapper
 
-    If filtering Bdb or a genome list, crash if Cdb exists
+    1) Make sure you either have a genome list or Bdb to filter. Bdb is the rarer
+    case, but can be done. Throw warnings if needed.
 
-    Make/get bdb- this is a dataframe LIKE Bdb, except it can be made by a genomelist,
-    by loading Bdb, or made from Wdb. This is what we'll filter, and then at the
-    end use it to either make a new Bdb or filter the Wdb
+    Args:
+        wd (WorkDirectory): The current workDirectory
+        **kwargs: Command line arguments
+
+    Returns:
+        Nothing
     '''
 
-    # Figure out what you're going to filter, and return that db
+    # Figure out what you're going to filter
     if wd.hasDb('Wdb'):
         logging.warning("NOTE: Wdb already exists! This will not be filtered! Be sure you know what you're doing")
-        #sys.exit()
-        #return bdb_from_wdb(wd.get_db('Wdb')), 'Wdb'
-
     if wd.hasDb('Bdb'):
         if kwargs.get('genomes',None) != None:
             logging.error("Both Bdb and a genome list are found- either don't include "\
@@ -156,50 +338,48 @@ def validate_arguments(wd,**kwargs):
             sys.exit()
         if wd.hasDb('Cdb'):
             logging.warning("NOTE: Clustering already exists! This will not be filtered! Be sure you know what you're doing")
-            #sys.exit()
-        logging.info("Will filter Bdb")
-        return wd.get_db('Bdb'), 'Bdb'
-
     else:
         if kwargs.get('genomes',None) == None:
             logging.error("I don't have anything to filter! Give me a genome list")
             sys.exit()
-        logging.info("Will filter the genome list")
-        bdb = drep.d_cluster.load_genomes(kwargs['genomes'])
-        return bdb, 'Bdb'
 
-def run_checkM_wrapper(bdb, workDirectory, **kwargs):
-    # Make the folder to house the checkM info
-    checkM_loc = workDirectory.location + '/data/checkM/'
-    dm.make_dir(checkM_loc,dry=kwargs.get('dry',False),\
-                overwrite=kwargs.get('overwrite',False))
+    return
 
+def _run_checkM_wrapper(bdb, workDirectory, **kwargs):
+    '''
+    Controller for running checkM through a workDirectory
+    '''
     # Run prodigal
-    prod_folder = workDirectory.location + '/data/prodigal/'
-    if not os.path.exists(prod_folder):
-        os.makedirs(prod_folder)
+    prod_folder = workDirectory.get_dir('prodigal')
     logging.info("Running prodigal")
-    run_prodigal(bdb, prod_folder, wd=workDirectory, **kwargs)
+    run_prodigal(bdb['location'].tolist(), prod_folder, wd=workDirectory, **kwargs)
+
+    # Make the folder to house the checkM info
+    checkM_loc = workDirectory.get_dir('checkM')
 
     # Run checkM
+    logging.info("Running checkM")
     checkM_outfolder = checkM_loc + 'checkM_outdir/'
     Chdb = run_checkM(prod_folder, checkM_outfolder, wd=workDirectory, **kwargs)
     validate_chdb(Chdb, bdb)
 
     # Fix genome size and N50 of Chdb
-    Chdb = fix_chdb(Chdb,bdb)
+    Chdb = _fix_chdb(Chdb,bdb)
 
     # Save checkM run
     workDirectory.store_db(Chdb,'Chdb')
 
     return Chdb
 
-def fix_chdb(Chdb, Bdb):
+def _fix_chdb(Chdb, Bdb):
+    '''
+    Add corrent genome length and N50 info when running checkM with proteins
+    '''
     g2s = {}
     g2n = {}
     for genome in Chdb['Bin Id'].unique():
         loc = Bdb['location'][Bdb['genome'] == genome].tolist()[0]
-        g2s[genome] = dm.fasta_length(loc)
+        g2s[genome] = calc_fasta_length(loc)
         g2n[genome] = calc_n50(loc)
     Chdb['Genome size (bp)'] = Chdb['Bin Id'].map(g2s)
     Chdb['N50 (scaffolds)'] = Chdb['Bin Id'].map(g2n)
@@ -207,8 +387,15 @@ def fix_chdb(Chdb, Bdb):
     return Chdb
 
 def calc_n50(loc):
-    from Bio import SeqIO
+    '''
+    Calculate the N50 of a .fasta file
 
+    Args:
+        fasta_loc: location of .fasta file.
+
+    Returns:
+        int: N50 of .fasta file.
+    '''
     lengths = []
     for seq_record in SeqIO.parse(loc, "fasta"):
         lengths.append(len(seq_record))
@@ -220,16 +407,30 @@ def calc_n50(loc):
         if tally > half:
             return l
 
-def run_prodigal(bdb, out_dir, **kwargs):
-    t = kwargs.get('processors','6')
-    loc = shutil.which('prodigal')
-    if loc == None:
-        logging.error('Cannot locate the program {0}- make sure its in the system path'\
-            .format('prodigal'))
-        sys.exit()
+def run_prodigal(genome_list, out_dir, **kwargs):
+    '''
+    Run prodigal on a set of genomes, store the output in the out_dir
 
+    Args:
+        genome_list: list of genomes to run prodigal on
+        out_dir: output directory to store prodigal output
+
+    Keyword Args:
+        processors: number of processors to multithread with
+        exe_loc: location of prodigal excutible (will try and find with shutil if not provided)
+        debug: log all of the commands
+        wd: if you want to log commands, you also need the wd
+
+    '''
+    # Get set up
+    t = kwargs.get('processors','6')
+    loc = kwargs.get('exe_loc', None)
+    if loc == None:
+        loc = drep.get_exe('prodigal')
+
+    # Make list of commands
     cmds = []
-    for genome in bdb['location'].unique():
+    for genome in genome_list:
         fna = "{0}{1}{2}".format(out_dir,os.path.basename(genome),'.fna')
         faa = "{0}{1}{2}".format(out_dir,os.path.basename(genome),'.faa')
         if os.path.exists(fna) and os.path.exists(faa):
@@ -237,20 +438,36 @@ def run_prodigal(bdb, out_dir, **kwargs):
         else:
             cmds.append(['prodigal','-i',genome,'-d',fna,'-a',faa,'-m','-p','meta'])
 
+    # Run commands
     if len(cmds) > 0:
-        if 'wd' in kwargs:
+        if ('wd' in kwargs) and (kwargs.get('debug', False) == True):
             logdir = kwargs.get('wd').get_dir('cmd_logs')
         else:
             logdir = False
-        dm.thread_cmds(cmds, shell=False, logdir=logdir, t=int(t))
+        drep.thread_cmds(cmds, shell=False, logdir=logdir, t=int(t))
 
     else:
         logging.info("Past prodigal runs found- will not re-run")
 
 def run_checkM(genome_folder,checkm_outf,**kwargs):
-    import drep.d_bonus as dBonus
-    t = str(kwargs.get('processors','6'))
-    loc, works = dBonus.find_program('checkm')
+    '''
+    Run checkM
+
+    WARNING- this will result in wrong genome lenth and genome N50 estimate, due to
+    it being run on prodigal output
+
+    Args:
+        genome_folder: location of folder to run checkM on - should be full of files ending in .faa (result of prodigal)
+        checkm_outf: location of folder to store checkM output
+
+    Keyword args:
+        processors: number of threads
+        checkm_method: either lineage_wf or taxonomy_wf
+        debug: log all of the commands
+        wd: if you want to log commands, you also need the wd
+    '''
+    # Find checkm exe
+    loc, works = drep.d_bonus.find_program('checkm')
     if loc == None:
         logging.error('Cannot locate the program {0}- make sure its in the system path'\
             .format('checkm'))
@@ -261,6 +478,8 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
         sys.exit()
     check_exe = loc
 
+    # Get set up
+    t = str(kwargs.get('processors','6'))
     checkm_method = kwargs.get('checkM_method','lineage_wf')
 
     # Run checkM initial
@@ -274,11 +493,11 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
 
     logging.debug("Running CheckM with command: {0}".format(cmd))
 
-    if 'wd' in kwargs:
+    if ('wd' in kwargs) & (kwargs.get('debug', False) == True):
         logdir = kwargs.get('wd').get_dir('cmd_logs')
     else:
         logdir = False
-    dm.run_cmd(cmd, shell=False, logdir=logdir)
+    drep.run_cmd(cmd, shell=False, logdir=logdir)
 
     # Run checkM again for the better table
     if checkm_method == 'taxonomy_wf':
@@ -290,42 +509,51 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
             str(t), '--tab_table','-o', '2']
     logging.debug("Running CheckM with command: {0}".format(cmd))
 
-    if 'wd' in kwargs:
+    if ('wd' in kwargs) & (kwargs.get('debug', False) == True):
         logdir = kwargs.get('wd').get_dir('cmd_logs')
     else:
         logdir = False
-    dm.run_cmd(cmd, shell=False, logdir=logdir)
+    drep.run_cmd(cmd, shell=False, logdir=logdir)
 
-    # Load table and return it
+    # Load table
     try:
         chdb = pd.read_table(desired_file,sep='\t')
     except:
         logging.error("!!! checkM failed !!!\nIf using pyenv, make sure both python2 and " +\
             "python3 are available (for example: pyenv global 3.5.1 2.7.9)")
         sys.exit()
+
+    # Return table
     return chdb
 
-def copy_bdb_loc(bdb,loc,extension=''):
-    for genome in bdb['location'].unique():
-        shutil.copy2(genome, "{0}{1}{2}".format(loc,os.path.basename(genome),extension))
+def calc_fasta_length(fasta_loc):
+    '''
+    Calculate the length of the .fasta file and retun length
 
-def test_filtering():
-    # Get test genomes
-	test_genomes = glob.glob(str(os.getcwd()) + '/../test/genomes/*')
-	names = sorted([os.path.basename(g) for g in test_genomes])
-	assert names == ['Enterococcus_casseliflavus_EC20.fasta',
-	                'Enterococcus_faecalis_T2.fna',
-	                'Enterococcus_faecalis_TX0104.fa',
-	                'Enterococcus_faecalis_YI6-1.fna',
-	                'Escherichia_coli_Sakai.fna']
+    Args:
+        fasta_loc: location of .fasta file
 
-	# Set test directory
-	test_directory = str(os.getcwd()) + '/../test/test_backend/'
-	dm.make_dir(test_directory,overwrite=True)
+    Returns:
+        int: total length of all .fasta files
+    '''
+    total = 0
+    for seq_record in SeqIO.parse(fasta_loc, "fasta"):
+        total += len(seq_record)
+    return total
 
-	# Perform functional test
-	d_filter_wrapper(test_directory,genomes=test_genomes,length= 100000,\
-	                completeness = 0.75, overwrite=True)
+def chdb_to_genomeInfo(chdb):
+    '''
+    Convert the output of checkM (chdb) into genomeInfo
 
-if __name__ == '__main__':
-	test_filtering()
+    Args:
+        chdb: dataframe of checkM
+
+    Returns:
+        DataFrame: genomeInfo
+    '''
+    Gdb = chdb.copy()
+    Gdb.rename(columns={'Bin Id': 'genome', 'Completeness': 'completeness',\
+        'Contamination':'contamination', \
+        'Strain heterogeneity':'strain_heterogeneity'}, inplace=True)
+    Gdb = Gdb[['genome', 'completeness', 'contamination', 'strain_heterogeneity']]
+    return Gdb

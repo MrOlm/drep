@@ -4,28 +4,58 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## Un-merged
+### Added (general)
+- API documentation
+
+### Changed (general)
+- dereplicate_wf to dereplicate
+- compare_wf to compare
+- removed adjust (simply removed reference to it in the argument parser; easy to bring back if desired)
+
+### Added to d_filter
+- Complete API coverage
+- Ability to include genome information from other sources more easily
+- More tests
+
+### Added to d_cluster
+- argument parsing broken up into more groups
+- more tests
+- complete API coverage
+- ANImf, gANI, and ANIn now make folders in the output, so that it doesnt have too
+many files in one dir
+- mash paste now goes in chunks, so that it will work if you have huge numbers of genomes (getting around OSError: [Errno 7] Argument list too long)
+
+### Added to d_choose
+- full API coverage
+- ability to make / generate genomeInfo better
+
+### Added to d_analyze
+- full API coverage
+- deleted the whole re-cluster thing
+
 ## [1.4.3] - 2017-10-24
-## fixed
+### fixed
 - fixed centrifuge call (shell=False)
 
 ## [1.4.2] - 2017-10-24
-## Changed
+### Changed
 - made ANImf the default comparison algorithm
 - added a little documentation on what ANImf is
 
-## fixed
+### fixed
 - made ANImf not rerun if .delta.filtered is present
 - made bonus call centrifuge using the new calling method
 - made the new calling method actually take into account the number of threads
 - updated tests to account for default ANImf
 
 ## [1.4.1] - 2017-10-23
-## Fixed
+### Fixed
 - with gANI, fixed a minor bug with the naming of self-comparisons in Ndb.csv
 - with ANImf, fixed a major bug that was preventing it from working right at all
 
 ## [1.4.0] - 2017-10-20
-## Added
+### Added
 - added ANImf comparison method
 
 ## [1.3.2] - 2017-10-20

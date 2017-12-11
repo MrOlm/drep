@@ -5,19 +5,18 @@ The functionality of dRep is broken up into modules. The modules can be run sepa
 
  $ dRep -h
 
-                ...::: dRep v0.5.0 :::...
+                ...::: dRep v2.0.0 :::...
 
   Choose one of the operations below for more detailed help.
-  Example: dRep dereplicate_wf -h
+  Example: dRep dereplicate -h
 
   Workflows:
-    dereplicate_wf  -> Combine several of the operations below to de-replicate a genome list
-    compare_wf      -> Simply compare a list of genomes
+    dereplicate  -> Combine several of the operations below to de-replicate a genome list
+    compare      -> Simply compare a list of genomes
 
   Single operations:
     filter          -> Filter a genome list based on size, completeness, and/or contamination
     cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
-    adjust          -> Adjust genome clusters
     choose          -> Choose the best genome from each genome cluster
     evaluate        -> Evaluate genome de-replication
     bonus           -> Other random operations (currently just determine taxonomy)
@@ -30,7 +29,7 @@ De-replication is the process of identifying groups of genomes that are the "sam
 
 To de-replicate a set of genomes, run the following command::
 
- $ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
+ $ dRep dereplicate outout_directory -g path/to/genomes/*.fasta
 
 This will automatically de-replicate the genome list and produce lots of information about it.
 

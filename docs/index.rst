@@ -6,7 +6,7 @@
 dRep
 ====
 
-de-replication of microbial genomes
+Rapid and accurate comparison and de-replication of microbial genomes
 -----------------------------------
 
 The publication is available at ISME_ and an open-source pre-print is available on bioRxiv_.
@@ -27,15 +27,16 @@ Contents
 --------
 
 .. toctree::
-   :maxdepth: 10
+   :maxdepth: 2
 
    overview
    installation
    quick_start
    example_output
-   module_descriptions
    choosing_parameters
+   module_descriptions
    advanced_use
+   source/drep
 
 .. _bioRxiv: https://doi.org/10.1101/108142
 .. _ISME: http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html

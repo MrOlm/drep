@@ -1,4 +1,34 @@
 #!/usr/bin/env python3
+"""
+This module provides access to the workDirectory
+
+The directory layout::
+
+    workDirectory
+    ./data
+    ...../MASH_files/
+    ...../ANIn_files/
+    ...../gANI_files/
+    ...../Clustering_files/
+    ...../checkM/
+    ........./genomes/
+    ........./checkM_outdir/
+    ...../prodigal/
+    ./figures
+    ./data_tables
+    ...../Bdb.csv  # Sequence locations and filenames
+    ...../Mdb.csv  # Raw results of MASH comparisons
+    ...../Ndb.csv  # Raw results of ANIn comparisons
+    ...../Cdb.csv  # Genomes and cluster designations
+    ...../Chdb.csv # CheckM results for Bdb
+    ...../Sdb.csv  # Scoring information
+    ...../Wdb.csv  # Winning genomes
+    ./dereplicated_genomes
+    ./log
+    ...../logger.log
+    ...../cluster_arguments.json
+
+"""
 
 import os
 import logging
@@ -6,60 +36,23 @@ import pandas as pd
 import pickle
 import json
 import sys
+import shutil
+import glob
 
-"""
-This is the file that maintains the integrity of the work directory
-
-The directory layout
-########################################
-workDirectory
-./data
-...../MASH_files/
-...../ANIn_files/
-...../gANI_files/
-...../Clustering_files/
-...../checkM/
-........./genomes/
-........./checkM_outdir/
-...../prodigal/
-./figures
-./data_tables
-...../Bdb.csv  # Sequence locations and filenames
-...../Mdb.csv  # Raw results of MASH comparisons
-...../Ndb.csv  # Raw results of ANIn comparisons
-...../Cdb.csv  # Genomes and cluster designations
-...../Chdb.csv # CheckM results for Bdb
-...../Sdb.csv  # Scoring information
-...../Wdb.csv  # Winning genomes
-./dereplicated_genomes
-./log
-...../logger.log
-...../cluster_arguments.json
-
-
-The data tables
-########################################
-Bdb = sequence names and sequence locations
-
-"""
+import drep
 
 class WorkDirectory(object):
+    '''
+    Object to interact with the workDirectory
 
+    Args:
+        location (str): location to make the workDirectory
+
+
+    '''
     firstLevels = ['data','figures','data_tables','dereplicated_genomes','log']
 
-    '''
-    # Make this is Singleton object
-    def __new__(cls, loc):
-        if not hasattr(cls,'instance'):
-            cls.instance = super(WorkDirectory, cls).__new__(cls)
-            cls.instance.__initialized = False
-        return cls.instance
-    '''
-
     def __init__(self, location):
-        #if(self.__initialized): return
-        #self.__initialized = True
-
         self.location = os.path.abspath(location)
         self.data_tables = {}
         self.clusters = {}
@@ -78,6 +71,9 @@ class WorkDirectory(object):
         return string
 
     def make_fileStructure(self):
+        '''
+        Make the top level file structure
+        '''
         location = self.location
 
         if not os.path.exists(location):
@@ -89,10 +85,11 @@ class WorkDirectory(object):
                 os.makedirs(loc)
 
     def load_cached(self):
+        '''
+        The wrapper to load everything it has into attributes
+        '''
         # Import data_tables
-        loc = self.location + '/data_tables/'
-        if not os.path.exists(loc):
-            os.makedirs(loc)
+        loc = self.get_dir('data_tables')
         self.import_data_tables(loc)
 
         # Import pickles
@@ -107,20 +104,20 @@ class WorkDirectory(object):
             os.makedirs(loc)
         self.import_arguments(loc)
 
-    def import_data_tables(self,loc):
-        tables = [os.path.join(loc, t) for t in os.listdir(loc) if os.path.isfile(os.path.join(loc, t))]
+    def import_data_tables(self, loc):
+        '''
+        Given the location of the datatables, load them
+        '''
+        tables = [os.path.join(loc, t) for t in os.listdir(loc) if \
+                os.path.isfile(os.path.join(loc, t))]
         for t in tables:
             assert t.endswith('.csv'), "{0} is incorrectly in the data_tables folder".format(t)
             self.data_tables[os.path.basename(t).replace('.csv','')] = pd.read_csv(t)
 
-    '''
-    def import_pickles(self,loc):
-        pickles = [os.path.join(loc, t) for t in os.listdir(loc) if os.path.isfile(os.path.join(loc, t))]
-        for p in pickles:
-            assert p.endswith('.pickle'), "{0} is incorrectly in the data/Clustering_files folder".format(t)
-            self.pickles[os.path.basename(p).replace('.pickle','')] = pickle.load(open(p,'rb'))
-    '''
     def import_clusters(self,loc):
+        '''
+        Given the location of the cluster files, load them
+        '''
         pickles = [os.path.join(loc, t) for t in os.listdir(loc) if os.path.isfile(os.path.join(loc, t))]
         for p in pickles:
             assert p.endswith('.pickle'), "{0} is incorrectly in the data/Clustering_files folder".format(t)
@@ -135,8 +132,10 @@ class WorkDirectory(object):
             except:
                 print("{0} is an imporperly made pickle- skipping import".format(p))
 
-
     def import_arguments(self,loc):
+        '''
+        Given the location of the log directory, load it
+        '''
         args = [os.path.join(loc, t) for t in os.listdir(loc) if os.path.isfile(os.path.join(loc, t))]
         for j in args:
             if j.endswith('_arguments.json'):
@@ -145,10 +144,21 @@ class WorkDirectory(object):
                 self.arguments[os.path.basename(j).replace('_arguments.json','')] = data
 
     def hasDb(self,db):
+        '''
+        If db is in the data_tables, return True
+        '''
         return (db in self.data_tables)
 
     def get_cluster(self, name):
+        '''
+        Get the cluster passed in
 
+        Args:
+            name: name of the cluster
+
+        Returns:
+            cluster
+        '''
         # If the whole cluster name is passed in
         if name in self.clusters:
             return self.clusters[name]
@@ -162,26 +172,25 @@ class WorkDirectory(object):
         print("The clusters I have are: {0}".format(list(self.clusters.keys())))
         print("Quitting")
         sys.exit()
-    '''
-    def get_ANIn_linkages(self):
-        to_return = {}
-        for pickle in self.pickles:
-            if pickle.startswith('ANIn_linkage_cluster_'):
-                to_return[pickle.replace('ANIn_linkage_cluster_','')] = self.pickles[pickle]
-        return to_return
 
-    def get_gANI_linkages(self):
-        to_return = {}
-        for pickle in self.pickles:
-            if pickle.startswith('gANI_linkage_cluster_'):
-                to_return[pickle.replace('gANI_linkage_cluster_','')] = self.pickles[pickle]
-        return to_return
-    '''
     def get_primary_linkage(self):
+        '''
+        Get the primary linkage cluster
+        '''
         return self.clusters['primary_linkage']
 
     def store_db(self,db,name,overwrite=False):
-        loc = self.location + '/data_tables/'
+        '''
+        Store a dataframe in the workDirectory
+
+        Will make a physical copy in the datatables folder
+
+        Args:
+            db: pandas dataframe to store
+            name: name to store it under (will add .csv automatically)
+            overwrite: if True, overwrite if DataFrame with same name already exists
+        '''
+        loc = self.get_dir('data_tables')
 
         if os.path.isfile(loc + name + '.csv'):
             assert overwrite == True, "data_table {0} already exists".format(name)
@@ -190,6 +199,13 @@ class WorkDirectory(object):
         self.data_tables[name] = db
 
     def get_db(self, name, return_none=True):
+        '''
+        Get database from self.data_tables
+
+        Args:
+            name: name of dataframe
+            return_none: if True will return None if database not found; otherwise assert False
+        '''
         if name in self.data_tables:
             return self.data_tables[name]
         else:
@@ -200,7 +216,18 @@ class WorkDirectory(object):
                                 name, self.location)
 
     def get_dir(self, dir):
+        '''
+        Get the location of one of the named directory types
+
+        Args:
+            dir: Name of directory to find
+
+        Returns:
+            string: Location of requested directory
+        '''
         d = None
+        if dir == 'data_tables':
+            d = self.location + '/data_tables/'
         if dir == 'prodigal':
             d = self.location + '/data/prodigal/'
         elif dir == 'centrifuge':
@@ -213,6 +240,19 @@ class WorkDirectory(object):
             d = self.location + '/log/cmd_logs/'
         elif dir == 'MASH':
             d = self.location + '/data/MASH_files/'
+        elif dir == 'checkM':
+            d = self.location + '/data/checkM/'
+        elif dir == 'data':
+            d = self.location + '/data/'
+        elif dir == 'clustering':
+            d = self.location + '/data/Clustering_files/'
+        elif dir == 'dereplicated_genomes':
+            d = self.location + '/dereplicated_genomes/'
+        elif dir == 'figures':
+            d = self.location + '/figures/'
+
+        if d == None:
+            assert False, "{0} is not a directory I know about".format(dir)
 
         if not os.path.exists(d):
             os.makedirs(d)
@@ -220,5 +260,75 @@ class WorkDirectory(object):
         return d
 
     def get_loc(self, what):
+        '''
+        Get the location of Things
+
+        Args:
+            what: string of what to get the location of
+
+        Returns:
+            string: location of what
+        '''
         if what == 'log':
             return self.location + '/log/logger.log'
+
+    def store_special(self, name, thing):
+        '''
+        Store special items in the work directory
+
+        Args:
+            name: what to store
+            thing: actual thing to store
+        '''
+        if name == 'primary_linkage':
+            assert len(thing) == 3
+            store_loc = self.get_dir('clustering')
+            logging.debug('Saving primary_linkage pickle to {0}'.format(store_loc))
+            with open(store_loc + 'primary_linkage.pickle', 'wb') as handle:
+                pickle.dump(thing[0], handle)
+                pickle.dump(thing[1], handle)
+                pickle.dump(thing[2], handle)
+
+        elif name == 'secondary_linkages':
+            assert type(thing) == dict
+            store_loc = self.get_dir('clustering')
+            for name, cluster_ret in thing.items():
+                #print(name)
+                if len(cluster_ret) == 0:
+                    continue
+                assert len(cluster_ret) == 3
+
+                pickle_name = "secondary_linkage_cluster_{0}.pickle".format(name)
+                logging.debug('Saving secondary_linkage pickle {1} to {0}'.format(pickle_name,\
+                                                                    store_loc))
+                with open(store_loc + pickle_name, 'wb') as handle:
+                    pickle.dump(cluster_ret[0], handle)
+                    pickle.dump(cluster_ret[1],handle)
+                    pickle.dump(cluster_ret[2],handle)
+
+        elif name == 'dereplicated_genomes':
+            output_folder = self.get_dir('dereplicated_genomes')
+            if os.path.exists(output_folder):
+                #logging.debug("{0} already exists: removing and remaking".format(output_folder))
+                shutil.rmtree(output_folder)
+            os.makedirs(output_folder)
+
+            for loc in thing:
+                genome = os.path.basename(loc)
+                shutil.copy2(loc, "{0}{1}".format(output_folder,genome))
+            #logging.info("Done! Dereplicated genomes saved at {0}".format(output_folder))
+
+        elif name == 'cluster_log':
+            cluster_log = os.path.join(self.get_dir('log') + 'cluster_arguments.json')
+            with open(cluster_log, 'w') as fp:
+                json.dump(thing, fp)
+            fp.close()
+
+    def _wipe_secondary_clusters(self):
+        '''
+        Wipe any and all secondary clusters present in the workDirectory
+        '''
+        # Clear out clustering folder
+        c_folder = self.get_dir('clustering')
+        for fn in glob.glob(c_folder + 'secondary_linkage_cluster*'):
+            os.remove(fn)

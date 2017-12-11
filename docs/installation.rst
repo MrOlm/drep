@@ -23,7 +23,7 @@ Pip is a great package with many options to change the installation parameters i
 Dependencies
 ------------
 
-dRep requires many other great programs to run. Not all dependencies are needed for all operations
+dRep requires other programs to run. Not all dependencies are needed for all operations
 
 To check which dependencies are installed on your system and accessible by dRep, run ::
 
@@ -46,14 +46,10 @@ To check which dependencies are installed on your system and accessible by dRep,
 
 Programs need to be installed to the system path, so that you can call them from anywhere on your computer.
 
-Testing
--------
+.. note::
 
-To make sure everything is installed correctly you can run the dRep test suite::
+  If you already have information on your genome's completeness and contamination, you can input that to dRep without the need to install checkM (see :doc:`advanced_use`))
 
- $ cd drep/tests
-
- $ python test_suite.py
 
 pyenv
 -----

@@ -8,8 +8,9 @@ import shutil
 import subprocess
 import time
 
-import drep
 import drep.WorkDirectory
+#import drep as dm
+import drep as dm
 import drep.d_filter
 
 def d_bonus_wrapper(wd,**kwargs):
@@ -30,7 +31,7 @@ def run_taxonomy(wd, **kwargs):
     Bdb, prod_dir, cent_dir = validate_arguments(wd, **kwargs)
 
     # Run prodigal
-    drep.d_filter.run_prodigal(Bdb, prod_dir, **kwargs)
+    d_filter.run_prodigal(Bdb, prod_dir, **kwargs)
 
     # Run centrifuge
     run_centrifuge(Bdb, prod_dir, cent_dir, wd=wd, **kwargs)
@@ -141,7 +142,7 @@ def run_centrifuge(Bdb, prod_dir, cent_dir, **kwargs):
             logdir = kwargs.get('wd').get_dir('cmd_logs')
         else:
             logdir = False
-        drep.thread_cmds(cmds, shell=False, logdir=logdir, t=int(t))
+        dm.thread_cmds(cmds, shell=False, logdir=logdir, t=int(t))
         #drep.d_cluster.thread_mash_cmds_status(cmds,t=int(t))
 
     else:

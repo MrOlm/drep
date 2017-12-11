@@ -20,12 +20,17 @@ $ pip install drep
 
 ### Genome comparison:
 ```
-$ dRep compare_wf output_directory -g path/to/genomes/*.fasta
+$ dRep compare output_directory -g path/to/genomes/*.fasta
 ```
 
 ### Genome de-replication:
 ```
-$ dRep dereplicate_wf outout_directory -g path/to/genomes/*.fasta
+$ dRep dereplicate outout_directory -g path/to/genomes/*.fasta
+```
+
+### Make sure dependencies are properly installed:
+```
+$ drep bonus output_directory --check_dependencies
 ```
 
 ## Dependencies

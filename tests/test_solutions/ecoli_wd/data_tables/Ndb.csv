@@ -1,4 +1,4 @@
-alignment_coverage,alignment_length,ani,querry,querry_coverage,querry_length,ref_coverage,reference,reference_length,similarity_errors,MASH_cluster
+alignment_coverage,alignment_length,ani,querry,querry_coverage,querry_length,ref_coverage,reference,reference_length,similarity_errors,primary_cluster
 0.9999997082230903,3427275,1.0,Enterococcus_casseliflavus_EC20.fasta,0.9999997082230903,3427276,0.9999997082230903,Enterococcus_casseliflavus_EC20.fasta,3427276,0,2
 0.9819396507482762,3204889,1.0,Enterococcus_faecalis_T2.fna,0.9819396507482762,3263835,0.9819396507482762,Enterococcus_faecalis_T2.fna,3263835,0,1
 0.8589975916195203,2711407,0.9885542819650462,Enterococcus_faecalis_T2.fna,0.8307426692832205,3263835,0.8589975916195203,Enterococcus_faecalis_TX0104.fa,3156478,31034,1

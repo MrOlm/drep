@@ -3,9 +3,9 @@ Example Output
 
 dRep produces a variety of output in the work directory depending on which operations are run.
 
-To explain the figures below, dRep ``dereplicate_wf`` was run on a set of 5 randomly chosen *Klebsiella oxytoca* isolate genomes as follows::
+To generate the figures below, dRep ``dereplicate`` was run on a set of 5 randomly chosen *Klebsiella oxytoca* isolate genomes as follows::
 
-  $ dRep dereplicate_wf complete_only -g *.fna --S_algorithm gANI
+  $ dRep dereplicate complete_only -g *.fna --S_algorithm gANI
 
 .. seealso::
   :doc:`overview`
@@ -53,14 +53,9 @@ This dendrogram summarizes the pair-wise distance between all organisms in each 
 
 The black dotted line shows the **secondary clustering ANI** (in this case 99%). This value determines which genomes end up in the same secondary cluster, **and thus are considered to be the "same"**. In the above figure, two secondary cluster are formed. The "best" genome of each secondary cluster is marked with as asterisk.
 
-The red line shows the lowest ANI for a "self-vs-self" comparison of all genomes in the genome list. That is, when each genome in this primary cluster is compared to itself, the red line is the lowest ANI you get. This represents a "limit of detection" of sorts. gANI always results in 100% ANI when self-vs-self comparisons are performed, but ANIm does not (as shown in the figure below). Note also that the secondary algorithm information above the dendrogram is changed in the figure below as well.
+The red line shows the lowest ANI for a "self-vs-self" comparison of all genomes in the genome list. That is, when each genome in this primary cluster is compared to itself, the red line is the lowest ANI you get. This represents a "limit of detection" of sorts. gANI always results in 100% ANI when self-vs-self comparisons are performed, but ANIm does not (as shown in the figure below).
 
 .. image :: images/Primary_cluster_1_average.png
-
-.. note::
-  The above figure was made with the command::
-
-    $ dRep analyze complete_only/ -c 1
 
 Cluster_scoring
 +++++++++++++++
@@ -86,8 +81,6 @@ Other figures
 
 **Clustering scatterplots** provides some information about genome alignment statistics, and **Winning genomes** provides some information about only the "best" genomes of each replicate set, as well as a couple quick overall statistics.
 
-Using the ``analyze`` operation to test out alternative clusterings will be within this ``figures`` folder. See :doc:`module_descriptions` for more information on that.
-
 Warnings
 --------
 
@@ -105,4 +98,4 @@ The folder ``dereplicated_genomes`` holds a copy of the "best" genome of each se
 .. seealso::
   Almost all data that dRep generates at any point is able to be accessed by the user. This includes the full checkM results of each genome, the value of all genome comparisons, the raw hierarchical clustering files, the primary and secondary cluster identity of each genome, etc.
 
-  For information on where all of this is hidden, see :doc:`advanced_use`
+  For information on where all of this is stored, see :doc:`advanced_use`

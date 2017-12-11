@@ -17,7 +17,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep dereplicate Step 1. Filter ::..
+    ..:: dRep Step 1. Filter ::..
 ***************************************************
     """
     logging.info(message)
@@ -29,7 +29,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep dereplicate Step 2. Cluster ::..
+    ..:: dRep Step 2. Cluster ::..
 ***************************************************
     """
     logging.info(message)
@@ -37,7 +37,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep dereplicate Step 3. Choose ::..
+    ..:: dRep Step 3. Choose ::..
 ***************************************************
     """
     logging.info(message)
@@ -45,7 +45,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep dereplicate Step 4. Bonus ::..
+    ..:: dRep Step 4. Bonus ::..
 ***************************************************
     """
     logging.info(message)
@@ -53,7 +53,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep dereplicate Step 5. Evaluate ::..
+    ..:: dRep Step 5. Evaluate ::..
 ***************************************************
     """
     logging.info(message)
@@ -61,7 +61,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep dereplicate Step 6. Analyze ::..
+    ..:: dRep Step 6. Analyze ::..
 ***************************************************
     """
     logging.info(message)
@@ -72,7 +72,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
 $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 
-    ..:: dRep dereplicate finished ::..
+    ..:: dRep dereplicate_wf finished ::..
 
 Dereplicated genomes................. {0}
 Dereplicated genomes information..... {2}
@@ -87,53 +87,21 @@ $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
 def compare_wrapper(wd,**kwargs):
     validate_compare(wd, **kwargs)
 
-    message = """\
-***************************************************
-    ..:: dRep compare Step 1. Cluster ::..
-***************************************************
-    """
+    message = 'Step 1. Cluster'
     logging.info(message)
     drep.d_cluster.d_cluster_wrapper(wd, **kwargs)
 
-    message = """\
-***************************************************
-    ..:: dRep compare Step 2. Bonus ::..
-***************************************************
-    """
+    message = 'Step 2. Bonus'
     logging.info(message)
     drep.d_bonus.d_bonus_wrapper(wd, **kwargs)
 
-    message = """\
-***************************************************
-    ..:: dRep compare Step 3. Evaluate ::..
-***************************************************
-    """
+    message = 'Step 3. Evaluate'
     logging.info(message)
     drep.d_evaluate.d_evaluate_wrapper(wd, evaluate = '2', **kwargs)
 
-    message = """\
-***************************************************
-    ..:: dRep compare Step 4. Analyze ::..
-***************************************************
-    """
+    message = 'Step 4. Analyze'
     logging.info(message)
     drep.d_analyze.d_analyze_wrapper(wd, plots = '1234', **kwargs)
-
-    loc = drep.WorkDirectory.WorkDirectory(wd).location
-    message = """\
-
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-
-    ..:: dRep compare finished ::..
-
-Genome comparison data............... {0}
-Figures.............................. {1}
-Warnings............................. {3}
-
-$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
-    """.format(loc + '/data_tables/', loc + '/figures/', \
-                loc + '/data_tables/Widb.csv', loc + '/log/warnings.txt')
-    logging.info(message)
 
 def validate_dereplicate(wd, **kwargs):
     pass
