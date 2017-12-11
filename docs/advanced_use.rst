@@ -79,6 +79,22 @@ Raw data
 
 Refer to the above file structure to find the rest of the raw data. The data is kept from all program runs, so you can find the raw ANIm/gANI files, Mash sketches, prodigal gene predictions, centrifuge raw output, ect.
 
+Using external genome quality information
+--------
+
+If you already have your own genome quality information and would not like dRep to run checkM to generate it again, you can provide it using the `genomeInformation` flag.
+
+The genomeInformation file must be in .csv format and have the columns "genome", "completeness", and "contamination". Columns "completeness" and "contamination" should be 0-100, and "genome" is the filename of the genome.
+
+For example:
+
+  genome,completeness,contamination
+  Enterococcus_casseliflavus_EC20.fasta,98.28,0.0
+  Enterococcus_faecalis_T2.fna,98.28,0.0
+  Enterococcus_faecalis_TX0104.fa,96.55,0.0
+  Enterococcus_faecalis_YI6-1.fna,98.28,0.0
+  Escherichia_coli_Sakai.fna,100.0,0.0
+
 Caching
 --------
 
