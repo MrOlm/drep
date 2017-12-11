@@ -52,12 +52,14 @@ Compare and Dereplicate
 These are higher-level operations that call the modules below in succession.
 
 Compare runs the modules:
+
 * cluster
 * bonus
 * evaluate
 * analyze
 
 Dereplicate runs the modules:
+
 * filter
 * cluster
 * choose

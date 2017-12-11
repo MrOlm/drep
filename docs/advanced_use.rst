@@ -86,7 +86,7 @@ If you already have your own genome quality information and would not like dRep 
 
 The genomeInformation file must be in .csv format and have the columns "genome", "completeness", and "contamination". Columns "completeness" and "contamination" should be 0-100, and "genome" is the filename of the genome.
 
-For example:
+For example::
 
   genome,completeness,contamination
   Enterococcus_casseliflavus_EC20.fasta,98.28,0.0

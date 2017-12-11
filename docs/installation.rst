@@ -46,6 +46,11 @@ To check which dependencies are installed on your system and accessible by dRep,
 
 Programs need to be installed to the system path, so that you can call them from anywhere on your computer.
 
+.. note::
+
+  If you already have information on your genome's completeness and contamination, you can input that to dRep without the need to install checkM (see :doc:`advanced_use`))
+
+
 pyenv
 -----
 
