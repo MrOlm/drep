@@ -21,7 +21,7 @@ import os
 #     versionFile = open(os.path.join(drep.__path__[0], 'VERSION'))
 #     return versionFile.read().strip()
 def get_version():
-    return 2.0.0
+    return  "2.0.0"
 
 
 # If extensions (or modules to document with autodoc) are in another directory,
