@@ -325,8 +325,10 @@ def parse_args(args):
     Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
                             + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
                             default = 'lineage_wf')
-    Iflags.add_argument('--Chdb',help='checkM run already completed. Must be in \
-                        --tab_table format.')
+    Iflags.add_argument('--genomeInfo',help='location of .csv file containing quality \
+            information on the genomes. Must contain: ["genome"(basename of .fasta file \
+            of that genome), "completeness"(0-100 value for completeness of the genome), \
+            "contamination"(0-100 value of the contamination of the genome)]')
 
     '''
     ####### Arguments for compare ######
