@@ -23,7 +23,7 @@ Pip is a great package with many options to change the installation parameters i
 Dependencies
 ------------
 
-dRep requires many other great programs to run. Not all dependencies are needed for all operations
+dRep requires other programs to run. Not all dependencies are needed for all operations
 
 To check which dependencies are installed on your system and accessible by dRep, run ::
 
@@ -45,15 +45,6 @@ To check which dependencies are installed on your system and accessible by dRep,
 * `Centrifuge <https://omictools.com/centrifuge-tool>`_ - Performs taxonomic assignment of bins (v1.0.3 confirmed works)
 
 Programs need to be installed to the system path, so that you can call them from anywhere on your computer.
-
-Testing
--------
-
-To make sure everything is installed correctly you can run the dRep test suite::
-
- $ cd drep/tests
-
- $ python test_suite.py
 
 pyenv
 -----

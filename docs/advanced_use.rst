@@ -95,7 +95,7 @@ For example, say you've already run the dereplicate_wf using gANI and want to ru
 API
 ---
 
-This is no formal API for dRep, but of course you can read through the source-code and import any function that you'd like. The one class that is particularly helpful, however, is the WorkDirectory. By loading the results of your dRep run as a WorkDirectory object, you have direct access to all of the data-frames.
+See :doc:`source/drep` for the API to dRep.
 
 For example::
 

@@ -11,29 +11,28 @@ The functionality of dRep is broken up into modules. The user can run the module
 
 OR::
 
- $ dRep comparison_wf example_workD -g path/to/genomes*.fasta
+ $ dRep compare example_workD -g path/to/genomes*.fasta
 
 There are two ways of doing the same thing. To see a list of available modules, check the help::
 
-  mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep -h
+ $ dRep -h
 
-                  ...::: dRep v0.2.0 :::...
+                ...::: dRep v2.0.0 :::...
 
-    Choose one of the operations below for more detailed help.
-    Example: dRep dereplicate_wf -h
+  Choose one of the operations below for more detailed help.
+  Example: dRep dereplicate -h
 
-    Workflows:
-      dereplicate_wf  -> Combine several of the operations below to de-replicate a genome list
-      compare_wf      -> Simply compare a list of genomes
+  Workflows:
+    dereplicate  -> Combine several of the operations below to de-replicate a genome list
+    compare      -> Simply compare a list of genomes
 
-    Single opterations:
-      filter          -> Filter a genome list based on size, completeness, and/or contamination
-      cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
-      adjust          -> Adjust genome clusters
-      choose          -> Choose the best genome from each genome cluster
-      evaluate        -> Evaluate genome de-replication
-      bonus           -> Other random operations (currently just determine taxonomy)
-      analyze         -> Make figures realted to the above operations; test alternative clustering
+  Single operations:
+    filter          -> Filter a genome list based on size, completeness, and/or contamination
+    cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
+    choose          -> Choose the best genome from each genome cluster
+    evaluate        -> Evaluate genome de-replication
+    bonus           -> Other random operations (currently just determine taxonomy)
+    analyze         -> Make figures related to the above operations; test alternative clustering
 
 Work Directory
 --------------
@@ -48,6 +47,24 @@ The work directory is where all of the program's internal workings, log files, c
   :doc:`advanced_use`
     for access to the raw internal data (which can be very useful)
 
+Compare and Dereplicate
+------
+These are higher-level operations that call the modules below in succession.
+
+Compare runs the modules:
+* cluster
+* bonus
+* evaluate
+* analyze
+
+Dereplicate runs the modules:
+* filter
+* cluster
+* choose
+* bonus
+* evaluate
+* analyze
+
 Filter
 ------
 
@@ -55,11 +72,11 @@ Filter is used filter the genome set (for why this is necessary, see :doc:`choos
 
 .. warning::
 
-  Due to a bug in checkM, all genomes must have at least one ORF called or else checkM will stall. So a length minimum of at least 10,000bp is recommended.
+  All genomes must have at least one ORF called or else checkM will stall, so a length minimum of at least 10,000bp is recommended.
 
 To see the command-line options, check the help::
 
-  mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep filter -h
+  $ dRep filter -h
   usage: dRep filter [-p PROCESSORS] [-d] [-o] [-h] [-l LENGTH]
                      [-comp COMPLETENESS] [-con CONTAMINATION] [-str STRAIN_HTR]
                      [--skipCheckM] [-g [GENOMES [GENOMES ...]]] [--Chdb CHDB]
@@ -107,7 +124,7 @@ Cluster is the module that does the actual primary and secondary comparisons. Ch
 
 To see the command-line options, check the help::
 
-  mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep cluster -h
+  $ dRep cluster -h
   usage: dRep cluster [-p PROCESSORS] [-d] [-o] [-h] [-ms MASH_SKETCH]
                       [-pa P_ANI] [--S_algorithm {ANIn,gANI}] [-sa S_ANI]
                       [-nc COV_THRESH] [-n_PRESET {normal,tight}]
@@ -215,11 +232,11 @@ To see the command-line options, check the help::
 Analyze
 -------
 
-Analyze is the module that makes all of the figures. It also has the option to visualize how a secondary cluster would look with different parameters (for example, using ANIm instead of gANI). To do that, use the ``RE-CLUSTER PRIMARY CLUSTERS`` arguments. To make plots, just use the -pl argument.
+Analyze is the module that makes all of the figures.
 
 To see the command-line options, check the help::
 
-  mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep analyze -h
+  $ dRep analyze -h
   usage: dRep analyze [-p PROCESSORS] [-d] [-o] [-h] [-c CLUSTER] [-t THRESHOLD]
                       [-m {ANIn,gANI}] [-mc MINIMUM_COVERAGE]
                       [-a {complete,average,single,weighted}]
@@ -237,19 +254,6 @@ To see the command-line options, check the help::
     -o, --overwrite       overwrite existing data in work folder (default:
                           False)
     -h, --help            show this help message and exit
-
-  RE-CLUSTER PRIMARY CLUSETERS:
-    -c CLUSTER, --cluster CLUSTER
-                          primary cluster to be adjusted (default: None)
-    -t THRESHOLD, --threshold THRESHOLD
-                          clustering threshold to apply (default: 0.99)
-    -m {ANIn,gANI}, --clustering_method {ANIn,gANI}
-                          Clustering method to apply (default: ANIn)
-    -mc MINIMUM_COVERAGE, --minimum_coverage MINIMUM_COVERAGE
-                          Minimum coverage for ANIn (default: 0.1)
-    -a {complete,average,single,weighted}, --clusterAlg {complete,average,single,weighted}
-                          Algorithm used to cluster genomes (passed to
-                          scipy.cluster.hierarchy.linkage) (default: average)
 
   PLOTTING:
     -pl [PLOTS [PLOTS ...]], --plots [PLOTS [PLOTS ...]]
@@ -273,7 +277,7 @@ Evaluate performs a series of checks to alert the user to potential problems wit
 
 To see the command-line options, check the help::
 
-  mattolm@Matts-MacBook-Pro:~/Programs/drep/docs$ dRep evaluate -h
+  $ dRep evaluate -h
   usage: dRep evaluate [-p PROCESSORS] [-d] [-o] [-h] [--warn_dist WARN_DIST]
                        [--warn_sim WARN_SIM] [--warn_aln WARN_ALN]
                        [-e [EVALUATE [EVALUATE ...]]]
@@ -308,11 +312,7 @@ To see the command-line options, check the help::
                           3) Generate a database of information on winning genomes
                            (default: None)
 
-Other
+Bonus
 -----
 
-The other modules, **adjust** and **bonus**, are not part of the normal de-replication pipeline but can be very useful.
-
-**adjust** allows the user to change the secondary clustering settings for a single primary cluster. This can be especially helpful when following up on a warning (generated using **evaluate**) to change the way the cluster is made.
-
-**bonus** consists of operations that don't really fit in with the functions of dRep, but can be helpful. Currently the only thing it can do is determine taxonomy of your bins. This is done using centrifuge, similar to how `anvi'o does it <http://merenlab.org/2016/06/18/importing-taxonomy/>`_. If you choose to use this option, the taxonomy of genome will be shown with the filename in most figures.
+Bonus consists of operations that don't really fit in with the functions of dRep, but can be helpful. Currently the only thing it can do is determine taxonomy of your bins. This is done using centrifuge, similar to how `anvi'o does it <http://merenlab.org/2016/06/18/importing-taxonomy/>`_. If you choose to use this option, the taxonomy of genome will be shown with the filename in most figures.

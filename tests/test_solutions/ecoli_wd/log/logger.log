@@ -45,3 +45,23 @@ Arguments: []
 10-24 15:06 INFO     Step 4. Return output
 10-24 15:06 DEBUG    Main program run complete- saving output to /Users/mattolm/Programs/drep/tests/test_backend/ecoli_wd/data_tables/
 10-24 15:06 DEBUG    !!! Finished the clustering operation !!!
+12-10 16:00 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+12-10 16:00 DEBUG    ***Logger started up at /Users/mattolm/Programs/drep/tests/test_solutions/ecoli_wd/log/logger.log***
+12-10 16:00 DEBUG    Command to run dRep was: /Users/mattolm/.pyenv/versions/anaconda3-2.4.0/bin/dRep analyze test_solutions/ecoli_wd/ -pl a
+
+12-10 16:00 DEBUG    dRep version 2.0.0_beta was run 
+
+12-10 16:00 DEBUG    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+
+12-10 16:00 DEBUG    Namespace(debug=False, operation='analyze', overwrite=False, plots=['a'], processors=6, work_directory='test_solutions/ecoli_wd/')
+12-10 16:00 DEBUG    Starting the analyze operation
+12-10 16:00 INFO     making plots 1, 2, 3, 4, 5, 6
+12-10 16:00 INFO     Plotting primary dendrogram
+12-10 16:00 INFO     Plotting secondary dendrograms
+12-10 16:00 INFO     Plotting MDS plot
+12-10 16:00 INFO     Plotting scatterplots
+12-10 16:00 DEBUG    Loading Chdb.csv from work directory
+12-10 16:00 INFO     Plotting bin scorring plot
+12-10 16:00 DEBUG    Loading Chdb.csv from work directory
+12-10 16:00 INFO     Plotting winning genomes plot...
+12-10 16:00 DEBUG    !!! Finished the analyze operation !!!

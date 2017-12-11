@@ -8,6 +8,22 @@ The publication is available at ISME_ and an open-source pre-print is available 
 Source code is `available on GitHub
 <https://github.com/MrOlm/drep>`_.
 
+Genome comparison
+-----------------
+
+dRep can rapidly and accurately compare a list of genomes in a pair-wise manner. This allows identification of groups of organisms that share similar DNA content in terms of Average Nucleotide Identity (ANI).
+
+dRep performs this in two steps- first with a rapid primary algorithm (Mash), and second with a more sensitive algorithm (ANIm). We can't just use Mash because, while incredibly fast, it is not robust to genome incompletenss (see :doc:`choosing_parameters`) and only provides an "estimate" of ANI. ANIm is robust to genome incompleteness and is more accurate, but too slow to perform pair-wise comparisons of longer genome lists.
+
+dRep first compares all genomes using Mash, and then only runs the secondary algorithm (ANIm or gANI) on sets of genomes that have at least 90% Mash ANI. This results in a great decrease in the number of (slow) secondary comparisons that need to be run while maintaining the sensitivity of ANIm.
+
+.. See the `publication <https://www.youtube.com/watch?v=dQw4w9WgXcQ>`_ for details
+
+.. image:: images/FigureD.png
+
+.. _bioRxiv: https://doi.org/10.1101/108142
+.. _ISME: http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html
+
 Genome de-replication
 ---------------------
 
@@ -23,19 +39,3 @@ The steps to this process are:
 * Bin each assembly (and co-assembly) separately using your favorite binner
 * Pull the bins from all assemblies together and run dRep on them
 * Perform downstream analysis on the de-replicated genome list
-
-Genome comparison
------------------
-
-Genome comparison is simply comparing a list of genomes in a pair-wise manner. This allows identification of groups of organisms that share similar DNA content in terms of Average Nucleotide Identity (ANI).
-
-dRep performs this in two steps- first with a rapid primary algorithm (Mash), and second with a more sensitive algorithm (gANI). We can't just use Mash because, while incredibly fast, it is not robust to genome incompletenss (see :doc:`choosing_parameters`) and only provides an "estimate" of ANI. gANI is robust to genome incompleteness and is more accurate, but too slow to perform pair-wise comparisons of longer genome lists.
-
-dRep first compares all genomes using Mash, and then only runs the secondary algorithm (gANI or ANIm) on sets of genomes that have at least 90% Mash ANI. This results it a great decrease in the number of (slow) secondary comparisons that need to be run while maintaining the sensitivity of gANI.
-
-.. See the `publication <https://www.youtube.com/watch?v=dQw4w9WgXcQ>`_ for details
-
-.. image:: images/FigureD.png
-
-.. _bioRxiv: https://doi.org/10.1101/108142
-.. _ISME: http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html

@@ -18,6 +18,10 @@ What defines genomes as being "same"?
 
 There is no standard definition of the average nucleotide identity (ANI) shared between two genomes that are the "same". This is a decision that the user must make on their own, depending on their own specific application. The ANI is determined by the **secondary clustering algorithm**, the **minimum secondary ANI** is the minimum ANI between genomes to be considered the "same", and the **minimum aligned fraction** is the minimum amount of genome overlap to believe the reported ANI value.
 
+.. tip::
+  For help choosing this threshold, see the blog post: `Are these microbes the “same”?  <https://www.microbe.net/2017/02/15/are-these-microbes-the-same/>`_.
+
+
 Secondary clustering algorithm
 ++++++++++++++++++++++++++++++
 
@@ -28,7 +32,7 @@ The **secondary clustering algorithm** is the program that will calculate the ac
 
 Neither of these algorithms are perfect, especially in repeat-prone genomes. Regions of the genome which are not homologous can align to each other and artificially decrease ANI. In fact, when a genome is compared to itself, ANIm often reports values <100% for this reason. gANI is better about this, but seems to be more sensitive to genome subsetting.
 
-* **ANImf** is very similar to ANIm, but filters the alignment before calculating ANI. This takes slighty 
+* **ANImf** is very similar to ANIm, but filters the alignment before calculating ANI. This takes slighty more time, but is much more accurate with repeat regions
 
 Minimum secondary ANI
 +++++++++++++++++++++

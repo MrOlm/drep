@@ -35,14 +35,6 @@ drep.d_analyze
     :undoc-members:
     :show-inheritance:
 
-drep.d_bonus
--------------------
-
-.. automodule:: drep.d_bonus
-    :members:
-    :undoc-members:
-    :show-inheritance:
-
 drep.WorkDirectory
 -------------------------
 
