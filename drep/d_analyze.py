@@ -55,27 +55,45 @@ def d_analyze_wrapper(wd, **kwargs):
 
     # 1) Primary clustering dendrogram
     if '1' in to_plot:
-        mash_dendrogram_from_wd(wd, plot_dir=plot_dir)
+        try:
+            mash_dendrogram_from_wd(wd, plot_dir=plot_dir)
+        except BaseException as e:
+            logging.debug('Failed to make plot #1: ' + e)
 
     # 2) Secondary clustering dendrogram
     if '2' in to_plot:
-        plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs)
+        try:
+            plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs)
+        except BaseException as e:
+            logging.debug('Failed to make plot #2: ' + e)
 
     # 3) Secondary clusters MDS
     if '3' in to_plot:
-        plot_secondary_mds_from_wd(wd, plot_dir, **kwargs)
+        try:
+            plot_secondary_mds_from_wd(wd, plot_dir, **kwargs)
+        except BaseException as e:
+            logging.debug('Failed to make plot #3: ' + e)
 
     # 4) Comparison scatterplots
     if '4' in to_plot:
-        plot_scatterplots_from_wd(wd, plot_dir, **kwargs)
+        try:
+            plot_scatterplots_from_wd(wd, plot_dir, **kwargs)
+        except BaseException as e:
+            logging.debug('Failed to make plot #4: ' + e)
 
     # 5) Complex bin scorring
     if '5' in to_plot:
-        plot_binscoring_from_wd(wd, plot_dir, **kwargs)
+        try:
+            plot_binscoring_from_wd(wd, plot_dir, **kwargs)
+        except BaseException as e:
+            logging.debug('Failed to make plot #5: ' + e)
 
     # 6) Winning plot
     if '6' in to_plot:
-        plot_winners_from_wd(wd, plot_dir, **kwargs)
+        try:
+            plot_winners_from_wd(wd, plot_dir, **kwargs)
+        except BaseException as e:
+            logging.debug('Failed to make plot #6: ' + e)
 
 
 def mash_dendrogram_from_wd(wd, plot_dir=False):
@@ -724,39 +742,46 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         save = False
 
     # Make piecharts
-    labels = []
-    sizes = []
-    for com in Widb['completeness_metric'].unique():
-        d = Widb[Widb['completeness_metric'] == com]
-        labels.append(com)
-        sizes.append(len(d['genome'].unique()))
-    labels = _annotate_labels(labels,'comp')
-    _make_piechart(labels,sizes)
-    plt.title('Overall Winner Completeness')
+    if Widb is not None:
+        labels = []
+        sizes = []
+        for com in Widb['completeness_metric'].unique():
+            d = Widb[Widb['completeness_metric'] == com]
+            labels.append(com)
+            sizes.append(len(d['genome'].unique()))
+        labels = _annotate_labels(labels,'comp')
 
-    # Save this page
-    if save == True:
-        fig = plt.gcf()
-        pp.savefig(fig)
-    plt.show()
-    plt.close(fig)
+        if (len(labels) != len(sizes)) | (len(labels) == 0): # not sure when this would happen, but it does...
+            logging.debug("len(labels) != len(sizes); {0} vs {1}".format(\
+                len(labels), len(sizes)))
 
-    labels = []
-    sizes = []
-    for com in Widb['contamination_metric'].unique():
-        d = Widb[Widb['contamination_metric'] == com]
-        labels.append(com)
-        sizes.append(len(d['genome'].unique()))
-    labels = _annotate_labels(labels,'con')
-    _make_piechart(labels,sizes)
-    plt.title('Overall Winner Contamination')
+        else:
+            _make_piechart(labels,sizes)
+            plt.title('Overall Winner Completeness')
 
-    # Save this page
-    if save == True:
-        fig = plt.gcf()
-        pp.savefig(fig)
-    plt.show()
-    plt.close(fig)
+            # Save this page
+            if save == True:
+                fig = plt.gcf()
+                pp.savefig(fig)
+            plt.show()
+            plt.close(fig)
+
+            labels = []
+            sizes = []
+            for com in Widb['contamination_metric'].unique():
+                d = Widb[Widb['contamination_metric'] == com]
+                labels.append(com)
+                sizes.append(len(d['genome'].unique()))
+            labels = _annotate_labels(labels,'con')
+            _make_piechart(labels,sizes)
+            plt.title('Overall Winner Contamination')
+
+            # Save this page
+            if save == True:
+                fig = plt.gcf()
+                pp.savefig(fig)
+            plt.show()
+            plt.close(fig)
 
     # Figure out what you're going to show
     bars = _get_toshow(Gdb)

@@ -4,7 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## Un-merged
+## [2.0.1] - 2018-01-02
+### Fixed
+- Plot 6 will not crash if Widb is not present
+- Put try / excepts around the plots failing
+
+## [2.0.0] - 2017-12-10
 ### Added (general)
 - API documentation
 

@@ -297,6 +297,9 @@ class VerifyFilter():
         genomes = self.genomes
         wd_loc  = self.wd_loc
 
+        # make sure calling it on the right genome
+        assert genomes[4].endswith('Enterococcus_faecalis_T2.fna')
+
         args = argumentParser.parse_args(['filter',wd_loc,'-g',genomes[4]] \
             + ['--checkM_method', 'taxonomy_wf'])
         controller = Controller()
@@ -305,11 +308,11 @@ class VerifyFilter():
         # Confirm Chdb.csv is correct
         wd = drep.WorkDirectory.WorkDirectory(wd_loc)
         chdb = wd.get_db('Chdb')
-        assert chdb['Completeness'].tolist()[0] == 100.0
+        assert chdb['Completeness'].tolist()[0] == 98.28
 
         # Confirm genome is in Bdb.csv
         Gdb = wd.get_db('genomeInfo')
-        assert Gdb['completeness'].tolist()[0] == 100.0
+        assert Gdb['completeness'].tolist()[0] == 98.28
 
     def tearDown(self):
         #logging.shutdown()
@@ -346,33 +349,33 @@ class VerifyCluster():
         self.test_all_vs_all_mash()
         self.tearDown()
 
-        # self.setUp()
-        # self.test_cluster_mash_database()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.test_compare_genomes()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.test_genome_hierarchical_clustering()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_3()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_2()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_1()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.skipsecondary_test()
-        # self.tearDown()
+        self.setUp()
+        self.test_cluster_mash_database()
+        self.tearDown()
+
+        self.setUp()
+        self.test_compare_genomes()
+        self.tearDown()
+
+        self.setUp()
+        self.test_genome_hierarchical_clustering()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_3()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_2()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.skipsecondary_test()
+        self.tearDown()
 
     def test_genome_hierarchical_clustering(self):
         '''
@@ -604,25 +607,29 @@ class VerifyAnalyze():
             shutil.rmtree(self.test_dir)
 
     def run(self):
-        self.setUp()
-        self.plot_1_test_1()
-        self.tearDown()
+        # self.setUp()
+        # self.plot_1_test_1()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.plot_5_test_1()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.plot_5_test_2()
+        # self.tearDown()
 
         self.setUp()
-        self.plot_5_test_1()
-        self.tearDown()
+        self.plot_6_test_1()
+        #self.tearDown()
 
-        self.setUp()
-        self.plot_5_test_2()
-        self.tearDown()
-
-        self.setUp()
-        self.functional_test_1()
-        self.tearDown()
-
-        self.setUp()
-        self.functional_test_2()
-        self.tearDown()
+        #self.setUp()
+        #self.functional_test_1()
+        #self.tearDown()
+        #
+        # self.setUp()
+        # self.functional_test_2()
+        # self.tearDown()
 
     def plot_1_test_1(self):
         '''
@@ -679,6 +686,41 @@ class VerifyAnalyze():
         assert len(glob.glob(test_dir + '/*')) == 1
         for f in glob.glob(test_dir + '/*'):
             assert os.path.getsize(f) > 0
+
+    def plot_6_test_1(self):
+        '''
+        Test plot 6 with different things missing
+        '''
+        # Test with everything there
+        args = argumentParser.parse_args(['analyze',self.working_wd_loc,'-pl', '6'])
+        controller = Controller()
+        controller.parseArguments(args)
+        fig_dir = os.path.join(self.working_wd_loc, 'figures', '')
+
+        figs = [os.path.basename(f) for f in glob.glob(fig_dir + '*')]
+        FIGS = ['Winning_genomes.pdf']
+
+        assert sorted(figs) == sorted(FIGS)
+        for fig in glob.glob(fig_dir + '*'):
+            assert os.path.getsize(fig) > 0
+
+        # Test with removing Widb
+        db_loc = os.path.join(self.working_wd_loc, 'data_tables', 'Widb.csv')
+        os.remove(db_loc)
+        for f in glob.glob(fig_dir + '*'):
+            os.remove(f)
+
+        args = argumentParser.parse_args(['analyze',self.working_wd_loc,'-pl', '6'])
+        controller = Controller()
+        controller.parseArguments(args)
+        fig_dir = os.path.join(self.working_wd_loc, 'figures', '')
+
+        figs = [os.path.basename(f) for f in glob.glob(fig_dir + '*')]
+        FIGS = ['Winning_genomes.pdf']
+
+        assert sorted(figs) == sorted(FIGS)
+        for fig in glob.glob(fig_dir + '*'):
+            assert os.path.getsize(fig) > 0
 
     def functional_test_1(self):
         '''
@@ -1227,7 +1269,7 @@ if __name__ == '__main__':
     # test_short()
     # test_long()
 
-    #filter_test()
+    filter_test()
     #choose_test()
     #analyze_test()
     #dereplicate_test()
