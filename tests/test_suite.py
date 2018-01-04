@@ -607,29 +607,33 @@ class VerifyAnalyze():
             shutil.rmtree(self.test_dir)
 
     def run(self):
-        # self.setUp()
-        # self.plot_1_test_1()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.plot_5_test_1()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.plot_5_test_2()
-        # self.tearDown()
+        self.setUp()
+        self.plot_1_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.plot_5_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.plot_5_test_2()
+        self.tearDown()
 
         self.setUp()
         self.plot_6_test_1()
-        #self.tearDown()
+        self.tearDown()
 
-        #self.setUp()
-        #self.functional_test_1()
-        #self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_2()
-        # self.tearDown()
+        self.setUp()
+        self.functional_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_2()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_3()
+        self.tearDown()
 
     def plot_1_test_1(self):
         '''
@@ -1269,9 +1273,9 @@ if __name__ == '__main__':
     # test_short()
     # test_long()
 
-    filter_test()
+    # filter_test()
     #choose_test()
-    #analyze_test()
+    analyze_test()
     #dereplicate_test()
     #taxonomy_test()
     #cluster_test()
