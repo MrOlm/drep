@@ -58,42 +58,42 @@ def d_analyze_wrapper(wd, **kwargs):
         try:
             mash_dendrogram_from_wd(wd, plot_dir=plot_dir)
         except BaseException as e:
-            logging.debug('Failed to make plot #1: ' + e)
+            logging.info('Failed to make plot #1: ' + str(e))
 
     # 2) Secondary clustering dendrogram
     if '2' in to_plot:
         try:
             plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
-            logging.debug('Failed to make plot #2: ' + e)
+            logging.info('Failed to make plot #2: ' + str(e))
 
     # 3) Secondary clusters MDS
     if '3' in to_plot:
         try:
             plot_secondary_mds_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
-            logging.debug('Failed to make plot #3: ' + e)
+            logging.info('Failed to make plot #3: ' + str(e))
 
     # 4) Comparison scatterplots
     if '4' in to_plot:
         try:
             plot_scatterplots_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
-            logging.debug('Failed to make plot #4: ' + e)
+            logging.info('Failed to make plot #4: ' + str(e))
 
     # 5) Complex bin scorring
     if '5' in to_plot:
         try:
             plot_binscoring_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
-            logging.debug('Failed to make plot #5: ' + e)
+            logging.info('Failed to make plot #5: ' + str(e))
 
     # 6) Winning plot
     if '6' in to_plot:
         try:
             plot_winners_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
-            logging.debug('Failed to make plot #6: ' + e)
+            logging.info('Failed to make plot #6: ' + str(e))
 
 
 def mash_dendrogram_from_wd(wd, plot_dir=False):
