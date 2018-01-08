@@ -631,10 +631,6 @@ class VerifyAnalyze():
         self.functional_test_2()
         self.tearDown()
 
-        self.setUp()
-        self.functional_test_3()
-        self.tearDown()
-
     def plot_1_test_1(self):
         '''
         Test drep.d_analyze.mash_dendrogram_from_wd
@@ -1275,8 +1271,8 @@ if __name__ == '__main__':
 
     # filter_test()
     #choose_test()
-    #analyze_test()
-    dereplicate_test()
+    analyze_test()
+    #dereplicate_test()
     #taxonomy_test()
     #cluster_test()
 
