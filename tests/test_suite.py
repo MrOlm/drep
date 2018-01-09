@@ -951,33 +951,38 @@ class VerifyTaxonomy():
         '''
         Try actually running centrifuge
         '''
-        genomes = self.genomes
-        wd_loc = self.wd_loc
-        swd_loc = self.s_wd_loc
+        loc, works = drep.d_bonus.find_program('centrifuge')
+        if works == False:
+            print('Centrifuge not installed- skipping tests')
 
-        # Remove previous data run
-        shutil.rmtree(os.path.join(self.wd_loc, 'data', 'centrifuge'))
+        else:
+            genomes = self.genomes
+            wd_loc = self.wd_loc
+            swd_loc = self.s_wd_loc
 
-        # Call the command
-        args = argumentParser.parse_args(['bonus',wd_loc,'-g'] +genomes \
-                + ['--run_tax','--cent_index','/home/mattolm/download/centrifuge/indices/b+h+v',\
-                '--tax_method', 'percent'])
-        controller = Controller()
-        controller.parseArguments(args)
+            # Remove previous data run
+            shutil.rmtree(os.path.join(self.wd_loc, 'data', 'centrifuge'))
 
-        # Verify
-        Swd = WorkDirectory(swd_loc)
-        wd = WorkDirectory(wd_loc)
+            # Call the command
+            args = argumentParser.parse_args(['bonus',wd_loc,'-g'] +genomes \
+                    + ['--run_tax','--cent_index','/home/mattolm/download/centrifuge/indices/b+h+v',\
+                    '--tax_method', 'percent'])
+            controller = Controller()
+            controller.parseArguments(args)
 
-        tdbS = Swd.get_db('BdbP')
-        tdb = wd.get_db('Bdb')
-        del tdbS['location']
-        del tdb['location']
-        assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Bdb')
+            # Verify
+            Swd = WorkDirectory(swd_loc)
+            wd = WorkDirectory(wd_loc)
 
-        tdbS = Swd.get_db('TdbP')
-        tdb = wd.get_db('Tdb')
-        assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Tdb')
+            tdbS = Swd.get_db('BdbP')
+            tdb = wd.get_db('Bdb')
+            del tdbS['location']
+            del tdb['location']
+            assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Bdb')
+
+            tdbS = Swd.get_db('TdbP')
+            tdb = wd.get_db('Tdb')
+            assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Tdb')
 
     def tearDown(self):
         logging.shutdown()

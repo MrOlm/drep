@@ -7,6 +7,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ## [2.0.4] - 2018-01-09
 ### Fixed
 - some changes in d_cluster that make gANI work
+- changes to the test suite so it doesn't fail if centrifuge isn't installed
 
 ## [2.0.3] - 2018-01-08
 ### Fixed
