@@ -870,13 +870,13 @@ class VerifyTaxonomy():
             os.path.join(self.wd_loc, 'data'))
 
     def run(self):
-        # self.setUp()
-        # self.taxTest1()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.taxTest2()
-        # self.tearDown()
+        self.setUp()
+        self.taxTest1()
+        self.tearDown()
+
+        self.setUp()
+        self.taxTest2()
+        self.tearDown()
 
         self.setUp()
         self.taxTest3()
@@ -1284,7 +1284,7 @@ if __name__ == '__main__':
     #choose_test()
     #analyze_test()
     # dereplicate_test()
-    cluster_test()
-    # taxonomy_test()
+    #cluster_test()
+    taxonomy_test()
 
     print("Everything seems to be working swimmingly!")
