@@ -956,7 +956,7 @@ def run_pairwise_gANI(bdb, gANI_folder, prod_folder, **kwargs):
 
     # Run prodigal
     logging.debug("Running prodigal...")
-    dFilter.run_prodigal(bdb, prod_folder, verbose=verbose, **kwargs)
+    drep.d_filter.run_prodigal(bdb['location'].tolist(), prod_folder, **kwargs)
 
     # Gen gANI commands
     logging.debug("Running gANI...")
@@ -978,9 +978,9 @@ def run_pairwise_gANI(bdb, gANI_folder, prod_folder, **kwargs):
 
                 # If the file doesn't already exist, add it to what needs to be run
                 if not os.path.isfile(file_name):
-                    fna1 = "{0}{1}.fna".format(prod_folder,name1)
-                    fna2 = "{0}{1}.fna".format(prod_folder,name2)
-                    cmds.append(gen_gANI_cmd(file_name,fna1,fna2,gANI_folder,gANI_exe))
+                    fna1 = "{0}.fna".format(os.path.join(prod_folder,name1))
+                    fna2 = "{0}.fna".format(os.path.join(prod_folder,name2))
+                    cmds.append(gen_gANI_cmd(file_name,fna1,fna2,gANI_exe))
 
     # Run commands
     if len(cmds) > 0:
@@ -989,7 +989,8 @@ def run_pairwise_gANI(bdb, gANI_folder, prod_folder, **kwargs):
             logdir = kwargs.get('wd').get_dir('cmd_logs')
         else:
             logdir = False
-        dm.thread_cmds(cmds, logdir=logdir, t=int(p))
+            #logdir = "/home/mattolm/Programs/drep/tests/test_backend/logs/"
+        drep.thread_cmds(cmds, logdir=logdir, t=int(p))
 
     else:
         logging.debug("gANI already run- will not re-run")

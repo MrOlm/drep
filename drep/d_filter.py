@@ -431,8 +431,8 @@ def run_prodigal(genome_list, out_dir, **kwargs):
     # Make list of commands
     cmds = []
     for genome in genome_list:
-        fna = "{0}{1}{2}".format(out_dir,os.path.basename(genome),'.fna')
-        faa = "{0}{1}{2}".format(out_dir,os.path.basename(genome),'.faa')
+        fna = "{0}{1}".format(os.path.join(out_dir,os.path.basename(genome)),'.fna')
+        faa = "{0}{1}".format(os.path.join(out_dir,os.path.basename(genome)),'.faa')
         if os.path.exists(fna) and os.path.exists(faa):
             pass
         else:
@@ -444,6 +444,8 @@ def run_prodigal(genome_list, out_dir, **kwargs):
             logdir = kwargs.get('wd').get_dir('cmd_logs')
         else:
             logdir = False
+            #logdir = "/home/mattolm/Programs/drep/tests/test_backend/logs/"
+
         drep.thread_cmds(cmds, shell=False, logdir=logdir, t=int(t))
 
     else:

@@ -102,9 +102,9 @@ class VerifyDereplicateWf():
         pass
 
     def run(self):
-        self.setUp()
-        self.functional_test_1()
-        self.tearDown()
+        # self.setUp()
+        # self.functional_test_1()
+        # self.tearDown()
 
         self.setUp()
         self.functional_test_2()
@@ -160,7 +160,7 @@ class VerifyDereplicateWf():
         s_wd = WorkDirectory(s_wd_loc)
         wd   = WorkDirectory(wd_loc)
         ensure_identicle(s_wd, wd, skip=['Bdb', 'Chdb', 'Sdb', 'Wdb', 'Widb',\
-            'genomeInformation'])
+            'genomeInformation', 'Mdb'])
 
         # Perform sanity check to make sure solutions directiory isn't
         # being overwritten
@@ -298,9 +298,11 @@ class VerifyFilter():
         wd_loc  = self.wd_loc
 
         # make sure calling it on the right genome
-        assert genomes[4].endswith('Enterococcus_faecalis_T2.fna')
+        genome = [g for g in genomes if g.endswith('Enterococcus_faecalis_T2.fna')]
+        assert len(genome) == 1
+        genome = genome[0]
 
-        args = argumentParser.parse_args(['filter',wd_loc,'-g',genomes[4]] \
+        args = argumentParser.parse_args(['filter',wd_loc,'-g',genome] \
             + ['--checkM_method', 'taxonomy_wf'])
         controller = Controller()
         controller.parseArguments(args)
@@ -345,13 +347,13 @@ class VerifyCluster():
             shutil.rmtree(self.test_dir)
 
     def run(self):
-        self.setUp()
-        self.test_all_vs_all_mash()
-        self.tearDown()
-
-        self.setUp()
-        self.test_cluster_mash_database()
-        self.tearDown()
+        # self.setUp()
+        # self.test_all_vs_all_mash()
+        # self.tearDown()
+        #
+        # self.setUp()
+        # self.test_cluster_mash_database()
+        # self.tearDown()
 
         self.setUp()
         self.test_compare_genomes()
@@ -404,6 +406,18 @@ class VerifyCluster():
         bdb = drep.d_cluster.load_genomes(self.genomes)
         data_folder = self.test_dir
 
+        # Try gANI
+        loc, works = drep.d_bonus.find_program('ANIcalculator')
+        if works:
+            p_folder = os.path.join(data_folder, 'prodigal')
+            print(p_folder)
+            Ndb = drep.d_cluster.compare_genomes(bdb, 'gANI', data_folder, \
+                prod_folder = p_folder)
+            db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+                & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+
+            assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.75)
+
         # Try ANImf
         Ndb = drep.d_cluster.compare_genomes(bdb, 'ANImf', data_folder)
         db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
@@ -416,15 +430,6 @@ class VerifyCluster():
             & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
         assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
 
-        # Try gANI
-        loc, works = drep.d_bonus.find_program('ANIcalculator')
-        if works:
-            Ndb = drep.d_cluster.compare_genomes(bdb, 'gANI', data_folder, \
-                prod_folder = os.path.join(data_folder + 'prodigal'))
-            db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
-                & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
-            assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
-
     def test_all_vs_all_mash(self):
         '''
         Test d_cluster.all_vs_all_MASH
@@ -435,10 +440,11 @@ class VerifyCluster():
         # Run it under normal conditions
         Mdb = drep.d_cluster.all_vs_all_MASH(bdb, data_folder)
         assert len(Mdb) == 25
-        db = Mdb[(Mdb['genome1'] == 'Enterococcus_faecalis_T2.fna') & \
-            (Mdb['genome2'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+        db = Mdb[(Mdb['genome1'] == 'Enterococcus_faecalis_YI6-1.fna') & \
+            (Mdb['genome2'] == 'Enterococcus_faecalis_TX0104.fa')]
+
         d = float(db['dist'].tolist()[0])
-        assert (d > .2) & (d < .3)
+        assert (d > .01) & (d < .02)
         assert len(glob.glob(data_folder + '/MASH_files/sketches/*')) == 1
         assert len(glob.glob(data_folder + '/MASH_files/sketches/*/*')) == 6
 
@@ -450,10 +456,10 @@ class VerifyCluster():
         Mdb = drep.d_cluster.all_vs_all_MASH(bdb, data_folder, groupSize=2)
 
         assert len(Mdb) == 25
-        db = Mdb[(Mdb['genome1'] == 'Enterococcus_faecalis_T2.fna') & \
-            (Mdb['genome2'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+        db = Mdb[(Mdb['genome1'] == 'Enterococcus_faecalis_YI6-1.fna') & \
+            (Mdb['genome2'] == 'Enterococcus_faecalis_TX0104.fa')]
         d = float(db['dist'].tolist()[0])
-        assert (d > .2) & (d < .3)
+        assert (d > .01) & (d < .02)
         assert len(glob.glob(data_folder + '/MASH_files/sketches/*')) == 3
         assert len(glob.glob(data_folder + '/MASH_files/sketches/*/*')) == 8
 
@@ -598,6 +604,11 @@ class VerifyAnalyze():
             os.path.join(self.working_wd_loc, 'data_tables'))
         shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
             os.path.join(self.working_wd_loc, 'log'))
+
+        # edit Bbd to point to the right genomes
+        bdb = drep.d_cluster.load_genomes(load_test_genomes())
+        bdb.to_csv(os.path.join(self.working_wd_loc, 'data_tables', 'Bdb.csv'), \
+            index=False)
 
     def tearDown(self):
         #logging.shutdown()
@@ -859,17 +870,17 @@ class VerifyTaxonomy():
             os.path.join(self.wd_loc, 'data'))
 
     def run(self):
-        self.setUp()
-        self.taxTest1()
-        self.tearDown()
-
-        self.setUp()
-        self.taxTest2()
-        self.tearDown()
-
         # self.setUp()
-        # self.taxTest3()
+        # self.taxTest1()
         # self.tearDown()
+        #
+        # self.setUp()
+        # self.taxTest2()
+        # self.tearDown()
+
+        self.setUp()
+        self.taxTest3()
+        self.tearDown()
 
     def taxTest1(self):
         '''
@@ -1269,11 +1280,11 @@ if __name__ == '__main__':
     # test_short()
     # test_long()
 
-    # filter_test()
+    #filter_test()
     #choose_test()
-    analyze_test()
-    #dereplicate_test()
-    #taxonomy_test()
-    #cluster_test()
+    #analyze_test()
+    # dereplicate_test()
+    cluster_test()
+    # taxonomy_test()
 
     print("Everything seems to be working swimmingly!")
