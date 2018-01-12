@@ -30,7 +30,7 @@ def run_taxonomy(wd, **kwargs):
     Bdb, prod_dir, cent_dir = validate_arguments(wd, **kwargs)
 
     # Run prodigal
-    drep.d_filter.run_prodigal(Bdb, prod_dir, **kwargs)
+    drep.d_filter.run_prodigal(Bdb['location'].tolist(), prod_dir, **kwargs)
 
     # Run centrifuge
     run_centrifuge(Bdb, prod_dir, cent_dir, wd=wd, **kwargs)
@@ -419,29 +419,3 @@ def gen_centrifuge_cmd(genes,cent,**kwargs):
             '-p','1','--report-file',"{0}_report.tsv".format(cent)]
 
     return cmd
-
-'''
-def gen_giant_centrifuge_cmd(genes,base,**kwargs):
-    loc = shutil.which('centrifuge')
-    if loc == None:
-        print("Can't find centrifuge- make sure it's in your system path")
-        sys.exit()
-    ind = kwargs.get('tax_db','ncbi')
-    if ind == 'ncbi':
-        cent_indicies = kwargs.get('cent_indicies', '/data3/Human/NIH_4/CentrifugeIndex/nt')
-    elif ind == 'bac_only':
-        cent_indicies = kwargs.get('cent_exe', '/home/mattolm/download/centrifuge/indices/b+h+v')
-    cent_exe = kwargs.get('cent_exe', '/home/mattolm/download/centrifuge/centrifuge')
-    p = kwargs.get('processors')
-
-    cmd = [cent_exe, '-f', '-x', cent_indicies, '-U', ','.join(genes), '-S',\
-        "{0}_hits.tsv".format(base),'-p',str(p),'--report-file',"{0}_report.tsv".format(base)]
-
-    return cmd
-'''
-
-def test_bonus():
-    print("Write this you lazy bum")
-
-if __name__ == '__main__':
-	test_bonus()

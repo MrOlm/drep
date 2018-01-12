@@ -882,6 +882,11 @@ class VerifyTaxonomy():
         self.taxTest3()
         self.tearDown()
 
+        self.setUp()
+        self.taxTest4()
+        self.tearDown()
+
+
     def taxTest1(self):
         '''
         Check the taxonomy call for max method
@@ -962,6 +967,44 @@ class VerifyTaxonomy():
 
             # Remove previous data run
             shutil.rmtree(os.path.join(self.wd_loc, 'data', 'centrifuge'))
+
+            # Call the command
+            args = argumentParser.parse_args(['bonus',wd_loc,'-g'] +genomes \
+                    + ['--run_tax','--cent_index','/home/mattolm/download/centrifuge/indices/b+h+v',\
+                    '--tax_method', 'percent'])
+            controller = Controller()
+            controller.parseArguments(args)
+
+            # Verify
+            Swd = WorkDirectory(swd_loc)
+            wd = WorkDirectory(wd_loc)
+
+            tdbS = Swd.get_db('BdbP')
+            tdb = wd.get_db('Bdb')
+            del tdbS['location']
+            del tdb['location']
+            assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Bdb')
+
+            tdbS = Swd.get_db('TdbP')
+            tdb = wd.get_db('Tdb')
+            assert compare_dfs(tdb, tdbS), "{0} is not the same!".format('Tdb')
+
+    def taxTest4(self):
+        '''
+        Try actually running centrifuge without prodigal done
+        '''
+        loc, works = drep.d_bonus.find_program('centrifuge')
+        if works == False:
+            print('Centrifuge not installed- skipping tests')
+
+        else:
+            genomes = self.genomes
+            wd_loc = self.wd_loc
+            swd_loc = self.s_wd_loc
+
+            # Remove previous data run
+            shutil.rmtree(os.path.join(self.wd_loc, 'data', 'centrifuge'))
+            shutil.rmtree(os.path.join(self.wd_loc, 'data', 'prodigal'))
 
             # Call the command
             args = argumentParser.parse_args(['bonus',wd_loc,'-g'] +genomes \
@@ -1288,8 +1331,8 @@ if __name__ == '__main__':
     #filter_test()
     #choose_test()
     #analyze_test()
-    # dereplicate_test()
+    dereplicate_test()
     #cluster_test()
-    taxonomy_test()
+    #taxonomy_test()
 
     print("Everything seems to be working swimmingly!")
