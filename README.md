@@ -38,7 +38,7 @@ $ drep bonus output_directory --check_dependencies
 * [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x) is used to repadily compare all genomes in a pair-wise manner
 * [MUMmer](http://mummer.sourceforge.net/) is used to perform more actuate comparisons between genomes which are shown to be similar with Mash
 
-### Recommended
+### Optional
 * [CheckM](http://ecogenomics.github.io/CheckM/) is used to determine the contamination and completeness of genomes (used during de-replication)
 * [gANI (aka ANIcalculator)](https://ani.jgi-psf.org/html/download.php?) is an optional alternative to MUMmer
 * [Prodigal](http://prodigal.ornl.gov/) is a dependency of both checkM and gANI
