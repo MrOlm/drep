@@ -35,7 +35,7 @@ $ drep bonus output_directory --check_dependencies
 
 ## Dependencies
 ### Required
-* [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x) is used to repadily compare all genomes in a pair-wise manner
+* [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x) is used to rapidly compare all genomes in a pair-wise manner
 * [MUMmer](http://mummer.sourceforge.net/) is used to perform more actuate comparisons between genomes which are shown to be similar with Mash
 
 ### Optional
