@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.0.5] - 2018-01-12
+### Fixed
+- taxonomy now works when prodigal was not previously run
+
 ## [2.0.4] - 2018-01-09
 ### Fixed
 - some changes in d_cluster that make gANI work

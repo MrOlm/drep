@@ -428,6 +428,9 @@ def run_prodigal(genome_list, out_dir, **kwargs):
     if loc == None:
         loc = drep.get_exe('prodigal')
 
+    # Make sure it's a list
+    assert type(genome_list) == list
+
     # Make list of commands
     cmds = []
     for genome in genome_list:
