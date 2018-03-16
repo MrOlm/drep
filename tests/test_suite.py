@@ -11,12 +11,12 @@ import os
 import pytest
 import shutil
 import logging
-
 import pandas as pd
+
+from collections import defaultdict
 
 import drep
 import drep.d_filter
-
 from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
@@ -1183,6 +1183,7 @@ class UnitTests():
         run all tests
         '''
         self.test1()
+        self.test2()
         self.test3()
 
     def test1(self):
@@ -1202,6 +1203,42 @@ class UnitTests():
         assert compare_dfs(df1, df4)
 
         assert not compare_dfs(df1, df3)
+
+    def test2(self):
+        '''
+        test scoring calculation
+        '''
+        table = defaultdict(list)
+        table['testnumber'].append("1")
+        table['completeness'].append(100)
+        table['contamination'].append(0)
+        table['N50'].append(100)
+        table['length'].append(100000)
+        table['strain_heterogeneity'].append(0)
+
+        table['testnumber'].append("2")
+        table['completeness'].append(100)
+        table['contamination'].append(0)
+        table['N50'].append(100)
+        table['length'].append(100000)
+        table['strain_heterogeneity'].append(50)
+
+        table['testnumber'].append("3")
+        table['completeness'].append(88.2)
+        table['contamination'].append(10)
+        table['N50'].append(100)
+        table['length'].append(100000)
+        table['strain_heterogeneity'].append(50)
+        df = pd.DataFrame(table)
+
+        for i, row in df.groupby('testnumber'):
+            score = drep.d_choose.score_row(row)
+            if i == "1":
+                assert score == 107.0
+            elif i == "2":
+                assert score == 107.0
+            elif i == "3":
+                assert score == 90.2
 
     def test3(self):
         '''
@@ -1280,7 +1317,7 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    # test_unit()
+    test_unit()
     # test_quick()
     # test_short()
     # test_long()
@@ -1290,6 +1327,6 @@ if __name__ == '__main__':
     #analyze_test()
     # dereplicate_test()
     #cluster_test()
-    taxonomy_test()
+    #taxonomy_test()
 
     print("Everything seems to be working swimmingly!")
