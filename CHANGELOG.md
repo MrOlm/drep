@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.1.0] - 2018-03-19
+### Changed
+- removed the overwrite option and enabled it by default. It was half-baked and didn't work anyways
+
 ## [2.0.6] - 2018-03-16
 ### Added
 - added unit tests for scoring

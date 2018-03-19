@@ -567,7 +567,7 @@ class VerifyCluster():
         s_wd_loc = self.s_wd_loc
 
         args = argumentParser.parse_args(['cluster',wd_loc,'-g'] +genomes \
-                + ['--SkipSecondary','-o'])
+                + ['--SkipSecondary'])
         controller = Controller()
         controller.parseArguments(args)
 
@@ -810,7 +810,7 @@ class VerifyChoose():
         Bdb.to_csv(wd_loc + '/data_tables/Bdb.csv', index=False)
 
         # Run choose - this should re-run checkM and re-generate chdb
-        args = argumentParser.parse_args(['choose', wd_loc, '-o', '--checkM_method',\
+        args = argumentParser.parse_args(['choose', wd_loc, '--checkM_method',\
             'taxonomy_wf'])
         controller = Controller()
         controller.parseArguments(args)
@@ -1084,7 +1084,7 @@ class QuickTests():
         '''
         # normal complete run
         args = argumentParser.parse_args(['cluster',self.working_wd_loc,'-g'] + \
-            self.genomes + ['-o'])
+            self.genomes)
         controller = Controller()
         controller.parseArguments(args)
 
@@ -1105,7 +1105,7 @@ class QuickTests():
         '''
         # run
         args = argumentParser.parse_args(['cluster',self.working_wd_loc,'-g'] + \
-            self.genomes + ['-o', '--SkipSecondary'])
+            self.genomes + ['--SkipSecondary'])
         controller = Controller()
         controller.parseArguments(args)
 
@@ -1131,7 +1131,7 @@ class QuickTests():
 
         # normal complete run
         args = argumentParser.parse_args(['cluster',self.working_wd_loc,'-g'] + \
-            self.genomes + ['-o', '--SkipMash'])
+            self.genomes + ['--SkipMash'])
         controller = Controller()
         controller.parseArguments(args)
 
@@ -1151,7 +1151,7 @@ class QuickTests():
         '''
         # normal complete run
         args = argumentParser.parse_args(['cluster',self.working_wd_loc,'-g'] + \
-            self.genomes + ['-o', '-pa', '0.10'])
+            self.genomes + ['-pa', '0.10'])
         controller = Controller()
         controller.parseArguments(args)
 
@@ -1177,7 +1177,7 @@ class QuickTests():
         '''
         # normal complete run
         args = argumentParser.parse_args(['cluster',self.working_wd_loc,'-g'] + \
-            self.genomes + ['-o', '--S_algorithm', 'gANI'])
+            self.genomes + ['--S_algorithm', 'gANI'])
         controller = Controller()
         controller.parseArguments(args)
 

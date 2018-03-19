@@ -70,8 +70,8 @@ def parse_args(args):
     Bflags.add_argument('-p','--processors',help='threads',default=6,type=int)
     Bflags.add_argument('-d','--debug',help='make extra debugging output',default=False,
                         action= "store_true")
-    Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
-                        default=False, action= "store_true")
+    # Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
+    #                     default=False, action= "store_true")
     Bflags.add_argument("-h", "--help", action="help", help="show this help message and exit")
 
     #

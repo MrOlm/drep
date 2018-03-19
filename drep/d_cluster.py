@@ -366,13 +366,13 @@ def _parse_cluster_arguments(workDirectory, **kwargs):
         Bdb = workDirectory.get_db('Bdb')
 
     # Make sure this isn't going to overwrite old data
-    overwrite = kwargs.get('overwrite',False)
-    for db in ['Cdb','Mdb','Ndb']:
-        if workDirectory.hasDb(db):
-            if not overwrite:
-                logging.error("clustering already exists; run with --overwrite to continue")
-                sys.exit()
-            logging.debug("THIS WILL OVERWRITE {0}".format(db))
+    # overwrite = kwargs.get('overwrite', True)
+    # for db in ['Cdb','Mdb','Ndb']:
+    #     if workDirectory.hasDb(db):
+    #         if not overwrite:
+    #             logging.error("clustering already exists; run with --overwrite to continue")
+    #             sys.exit()
+    #         logging.debug("THIS WILL OVERWRITE {0}".format(db))
 
     # Make sure people weren't dumb with their cutoffs
     for v in ['P_ani', 'S_ani']:
@@ -453,7 +453,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
 
     MASH_s = kwargs.get('MASH_sketch',1000)
     dry = kwargs.get('dry',False)
-    overwrite = kwargs.get('overwrite', False)
+    # overwrite = kwargs.get('overwrite', False)
     mash_exe = kwargs.get('mash_exe', None)
     p = kwargs.get('processors',6)
     groupSize = kwargs.get('groupSize', 1000)

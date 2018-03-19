@@ -74,8 +74,8 @@ def d_choose_wrapper(wd, **kwargs):
     Sdb, Wdb = choose_winners(Cdb, Gdb, **kwargs)
 
     # Save Sdb and Wdb
-    workDirectory.store_db(Sdb,'Sdb',overwrite=kwargs.get('overwrite',False))
-    workDirectory.store_db(Wdb,'Wdb',overwrite=kwargs.get('overwrite',False))
+    workDirectory.store_db(Sdb,'Sdb',overwrite=True)
+    workDirectory.store_db(Wdb,'Wdb',overwrite=True)
 
     # Make a "winning genomes" folder and populate it
     logging.debug('saving dereplicated genomes')

@@ -45,7 +45,7 @@ def run_taxonomy(wd, **kwargs):
     Tdb, Bdb = parse_taxonomy(Bdb, cent_dir, **kwargs)
 
     # Save Tdb and Bdb
-    wd.store_db(Tdb,'Tdb',overwrite=kwargs.get('overwrite',False))
+    wd.store_db(Tdb,'Tdb',overwrite=True)
     wd.store_db(Bdb,'Bdb',overwrite=True)
 
 def parse_taxonomy(Bdb, cent_dir, **kwargs):
@@ -87,9 +87,9 @@ def validate_arguments(wd, **kwargs):
 
     prod_dir = wd.get_dir('prodigal')
     cent_dir = wd.get_dir('centrifuge')
-    if wd.hasDb('Tdb') and (kwargs.get('overwrite',False) == False):
-        logging.error('Tdb already exists- run with overwrite to overwrite')
-        sys.exit()
+    # if wd.hasDb('Tdb') and (kwargs.get('overwrite',False) == False):
+    #     logging.error('Tdb already exists- run with overwrite to overwrite')
+    #     sys.exit()
 
     return Bdb, prod_dir, cent_dir
 

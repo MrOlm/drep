@@ -57,7 +57,7 @@ class WorkDirectory(object):
         self.data_tables = {}
         self.clusters = {}
         self.arguments = {}
-        self.overwrite = False
+        self.overwrite = True
         self.name = None
 
         self.make_fileStructure()
@@ -179,7 +179,7 @@ class WorkDirectory(object):
         '''
         return self.clusters['primary_linkage']
 
-    def store_db(self,db,name,overwrite=False):
+    def store_db(self,db,name,overwrite=None):
         '''
         Store a dataframe in the workDirectory
 
@@ -191,6 +191,9 @@ class WorkDirectory(object):
             overwrite: if True, overwrite if DataFrame with same name already exists
         '''
         loc = self.get_dir('data_tables')
+
+        if overwrite == None:
+            overwrite = self.overwrite
 
         if os.path.isfile(loc + name + '.csv'):
             assert overwrite == True, "data_table {0} already exists".format(name)

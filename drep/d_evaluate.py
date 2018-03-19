@@ -29,8 +29,8 @@ def d_evaluate_wrapper(wd,**kwargs):
         Wmdb, Wndb = compare_winners(wd,**kwargs)
 
         # Save databases
-        wd.store_db(Wmdb,'Wmdb',overwrite=kwargs.get('overwrite',False))
-        wd.store_db(Wndb,'Wndb',overwrite=kwargs.get('overwrite',False))
+        wd.store_db(Wmdb,'Wmdb',overwrite=True)
+        wd.store_db(Wndb,'Wndb',overwrite=True)
 
     # 2) Throw warnings for clusters that were almost different
     if '2' in to_eval:
@@ -50,7 +50,7 @@ def d_evaluate_wrapper(wd,**kwargs):
         Widb = evaluate_winners(wd, **kwargs)
 
         # Save it
-        wd.store_db(Widb,'Widb',overwrite=kwargs.get('overwrite',False))
+        wd.store_db(Widb,'Widb',overwrite=True)
         loc = wd.location + 'data_tables/Widb.csv'
         logging.info("Winner database saved to {0}".format(loc))
 
