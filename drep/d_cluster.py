@@ -124,6 +124,13 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
     Returns:
         list: [Mdb(db of primary clustering), Ndb(db of secondary clustering, Cdb(clustering information))]
     """
+    # Handle debug mode
+    if kwargs.get('debug', False):
+        debug = True
+        wd = kwargs.get('wd')
+    else:
+        debug = False
+
     logging.info("Clustering Step 1. Parse Arguments")
 
     Bdb = load_genomes(genome_list)
@@ -140,6 +147,10 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
 
         logging.info("2a. Run pair-wise MASH clustering")
         Mdb = all_vs_all_MASH(Bdb, data_folder, **kwargs)
+
+        if debug:
+            logging.debug("Debug mode on - saving Mdb ASAP")
+            wd.store_db(Mdb, 'Mdb')
 
         logging.info("2b. Cluster pair-wise MASH clustering")
         Cdb, cluster_ret = cluster_mash_database(Mdb, **kwargs)
@@ -162,14 +173,23 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
     if kwargs.get('wd', None) != None:
         kwargs.get('wd')._wipe_secondary_clusters()
 
+    if debug:
+        logging.debug("Debug mode on - saving CdbF ASAP")
+        wd.store_db(Cdb, 'CdbF')
+
     if not kwargs.get('SkipSecondary', False):
         # Run comparisons, make Ndb
         _print_time_estimate(Bdb, Cdb, algorithm, kwargs.get('processors', 6))
         Ndb = pd.DataFrame()
         for bdb, name in iteratre_clusters(Bdb,Cdb):
+            logging.debug('running cluster {0}'.format(name))
             ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
             ndb['primary_cluster'] = name
             Ndb = pd.concat([Ndb,ndb], ignore_index= True)
+
+        if debug:
+            logging.debug("Debug mode on - saving Ndb ASAP")
+            wd.store_db(Ndb, 'Ndb')
 
         # Run clustering on Ndb
         Cdb, c2ret = _cluster_Ndb(Ndb, comp_method=algorithm, **kwargs)

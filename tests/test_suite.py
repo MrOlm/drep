@@ -1059,11 +1059,11 @@ class QuickTests():
         # self.tearDown()
 
         self.setUp()
-        self.unit_tests_6()
+        self.unit_tests_1()
         self.tearDown()
 
         self.setUp()
-        self.unit_tests_1()
+        self.unit_tests_6()
         self.tearDown()
 
         self.setUp()
@@ -1097,6 +1097,22 @@ class QuickTests():
         for db in ['Cdb', 'Ndb']:
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
+
+            if compare_dfs(db1, db2) == False:
+                # db1['solution'] = True
+                # db2['solution'] = False
+                # db = pd.merge(db1, db2, on='')
+                db1 = db1[['reference', 'querry', 'ani']]
+                db1.rename(columns={'ani':'ani1'}, inplace=True)
+                db2 = db2[['reference', 'querry', 'ani']]
+                db2.rename(columns={'ani':'ani2'}, inplace=True)
+                db1.sort_values(['reference', 'querry'], inplace=True)
+                db2.sort_values(['reference', 'querry'], inplace=True)
+                print("{0} is not the same!".format(db))
+                my_panel = pd.Panel(dict(df1=db1,df2=db2))
+                print(my_panel.apply(report_diff, axis=0))
+                print(pd.merge(db1, db2, on=['reference', 'querry']))
+
             assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
 
     def unit_tests_2(self):
@@ -1360,15 +1376,15 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    test_unit()
-    # test_quick()
-    # test_short()
-    # test_long()
+    #test_unit()
+    test_quick()
+    test_short()
+    test_long()
 
     #filter_test()
     #choose_test()
     #analyze_test()
-    dereplicate_test()
+    #dereplicate_test()
     #cluster_test()
     #taxonomy_test()
 
