@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.1.1] - 2018-03-22
+### Changed
+- use threading instead of multiprocessing. This should significantly help with RAM utilization of large genome lists
+- Added some extra debug options
+
 ## [2.1.0] - 2018-03-19
 ### Changed
 - removed the overwrite option and enabled it by default. It was half-baked and didn't work anyways

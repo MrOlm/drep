@@ -5,6 +5,7 @@ import os
 from Bio import SeqIO
 import shutil
 import multiprocessing
+import multiprocessing.dummy
 import datetime
 
 import drep.d_filter
@@ -50,7 +51,7 @@ def thread_cmd_wrapper(tup):
     run_cmd(*tup)
 
 def thread_cmds(cmds, dry=False, shell=False, logdir=False, t=10):
-    pool = multiprocessing.Pool(processes=t)
+    pool = multiprocessing.dummy.Pool(processes=t)
     tups = [(cmd, dry, shell, logdir) for cmd in cmds]
     pool.map(thread_cmd_wrapper, tups)
     pool.close()

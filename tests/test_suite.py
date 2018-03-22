@@ -1399,8 +1399,8 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    #test_unit()
-    # test_quick()
+    # test_unit()
+    test_quick()
     # test_short()
     # test_long()
 
@@ -1411,9 +1411,9 @@ if __name__ == '__main__':
     #cluster_test()
     #taxonomy_test()
 
-    verifyCluster = VerifyCluster()
-    verifyCluster.setUp()
-    verifyCluster.time_compare_genomes()
-    verifyCluster.tearDown()
+    # verifyCluster = VerifyCluster()
+    # verifyCluster.setUp()
+    # verifyCluster.time_compare_genomes()
+    # verifyCluster.tearDown()
 
     print("Everything seems to be working swimmingly!")
