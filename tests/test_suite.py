@@ -356,6 +356,10 @@ class VerifyCluster():
         # self.tearDown()
 
         self.setUp()
+        self.time_compare_genomes()
+        self.tearDown()
+
+        self.setUp()
         self.test_compare_genomes()
         self.tearDown()
 
@@ -429,6 +433,25 @@ class VerifyCluster():
         db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
             & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
         assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
+
+    def time_compare_genomes(self):
+        '''
+        Time d_cluster.compare_genomes
+        '''
+        import time
+
+        bdb = drep.d_cluster.load_genomes(self.genomes)
+        data_folder = self.test_dir
+
+        # Try ANImf
+        start = time.time()
+        Ndb = drep.d_cluster.compare_genomes(bdb, 'ANImf', data_folder)
+        db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+            & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+        assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
+        end = time.time()
+
+        print("Time: {0:.2f}".format(end-start))
 
     def test_all_vs_all_mash(self):
         '''
@@ -1377,9 +1400,9 @@ def test_unit():
 
 if __name__ == '__main__':
     #test_unit()
-    test_quick()
-    test_short()
-    test_long()
+    # test_quick()
+    # test_short()
+    # test_long()
 
     #filter_test()
     #choose_test()
@@ -1387,5 +1410,10 @@ if __name__ == '__main__':
     #dereplicate_test()
     #cluster_test()
     #taxonomy_test()
+
+    verifyCluster = VerifyCluster()
+    verifyCluster.setUp()
+    verifyCluster.time_compare_genomes()
+    verifyCluster.tearDown()
 
     print("Everything seems to be working swimmingly!")
