@@ -354,10 +354,10 @@ class VerifyCluster():
         # self.setUp()
         # self.test_cluster_mash_database()
         # self.tearDown()
-
-        self.setUp()
-        self.time_compare_genomes()
-        self.tearDown()
+        #
+        # self.setUp()
+        # self.time_compare_genomes()
+        # self.tearDown()
 
         self.setUp()
         self.test_compare_genomes()
@@ -414,7 +414,7 @@ class VerifyCluster():
         loc, works = drep.d_bonus.find_program('ANIcalculator')
         if works:
             p_folder = os.path.join(data_folder, 'prodigal')
-            print(p_folder)
+            #print(p_folder)
             Ndb = drep.d_cluster.compare_genomes(bdb, 'gANI', data_folder, \
                 prod_folder = p_folder)
             db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
@@ -1400,7 +1400,7 @@ def test_unit():
 
 if __name__ == '__main__':
     # test_unit()
-    test_quick()
+    # test_quick()
     # test_short()
     # test_long()
 
@@ -1408,7 +1408,7 @@ if __name__ == '__main__':
     #choose_test()
     #analyze_test()
     #dereplicate_test()
-    #cluster_test()
+    cluster_test()
     #taxonomy_test()
 
     # verifyCluster = VerifyCluster()

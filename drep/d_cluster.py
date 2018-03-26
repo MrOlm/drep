@@ -548,15 +548,15 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     drep.run_cmd(cmd, dry, shell=True, logdir=logdir)
 
     # Make Mdb based on all genomes in the MASH folder
-    Mdb = pd.DataFrame()
     file = MASH_folder + 'MASH_table.tsv'
 
-    table = pd.read_csv(file,sep='\t',header = None)
-    table.columns = ['genome1','genome2','dist','p','kmers']
-    table['genome1'] = table['genome1'].apply(_get_genome_name_from_fasta)
-    table['genome2'] = table['genome2'].apply(_get_genome_name_from_fasta)
-    Mdb = pd.concat([Mdb,table],ignore_index=True)
-    Mdb['similarity'] = 1 - Mdb['dist'].astype(float)
+    iniCols = ['genome1','genome2','dist','p','kmers']
+    uCols = ['genome1','genome2','dist']
+    dTypes = {'genome1':'category', 'genome2':'category', 'dist':np.float32}
+    Mdb = pd.read_table(file, names=iniCols, usecols=uCols, dtype=dTypes)
+    Mdb['genome1'] = Mdb['genome1'].apply(_get_genome_name_from_fasta)
+    Mdb['genome2'] = Mdb['genome2'].apply(_get_genome_name_from_fasta)
+    Mdb['similarity'] = 1 - Mdb['dist']
 
     # Filter out those genomes that are in the MASH folder but shouldn't be in Mdb
     genomes = Bdb['genome'].unique()
