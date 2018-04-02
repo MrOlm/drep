@@ -563,6 +563,11 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     Mdb = Mdb[Mdb['genome1'].isin(genomes)]
     Mdb = Mdb[Mdb['genome2'].isin(genomes)]
 
+    # Reorder categories to be correct
+    for g in ['genome1', 'genome2']:
+        Mdb[g] = Mdb[g].cat.remove_unused_categories()
+        Mdb[g] = Mdb[g].cat.reorder_categories(sorted((Mdb[g].unique())), ordered=True)
+
     return Mdb
 
 def cluster_mash_database(db, **kwargs):

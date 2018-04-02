@@ -4,9 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [2.2.0] - Unreleased
+## [2.2.0] - 2018-04-02
 ### Changed
 - RAM optimization with regards to loading Mash table
+- Pickle protocol 4 to allow storage of larger clusterings
+- Increased debug tools
 
 ## [2.1.1] - 2018-03-22
 ### Changed

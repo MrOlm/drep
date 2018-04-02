@@ -288,9 +288,9 @@ class WorkDirectory(object):
             store_loc = self.get_dir('clustering')
             logging.debug('Saving primary_linkage pickle to {0}'.format(store_loc))
             with open(store_loc + 'primary_linkage.pickle', 'wb') as handle:
-                pickle.dump(thing[0], handle)
-                pickle.dump(thing[1], handle)
-                pickle.dump(thing[2], handle)
+                pickle.dump(thing[0], handle, protocol=4)
+                pickle.dump(thing[1], handle, protocol=4)
+                pickle.dump(thing[2], handle, protocol=4)
 
         elif name == 'secondary_linkages':
             assert type(thing) == dict
@@ -305,9 +305,9 @@ class WorkDirectory(object):
                 logging.debug('Saving secondary_linkage pickle {1} to {0}'.format(pickle_name,\
                                                                     store_loc))
                 with open(store_loc + pickle_name, 'wb') as handle:
-                    pickle.dump(cluster_ret[0], handle)
-                    pickle.dump(cluster_ret[1],handle)
-                    pickle.dump(cluster_ret[2],handle)
+                    pickle.dump(cluster_ret[0],handle, protocol=4)
+                    pickle.dump(cluster_ret[1],handle, protocol=4)
+                    pickle.dump(cluster_ret[2],handle, protocol=4)
 
         elif name == 'dereplicated_genomes':
             output_folder = self.get_dir('dereplicated_genomes')
@@ -324,7 +324,7 @@ class WorkDirectory(object):
         elif name == 'cluster_log':
             cluster_log = os.path.join(self.get_dir('log') + 'cluster_arguments.json')
             with open(cluster_log, 'w') as fp:
-                json.dump(thing, fp)
+                json.dump(thing, fp, protocol=4)
             fp.close()
 
     def _wipe_secondary_clusters(self):
