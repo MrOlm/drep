@@ -19,6 +19,8 @@ import pickle
 import time
 import glob
 
+import memory_profiler
+
 import drep
 import drep.d_filter
 import drep.d_bonus
@@ -58,7 +60,6 @@ def d_cluster_wrapper(workDirectory, **kwargs):
     Returns:
         Stores Cdb, Mdb, Ndb, Bdb
     '''
-
     # Load the WorkDirectory.
     logging.debug("Loading work directory")
     workDirectory = drep.WorkDirectory.WorkDirectory(workDirectory)
@@ -142,9 +143,23 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         = _nucmer_preset(kwargs['n_PRESET'])
     logging.debug("kwargs to cluster: {0}".format(kwargs))
 
-    logging.info("Clustering Step 2. Perform MASH (primary) clustering")
-    if not kwargs.get('SkipMash', False):
 
+    logging.info("Clustering Step 2. Perform MASH (primary) clustering")
+    # figure out if you have cached Mdb / CdbF
+    cached = (debug and wd.hasDb('Mdb') and wd.hasDb('CdbF'))
+
+    if kwargs.get('SkipMash', False):
+        logging.info("2. Nevermind! Skipping Mash")
+        # Make a "Cdb" where all genomes are in the same cluster
+        Cdb = _gen_nomash_cdb(Bdb)
+        # Make a blank "Mdb" for storage anyways
+        Mdb = pd.DataFrame({'Blank':[]})
+
+    elif cached:
+        print('cached!')
+        sys.exit()
+
+    else:
         logging.info("2a. Run pair-wise MASH clustering")
         Mdb = all_vs_all_MASH(Bdb, data_folder, **kwargs)
 
@@ -155,16 +170,13 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         logging.info("2b. Cluster pair-wise MASH clustering")
         Cdb, cluster_ret = cluster_mash_database(Mdb, **kwargs)
 
+        if debug:
+            logging.debug("Debug mode on - saving CdbF ASAP")
+            wd.store_db(Cdb, 'CdbF')
+
         # Store the primary clustering results
         if kwargs.get('wd', None) != None:
             kwargs.get('wd').store_special('primary_linkage', cluster_ret)
-
-    else:
-        logging.info("2. Nevermind! Skipping Mash")
-        # Make a "Cdb" where all genomes are in the same cluster
-        Cdb = _gen_nomash_cdb(Bdb)
-        # Make a blank "Mdb" for storage anyways
-        Mdb = pd.DataFrame({'Blank':[]})
 
     logging.info("{0} primary clusters made".format(len(Cdb['primary_cluster'].unique())))
     logging.info("Step 3. Perform secondary clustering")
@@ -172,10 +184,6 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
     # Wipe any old secondary clusters
     if kwargs.get('wd', None) != None:
         kwargs.get('wd')._wipe_secondary_clusters()
-
-    if debug:
-        logging.debug("Debug mode on - saving CdbF ASAP")
-        wd.store_db(Cdb, 'CdbF')
 
     if not kwargs.get('SkipSecondary', False):
         # Run comparisons, make Ndb

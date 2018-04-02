@@ -111,8 +111,8 @@ class WorkDirectory(object):
         tables = [os.path.join(loc, t) for t in os.listdir(loc) if \
                 os.path.isfile(os.path.join(loc, t))]
         for t in tables:
-            assert t.endswith('.csv'), "{0} is incorrectly in the data_tables folder".format(t)
-            self.data_tables[os.path.basename(t).replace('.csv','')] = pd.read_csv(t)
+            self.data_tables[os.path.basename(t).replace('.csv','').\
+                replace('.pickle', '')] = t
 
     def import_clusters(self,loc):
         '''
@@ -198,8 +198,15 @@ class WorkDirectory(object):
         if os.path.isfile(loc + name + '.csv'):
             assert overwrite == True, "data_table {0} already exists".format(name)
 
-        db.to_csv(loc + name + '.csv', index=False)
-        self.data_tables[name] = db
+        if name == 'Mdb':
+            floc = loc + name + '.csv',
+            db.to_csv(floc, index=False)
+            self.data_tables[name] = floc
+
+        else:
+            floc = loc + name + '.csv',
+            db.to_csv(floc, index=False)
+            self.data_tables[name] = floc
 
     def get_db(self, name, return_none=True):
         '''
@@ -210,7 +217,12 @@ class WorkDirectory(object):
             return_none: if True will return None if database not found; otherwise assert False
         '''
         if name in self.data_tables:
-            return self.data_tables[name]
+            if name == 'Mdb':
+                return pd.read_csv(self.data_tables[name],\
+                    dTypes = {'genome1':'category', 'genome2':'category', 'dist':np.float32,\
+                    'similarity':np.float32})
+            else:
+                return pd.read_csv(self.data_tables[name])
         else:
             if return_none:
                 return None
