@@ -542,7 +542,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     drep.run_cmd(cmd, dry, shell=False, logdir=logdir)
 
     # Calculate distances
-    cmd = [mash_exe, 'dist', all_file, all_file, '>', MASH_folder
+    cmd = [mash_exe, 'dist','-p', str(p), all_file, all_file, '>', MASH_folder
             + 'MASH_table.tsv']
     cmd = ' '.join(cmd)
     drep.run_cmd(cmd, dry, shell=True, logdir=logdir)
