@@ -23,6 +23,10 @@ import drep
 import drep.d_filter
 import drep.d_bonus
 
+# from memory_profiler import profile
+# import psutil
+# process = psutil.Process(os.getpid())
+
 # This is to make pandas shut up with it's warnings
 pd.options.mode.chained_assignment = None
 
@@ -58,7 +62,6 @@ def d_cluster_wrapper(workDirectory, **kwargs):
     Returns:
         Stores Cdb, Mdb, Ndb, Bdb
     '''
-
     # Load the WorkDirectory.
     logging.debug("Loading work directory")
     workDirectory = drep.WorkDirectory.WorkDirectory(workDirectory)
@@ -143,8 +146,24 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
     logging.debug("kwargs to cluster: {0}".format(kwargs))
 
     logging.info("Clustering Step 2. Perform MASH (primary) clustering")
-    if not kwargs.get('SkipMash', False):
+    #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
+    # figure out if you have cached Mdb / CdbF
+    cached = (debug and wd.hasDb('Mdb') and wd.hasDb('CdbF'))
 
+    if kwargs.get('SkipMash', False):
+        logging.info("2. Nevermind! Skipping Mash")
+        # Make a "Cdb" where all genomes are in the same cluster
+        Cdb = _gen_nomash_cdb(Bdb)
+        # Make a blank "Mdb" for storage anyways
+        Mdb = pd.DataFrame({'Blank':[]})
+
+    elif cached:
+        logging.info('2. Nevermind! Loading cached primary clustering')
+        Mdb = wd.get_db('Mdb')
+        Cdb = wd.get_db('CdbF')
+        logging.info('2. Primary clustering cache loaded')
+
+    else:
         logging.info("2a. Run pair-wise MASH clustering")
         Mdb = all_vs_all_MASH(Bdb, data_folder, **kwargs)
 
@@ -155,27 +174,21 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         logging.info("2b. Cluster pair-wise MASH clustering")
         Cdb, cluster_ret = cluster_mash_database(Mdb, **kwargs)
 
+        if debug:
+            logging.debug("Debug mode on - saving CdbF ASAP")
+            wd.store_db(Cdb, 'CdbF')
+
         # Store the primary clustering results
         if kwargs.get('wd', None) != None:
             kwargs.get('wd').store_special('primary_linkage', cluster_ret)
 
-    else:
-        logging.info("2. Nevermind! Skipping Mash")
-        # Make a "Cdb" where all genomes are in the same cluster
-        Cdb = _gen_nomash_cdb(Bdb)
-        # Make a blank "Mdb" for storage anyways
-        Mdb = pd.DataFrame({'Blank':[]})
-
     logging.info("{0} primary clusters made".format(len(Cdb['primary_cluster'].unique())))
     logging.info("Step 3. Perform secondary clustering")
+    #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
 
     # Wipe any old secondary clusters
     if kwargs.get('wd', None) != None:
         kwargs.get('wd')._wipe_secondary_clusters()
-
-    if debug:
-        logging.debug("Debug mode on - saving CdbF ASAP")
-        wd.store_db(Cdb, 'CdbF')
 
     if not kwargs.get('SkipSecondary', False):
         # Run comparisons, make Ndb
@@ -183,9 +196,10 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         Ndb = pd.DataFrame()
         for bdb, name in iteratre_clusters(Bdb,Cdb):
             logging.debug('running cluster {0}'.format(name))
+            #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
             ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
             ndb['primary_cluster'] = name
-            Ndb = pd.concat([Ndb,ndb], ignore_index= True)
+            Ndb = Ndb.append(ndb)
 
         if debug:
             logging.debug("Debug mode on - saving Ndb ASAP")
@@ -721,7 +735,12 @@ def process_deltafiles(deltafiles, org_lengths, logger=None, **kwargs):
             Table['alignment_coverage'].append(max((tot_length/org_lengths[qname]),\
                 (tot_length/org_lengths[sname])))
 
+    dTypes = {'querry':'category','querry_length':np.int64, 'reference':'category',\
+            'reference_length':np.int64, 'alignment_length':np.int64, 'similarity_errors':np.int64,\
+            'ani':np.float32, 'ref_coverage':np.float32, 'querry_coverage':np.float32}
     df = pd.DataFrame(Table)
+    for c, t in dTypes.items():
+        df[c] = df[c].astype(t)
     return df
 
 def process_gani_files(files):
