@@ -38,6 +38,7 @@ import json
 import sys
 import shutil
 import glob
+import numpy as np
 
 import drep
 
@@ -199,12 +200,12 @@ class WorkDirectory(object):
             assert overwrite == True, "data_table {0} already exists".format(name)
 
         if name == 'Mdb':
-            floc = loc + name + '.csv',
+            floc = loc + name + '.csv'
             db.to_csv(floc, index=False)
             self.data_tables[name] = floc
 
         else:
-            floc = loc + name + '.csv',
+            floc = loc + name + '.csv'
             db.to_csv(floc, index=False)
             self.data_tables[name] = floc
 
@@ -218,9 +219,10 @@ class WorkDirectory(object):
         '''
         if name in self.data_tables:
             if name == 'Mdb':
-                return pd.read_csv(self.data_tables[name],\
-                    dTypes = {'genome1':'category', 'genome2':'category', 'dist':np.float32,\
-                    'similarity':np.float32})
+                dTypes={'genome1':'category', 'genome2':'category', 'dist':np.float32,\
+                'similarity':np.float32}
+                return pd.read_csv(self.data_tables[name], dtype=dTypes)
+
             else:
                 return pd.read_csv(self.data_tables[name])
         else:
@@ -336,7 +338,7 @@ class WorkDirectory(object):
         elif name == 'cluster_log':
             cluster_log = os.path.join(self.get_dir('log') + 'cluster_arguments.json')
             with open(cluster_log, 'w') as fp:
-                json.dump(thing, fp, protocol=4)
+                json.dump(thing, fp)
             fp.close()
 
     def _wipe_secondary_clusters(self):

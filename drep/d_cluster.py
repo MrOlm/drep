@@ -19,11 +19,13 @@ import pickle
 import time
 import glob
 
-import memory_profiler
-
 import drep
 import drep.d_filter
 import drep.d_bonus
+
+# from memory_profiler import profile
+# import psutil
+# process = psutil.Process(os.getpid())
 
 # This is to make pandas shut up with it's warnings
 pd.options.mode.chained_assignment = None
@@ -143,8 +145,8 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         = _nucmer_preset(kwargs['n_PRESET'])
     logging.debug("kwargs to cluster: {0}".format(kwargs))
 
-
     logging.info("Clustering Step 2. Perform MASH (primary) clustering")
+    #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
     # figure out if you have cached Mdb / CdbF
     cached = (debug and wd.hasDb('Mdb') and wd.hasDb('CdbF'))
 
@@ -156,8 +158,10 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         Mdb = pd.DataFrame({'Blank':[]})
 
     elif cached:
-        print('cached!')
-        sys.exit()
+        logging.info('2. Nevermind! Loading cached primary clustering')
+        Mdb = wd.get_db('Mdb')
+        Cdb = wd.get_db('CdbF')
+        logging.info('2. Primary clustering cache loaded')
 
     else:
         logging.info("2a. Run pair-wise MASH clustering")
@@ -180,6 +184,7 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
 
     logging.info("{0} primary clusters made".format(len(Cdb['primary_cluster'].unique())))
     logging.info("Step 3. Perform secondary clustering")
+    #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
 
     # Wipe any old secondary clusters
     if kwargs.get('wd', None) != None:
@@ -191,9 +196,10 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         Ndb = pd.DataFrame()
         for bdb, name in iteratre_clusters(Bdb,Cdb):
             logging.debug('running cluster {0}'.format(name))
+            #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
             ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
             ndb['primary_cluster'] = name
-            Ndb = pd.concat([Ndb,ndb], ignore_index= True)
+            Ndb = Ndb.append(ndb)
 
         if debug:
             logging.debug("Debug mode on - saving Ndb ASAP")
@@ -729,7 +735,12 @@ def process_deltafiles(deltafiles, org_lengths, logger=None, **kwargs):
             Table['alignment_coverage'].append(max((tot_length/org_lengths[qname]),\
                 (tot_length/org_lengths[sname])))
 
+    dTypes = {'querry':'category','querry_length':np.int64, 'reference':'category',\
+            'reference_length':np.int64, 'alignment_length':np.int64, 'similarity_errors':np.int64,\
+            'ani':np.float32, 'ref_coverage':np.float32, 'querry_coverage':np.float32}
     df = pd.DataFrame(Table)
+    for c, t in dTypes.items():
+        df[c] = df[c].astype(t)
     return df
 
 def process_gani_files(files):
