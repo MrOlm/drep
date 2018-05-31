@@ -7,6 +7,8 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ## [2.2.1] - UNRELEASED
 ### Changed
 - WorkDirectory now loads databases in a way that makes more sense for large tables
+- Some extra caching debug options
+- Some commented out memory stuff
 
 ## [2.2.0] - 2018-04-02
 ### Changed
