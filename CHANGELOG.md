@@ -10,6 +10,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 - Some extra caching debug options
 - Some commented out memory stuff
 - Mash comparisons are now actually multithreaded (thanks mruehlemann)
+- Throws an error if run with python2 
 
 ## [2.2.0] - 2018-04-02
 ### Changed

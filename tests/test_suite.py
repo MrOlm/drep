@@ -53,7 +53,11 @@ def ensure_identicle(Swd, wd, skip = None):
         db1 = Swd.get_db(d, return_none=False)
         db2 =  wd.get_db(d, return_none=False)
 
-        assert compare_dfs(db1, db2), "{0} is not the same!".format(d)
+        if d == 'Ndb':
+            db1 = db1[['reference', 'querry', 'ani']]
+            db2 = db2[['reference', 'querry', 'ani']]
+
+        assert compare_dfs(db1, db2, verbose=True), "{0} is not the same!".format(d)
 
     # Compare the clustering files
     pass
@@ -72,13 +76,13 @@ def sanity_check(Swd):
 
     return
 
-def compare_dfs(db1, db2):
+def compare_dfs(db1, db2, round=4, verbose=False):
     '''
     Return True if dataframes are equal (order of dataframes doesn't matter)
     '''
 
-    db1 = db1.fillna(0)
-    db2 = db2.fillna(0)
+    db1 = db1.fillna(0).round(round)
+    db2 = db2.fillna(0).round(round)
 
     df = pd.concat([db1, db2])
     df = df.reset_index(drop=True)
@@ -86,11 +90,11 @@ def compare_dfs(db1, db2):
     idx = [x[0] for x in df_gpby.groups.values() if len(x) == 1]
 
     identicle = (len(idx) == 0)
-    # if not identicle:
-    #     print("index: ", idx)
-    #     print("db1: ",db1)
-    #     print("db2: ",db2)
-    #     print("df_gpby: ", str(df_gpby))
+    if ((not identicle) and verbose):
+        print("index: ", idx)
+        print("db1: ",db1)
+        print("db2: ",db2)
+        print("df_gpby: ", str(df_gpby))
 
     return identicle
 
@@ -1121,20 +1125,53 @@ class QuickTests():
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
 
+            # get rid of some precision on the ANI
+            if db == 'Ndb':
+                db1['ani'] = [float("{0:.4f}".format(x)) for x in db1['ani']]
+                db2['ani'] = [float("{0:.4f}".format(x)) for x in db2['ani']]
+
             if compare_dfs(db1, db2) == False:
-                # db1['solution'] = True
-                # db2['solution'] = False
-                # db = pd.merge(db1, db2, on='')
+                # # db1['solution'] = True
+                # # db2['solution'] = False
+                # # db = pd.merge(db1, db2, on='')
                 db1 = db1[['reference', 'querry', 'ani']]
-                db1.rename(columns={'ani':'ani1'}, inplace=True)
+                # db1.rename(columns={'ani':'ani1'}, inplace=True)
                 db2 = db2[['reference', 'querry', 'ani']]
-                db2.rename(columns={'ani':'ani2'}, inplace=True)
-                db1.sort_values(['reference', 'querry'], inplace=True)
-                db2.sort_values(['reference', 'querry'], inplace=True)
-                print("{0} is not the same!".format(db))
+                # db2.rename(columns={'ani':'ani2'}, inplace=True)
+
+                print("now?")
+                print(compare_dfs(db1, db2))
+
+                db1 = db1.sort_values(['reference', 'querry'])
+                db2 = db2.sort_values(['reference', 'querry'])
+                print(db1)
+                print(db2)
+
                 my_panel = pd.Panel(dict(df1=db1,df2=db2))
+                print('panel:')
                 print(my_panel.apply(report_diff, axis=0))
-                print(pd.merge(db1, db2, on=['reference', 'querry']))
+                # print("{0} is not the same!".format(db))
+                #
+                # my_panel = pd.Panel(dict(df1=db1,df2=db2))
+                # print('panel:')
+                # print(my_panel.apply(report_diff, axis=0))
+                # print('merge:')
+                # xdb = pd.merge(db1, db2, on=['reference', 'querry'])
+                # print(xdb)
+                # print('diff:')
+                # print(xdb[xdb['ani1'] != xdb['ani2']])
+                #
+                # print('ref sorted 1')
+                # print(db1['reference'].sort_values())
+                #
+                # print('ref sorted 2')
+                # print(db2['reference'].sort_values())
+                #
+                # print('querry sorted 1')
+                # print(db1['querry'].sort_values())
+                #
+                # print('querry sorted 2')
+                # print(db2['querry'].sort_values())
 
             assert compare_dfs(db1, db2), "{0} is not the same!".format(db)
 
@@ -1179,9 +1216,10 @@ class QuickTests():
         wd   = WorkDirectory(self.working_wd_loc)
 
         # Confirm the following are not the same:
-        for db in ['Cdb', 'Ndb', 'Mdb']:
+        for db in ['Cdb', 'Ndb']:#, 'Mdb']:
             db1 = Swd.get_db(db)
             db2 = wd.get_db(db)
+
             assert not compare_dfs(db1, db2), "{0} is the same! (and shouldn't be)".format(db)
 
     def unit_tests_4(self):
@@ -1407,8 +1445,8 @@ if __name__ == '__main__':
     #filter_test()
     #choose_test()
     #analyze_test()
-    #dereplicate_test()
-    cluster_test()
+    dereplicate_test()
+    #cluster_test()
     #taxonomy_test()
 
     # verifyCluster = VerifyCluster()

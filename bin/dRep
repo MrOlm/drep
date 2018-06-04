@@ -16,6 +16,13 @@ import argparse
 import os
 import sys
 
+if sys.version_info[0] < 3:
+    print('''
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+    !!! you're running dRep with python2- you need python 3 !!!
+    !!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!''')
+    sys.exit(1)
+
 import drep.argumentParser
 from drep.controller import Controller
 
