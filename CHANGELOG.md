@@ -4,13 +4,17 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## UNCOMMITTED
+### Added
+- Added the --set_recursion option for filter to handle dendropy errors
+
 ## [2.2.1] - 2018-05-30
 ### Changed
 - WorkDirectory now loads databases in a way that makes more sense for large tables
 - Some extra caching debug options
 - Some commented out memory stuff
 - Mash comparisons are now actually multithreaded (thanks mruehlemann)
-- Throws an error if run with python2 
+- Throws an error if run with python2
 
 ## [2.2.0] - 2018-04-02
 ### Changed

@@ -470,6 +470,7 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
         checkm_method: either lineage_wf or taxonomy_wf
         debug: log all of the commands
         wd: if you want to log commands, you also need the wd
+        set_recursion: if not 0, set the python recursion
     '''
     # Find checkm exe
     loc, works = drep.d_bonus.find_program('checkm')
@@ -486,6 +487,12 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     # Get set up
     t = str(kwargs.get('processors','6'))
     checkm_method = kwargs.get('checkM_method','lineage_wf')
+
+    # Set recursion
+    R = kwargs.get('set_recursion', '0')
+    if R != '0':
+        logging.warning('Setting Maximum Recursion depth to {0}'.format(R))
+        sys.setrecursionlimit(int(R))
 
     # Run checkM initial
     if checkm_method == 'taxonomy_wf':

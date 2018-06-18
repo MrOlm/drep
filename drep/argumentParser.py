@@ -212,6 +212,10 @@ def parse_args(args):
     Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
                             + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
                             default = 'lineage_wf')
+    Iflags.add_argument("--set_recursion", help="Increases the python recursion limit. "\
+                            + "NOT RECOMMENDED unless checkM is crashing due to recursion issues. "\
+                            + "Recommended to set to 2000 if needed, but setting this could crash python",\
+                            default = '0')
 
     '''
     ####### Arguments for clustering operation ######
