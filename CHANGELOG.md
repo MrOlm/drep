@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## UNCOMMITTED
+## [2.2.2] - 2018-06-18
 ### Added
 - Added the --set_recursion option for filter to handle dendropy errors
 
