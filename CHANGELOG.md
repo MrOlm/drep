@@ -7,6 +7,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ## [2.2.3] - 2018-10-11
 ### Fixed
 - Fixed bug where Mash dendrogram labels were scrambled if a big list of genomes was used (thanks brymerr921)
+- Fixed typos (thanks AstrobioMike!)
 
 ## [2.2.2] - 2018-06-18
 ### Added
