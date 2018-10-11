@@ -1437,15 +1437,15 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    # test_unit()
-    # test_quick()
-    # test_short()
-    # test_long()
+    test_unit()
+    test_quick()
+    test_short()
+    test_long()
 
     #filter_test()
     #choose_test()
     #analyze_test()
-    dereplicate_test()
+    #dereplicate_test()
     #cluster_test()
     #taxonomy_test()
 
