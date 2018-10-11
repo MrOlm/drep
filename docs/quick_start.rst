@@ -45,7 +45,7 @@ Genome comparison
 
 dRep is able to perform rapid genome comparisons for a group of genomes and visualize their relatedness. For example::
 
- $ dRep compare_wf output_directory -g path/to/genomes/*.fasta
+ $ dRep compare output_directory -g path/to/genomes/*.fasta
 
 For help understanding the output, see :doc:`example_output`
 

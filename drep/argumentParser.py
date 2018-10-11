@@ -123,7 +123,7 @@ def parse_args(args):
     Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \
         + "(for ANIn/ANImf only; gANI can only do larger method)\n"
         + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
-        + "larger  = max((aligned length / genome 1), (aligned_length / genome2)\n",
+        + "larger  = max((aligned length / genome 1), (aligned_length / genome2))\n",
                         choices=['total', 'larger'], default='larger')
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage",default='average')
