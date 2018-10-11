@@ -209,19 +209,25 @@ class WorkDirectory(object):
             db.to_csv(floc, index=False)
             self.data_tables[name] = floc
 
-    def get_db(self, name, return_none=True):
+    def get_db(self, name, return_none=True, forPlotting=False):
         '''
         Get database from self.data_tables
 
         Args:
             name: name of dataframe
             return_none: if True will return None if database not found; otherwise assert False
+            forPlotting: if True don't do fancy dType loading; it messes with order of names for dendrograms
         '''
         if name in self.data_tables:
             if name == 'Mdb':
-                dTypes={'genome1':'category', 'genome2':'category', 'dist':np.float32,\
-                'similarity':np.float32}
-                return pd.read_csv(self.data_tables[name], dtype=dTypes)
+                if forPlotting:
+                    return pd.read_csv(self.data_tables[name])
+                else:
+                    dTypes={'genome1':'category', 'genome2':'category', 'dist':np.float32,\
+                        'similarity':np.float32}
+                    return pd.read_csv(self.data_tables[name], dtype=dTypes)
+
+                print('hioh')
 
             else:
                 return pd.read_csv(self.data_tables[name])

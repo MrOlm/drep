@@ -109,7 +109,7 @@ def mash_dendrogram_from_wd(wd, plot_dir=False):
     '''
     # Load the required data
     try:
-        Mdb = wd.get_db('Mdb', return_none=False)
+        Mdb = wd.get_db('Mdb', return_none=False, forPlotting=True)
         Cdb = wd.get_db('Cdb', return_none=False)
         Pcluster = wd.get_primary_linkage()
         Plinkage = Pcluster['linkage']
@@ -579,7 +579,7 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
     Make a dendrogram of the primary clustering
 
     Args:
-        Mdb: DataFrame of Mash comparison results
+        Mdb: DataFrame of Mash comparison results; make sure loaded not as categories
         Cdb: DataFrame of Clustering results
         linkage: Result of scipy.cluster.hierarchy.linkage
         threshold (optional): Line to plot on x-axis
@@ -590,6 +590,9 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
     '''
     sns.set_style('white',{'axes.grid': False})
 
+    if Mdb['genome1'].dtype.name == 'category':
+        logging.error("WARNING: Primary dendrogram labels may be shuffled! Load as csv to prevent this")
+
     db = Mdb.pivot("genome1","genome2","similarity")
     names = list(db.columns)
     name2cluster = Cdb.set_index('genome')['primary_cluster'].to_dict()
@@ -599,6 +602,7 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
     g = fancy_dendrogram(linkage,names,name2color,threshold=threshold)
     plt.title('MASH clustering')
     plt.xlabel('MASH Average Nucleotide Identity (ANI)')
+
     #plt.xlim([0,.4])
 
     sns.despine(left=True,top=True,right=True,bottom=False)
@@ -613,7 +617,7 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
     axes = plt.gca()
     labels = axes.xaxis.get_majorticklocs()
     for i, label in enumerate(labels):
-        labels[i] = (1 - float(label)) * 100
+        labels[i] = float("{0:.2f}".format((1 - float(label)) * 100))
     axes.set_xticklabels(labels)
 
     # Add cluster to the y axis
