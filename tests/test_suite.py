@@ -860,7 +860,7 @@ class VerifyChoose():
         os.remove(wd_loc + '/data_tables/Wdb.csv')
 
         # Run choose with --skipCheckM
-        args = argumentParser.parse_args(['choose', wd_loc, '--noQualityFiltering'])
+        args = argumentParser.parse_args(['choose', wd_loc, '--ignoreGenomeQuality'])
         controller = Controller()
         controller.parseArguments(args)
 

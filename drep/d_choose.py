@@ -38,7 +38,7 @@ def d_choose_wrapper(wd, **kwargs):
 
     Keyword args:
         genomeInfo: .csv genomeInfo file
-        noQualityFiltering: Don't run checkM or do any quality-based filtering (not recommended)
+        ignoreGenomeQuality: Don't run checkM or do any quality-based filtering (not recommended)
         checkM_method: Either lineage_wf (more accurate) or taxonomy_wf (faster)
 
         completeness_weight: see formula
@@ -62,7 +62,7 @@ def d_choose_wrapper(wd, **kwargs):
     bdb = wd.get_db('Bdb')
 
     # Get comp/con information
-    if kwargs.get('noQualityFiltering', False):
+    if kwargs.get('ignoreGenomeQuality', False):
         logging.debug("Skipping all quality-based filtering")
         Gdb = drep.d_filter.calc_genome_info(bdb['location'].tolist())
     else:
@@ -164,7 +164,7 @@ def score_row(row, **kwargs):
         row: row of genome information
 
     Keyword Args:
-        noQualityFiltering: Don't run checkM or do any quality-based filtering (not recommended)
+        ignoreGenomeQuality: Don't run checkM or do any quality-based filtering (not recommended)
 
         completeness_weight: see formula
         contamination_weight: see formula
@@ -181,7 +181,7 @@ def score_row(row, **kwargs):
     sizeW = kwargs.get('size_weight',1)
     strW =  kwargs.get('strain_heterogeneity_weight',1)
 
-    if kwargs.get('noQualityFiltering', False):
+    if kwargs.get('ignoreGenomeQuality', False):
         n50 = float(row['N50'].tolist()[0])
         size = float(row['length'].tolist()[0])
 

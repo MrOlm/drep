@@ -87,10 +87,10 @@ def parse_args(args):
                             default = 25, type = float)
     # fiflags.add_argument("-str","--strain_htr", help="Maximum strain heterogeneity",
     #                         default = 25, type = float)
-    fiflags.add_argument("--noQualityFiltering", help="Don't run checkM or do any \
-            quality filtering- will ignore con and comp settings if genomeInfo.csv \
-            not also provided. NOT RECOMMENDED! See docs for details", \
-                            action='store_true')
+    fiflags.add_argument("--ignoreGenomeQuality", help="Don't run checkM or do any \
+            quality filtering. NOT RECOMMENDED! This is useful for use with bacteriophages\
+            or eukaryotes or things where checkM scoring does not work. Will only \
+            choose genomes based on length and N50", action='store_true')
 
     #
     # Make a parent parser for the cluster operation
@@ -245,10 +245,10 @@ def parse_args(args):
             information on the genomes. Must contain: ["genome"(basename of .fasta file \
             of that genome), "completeness"(0-100 value for completeness of the genome), \
             "contamination"(0-100 value of the contamination of the genome)]')
-    Oflags.add_argument("--noQualityFiltering", help="Don't run checkM or do any \
-            quality filtering- will ignore con and comp settings if genomeInfo.csv \
-            not also provided. NOT RECOMMENDED! Will only choose based on length and N50.\
-                    See docs for details", action='store_true')
+    Oflags.add_argument("--ignoreGenomeQuality", help="Don't run checkM or do any \
+            quality filtering. NOT RECOMMENDED! This is useful for use with bacteriophages\
+            or eukaryotes or things where checkM scoring does not work. Will only \
+            choose genomes based on length and N50", action='store_true')
 
     '''
     ####### Arguments for analyze operation ######

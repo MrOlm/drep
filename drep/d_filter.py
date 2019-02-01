@@ -40,7 +40,7 @@ def d_filter_wrapper(wd, **kwargs):
         completeness: minimum genome completeness when filtering
         contamination: maximum genome contamination when filtering
 
-        noQualityFiltering: Don't run checkM or do any quality-based filtering (not recommended)
+        ignoreGenomeQuality: Don't run checkM or do any quality-based filtering (not recommended)
         checkM_method: Either lineage_wf (more accurate) or taxonomy_wf (faster)
 
     Returns:
@@ -74,14 +74,14 @@ def d_filter_wrapper(wd, **kwargs):
         bdb = _filter_bdb_length(bdb, Gdb, kwargs['length'])
 
     # Get comp/con information
-    if kwargs.get('noQualityFiltering', False):
+    if kwargs.get('ignoreGenomeQuality', False):
         logging.debug("Skipping all quality-based filtering")
 
     else:
         Gdb = _get_run_genomeInfo(wd, bdb, **kwargs)
 
     # Filter
-    if not kwargs.get('noQualityFiltering', False):
+    if not kwargs.get('ignoreGenomeQuality', False):
         logging.debug("Filtering genomes")
         bdb = filter_bdb(bdb, Gdb, **kwargs)
 
@@ -89,7 +89,7 @@ def d_filter_wrapper(wd, **kwargs):
     logging.debug("Storing resulting files")
 
     workDirectory.store_db(bdb, 'Bdb')
-    if not kwargs.get('noQualityFiltering', False):
+    if not kwargs.get('ignoreGenomeQuality', False):
         workDirectory.store_db(Gdb, 'genomeInfo')
 
 def _get_run_genomeInfo(workDirectory, bdb, **kwargs):

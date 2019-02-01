@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.2.4] - 2019-01-31
+### Changed
+- Renamed --noQualityFiltering to --ignoreGenomeQuality
+
 ## [2.2.3] - 2018-10-11
 ### Fixed
 - Fixed bug where Mash dendrogram labels were scrambled if a big list of genomes was used (thanks brymerr921)
