@@ -84,7 +84,7 @@ def compare_dfs(db1, db2, round=4, verbose=False):
     db1 = db1.fillna(0).round(round)
     db2 = db2.fillna(0).round(round)
 
-    df = pd.concat([db1, db2])
+    df = pd.concat([db1, db2], sort=True)
     df = df.reset_index(drop=True)
     df_gpby = df.groupby(list(df.columns))
     idx = [x[0] for x in df_gpby.groups.values() if len(x) == 1]
@@ -1317,7 +1317,7 @@ class UnitTests():
 
         assert not df1.equals(df2)
         assert not df1.equals(df3)
-        assert df1.equals(df4)
+        assert df1.sort_index(axis=1).equals(df4.sort_index(axis=1))
 
         assert compare_dfs(df1, df2)
         assert compare_dfs(df1, df4)

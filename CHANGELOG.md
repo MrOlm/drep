@@ -7,6 +7,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 ## [2.2.4] - 2019-01-31
 ### Changed
 - Renamed --noQualityFiltering to --ignoreGenomeQuality
+- Changed some things around to satisfy pandas deprication warnings
 
 ## [2.2.3] - 2018-10-11
 ### Fixed

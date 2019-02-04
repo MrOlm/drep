@@ -567,7 +567,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     iniCols = ['genome1','genome2','dist','p','kmers']
     uCols = ['genome1','genome2','dist']
     dTypes = {'genome1':'category', 'genome2':'category', 'dist':np.float32}
-    Mdb = pd.read_table(file, names=iniCols, usecols=uCols, dtype=dTypes)
+    Mdb = pd.read_csv(file, names=iniCols, usecols=uCols, dtype=dTypes, sep='\t')
     Mdb['genome1'] = Mdb['genome1'].apply(_get_genome_name_from_fasta)
     Mdb['genome2'] = Mdb['genome2'].apply(_get_genome_name_from_fasta)
     Mdb['similarity'] = 1 - Mdb['dist']
@@ -642,7 +642,7 @@ def parse_delta(filename):
     '''
 
     aln_length, sim_errors = 0, 0
-    for line in [l.strip().split() for l in open(filename, 'rU').readlines()]:
+    for line in [l.strip().split() for l in open(filename, 'r').readlines()]:
         if line[0] == 'NUCMER' or line[0].startswith('>'):  # Skip headers
             continue
         # We only process lines with seven columns:
