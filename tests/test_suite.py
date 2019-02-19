@@ -114,6 +114,10 @@ class VerifyDereplicateWf():
         self.functional_test_2()
         self.tearDown()
 
+        self.setUp()
+        self.functional_test_3()
+        self.tearDown()
+
     def setUp(self):
         self.genomes = load_test_genomes()
         self.wd_loc = load_test_wd_loc()
@@ -165,6 +169,31 @@ class VerifyDereplicateWf():
         wd   = WorkDirectory(wd_loc)
         ensure_identicle(s_wd, wd, skip=['Bdb', 'Chdb', 'Sdb', 'Wdb', 'Widb',\
             'genomeInformation', 'Mdb'])
+
+        # Perform sanity check to make sure solutions directiory isn't
+        # being overwritten
+        sanity_check(s_wd)
+
+    def functional_test_3(self):
+        '''
+        Use goANI
+        '''
+        genomes  = self.genomes
+        wd_loc   = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        sanity_check(WorkDirectory(s_wd_loc))
+
+        args = argumentParser.parse_args(['compare',wd_loc,'--S_algorithm',
+                    'goANI','-g'] + genomes)
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        s_wd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+        Ndb = wd.get_db('Ndb')
+        assert len(Ndb) > 0
 
         # Perform sanity check to make sure solutions directiory isn't
         # being overwritten
@@ -364,6 +393,10 @@ class VerifyCluster():
         # self.tearDown()
 
         self.setUp()
+        self.test_goANI()
+        self.tearDown()
+
+        self.setUp()
         self.test_compare_genomes()
         self.tearDown()
 
@@ -437,6 +470,30 @@ class VerifyCluster():
         db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
             & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
         assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
+
+    def test_goANI(self):
+        '''
+        Test goANI
+        '''
+        import time
+
+        bdb = drep.d_cluster.load_genomes(self.genomes)
+        data_folder = self.test_dir
+
+        # Copy over prodigal
+        self.s_wd_loc = load_solutions_wd()
+        p_folder = os.path.join(data_folder, 'data/prodigal/')
+        shutil.copytree(os.path.join(self.s_wd_loc, 'data/prodigal'), \
+            p_folder)
+
+        # Try goANI
+        p_folder = os.path.join(data_folder, 'data/prodigal/')
+        Ndb = drep.d_cluster.compare_genomes(bdb, 'goANI', data_folder, \
+            prod_folder = p_folder)
+        db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+            & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+
+        assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
 
     def time_compare_genomes(self):
         '''
@@ -1450,8 +1507,6 @@ if __name__ == '__main__':
     #taxonomy_test()
 
     # verifyCluster = VerifyCluster()
-    # verifyCluster.setUp()
-    # verifyCluster.time_compare_genomes()
-    # verifyCluster.tearDown()
+    # verifyCluster.run()
 
     print("Everything seems to be working swimmingly!")
