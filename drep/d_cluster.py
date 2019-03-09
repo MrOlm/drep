@@ -440,6 +440,7 @@ def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
     except:
         logging.error("The database passed in is not symmetrical!")
         logging.error(arr)
+        logging.error(names)
         sys.exit()
     linkage = scipy.cluster.hierarchy.linkage(arr, method= linkage_method)
 
@@ -1289,9 +1290,13 @@ def _summarize_nsimsan(db):
     Take all those aligned genes and return a summary ANI
     '''
     table = {}
-    table['ani'] = sum([p * l for p, l in zip(db['p_inden'], db['al_len'])]) \
-                    / db['al_len'].sum()
-    table['af'] = db['al_len'].sum() / db['qry_len'].sum()
+    if len(db) > 0:
+        table['ani'] = sum([p * l for p, l in zip(db['p_inden'], db['al_len'])]) \
+                        / db['al_len'].sum()
+        table['af'] = db['al_len'].sum() / db['qry_len'].sum()
+    else:
+        table['ani'] = 0
+        table['af'] = 0
 
     return table
 
