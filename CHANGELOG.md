@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.3.2] - 2019-03-28
+### Fixed
+- print tracebacks when plots fail
+- fixed a weird bug with plot 5 resulting from genomeInformation having too many columns
+- fixed plot 6 failing due to the deprecatoin of d_cluster.av_ani
+
 ## [2.3.1] - 2019-03-09
 ### Fixed
 - goANI bug resulting when there is no overlap in a filtered nsimscan
