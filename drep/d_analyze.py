@@ -4,7 +4,6 @@ d_analyze - a subset of drep
 
 Make plots based on de-replication
 '''
-
 import matplotlib
 matplotlib.use('Agg')
 
@@ -26,6 +25,10 @@ import matplotlib.patches as mpatches
 import drep
 import drep.d_cluster
 import drep.d_filter
+
+import traceback
+
+#warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning)
 
 def d_analyze_wrapper(wd, **kwargs):
     '''
@@ -59,6 +62,7 @@ def d_analyze_wrapper(wd, **kwargs):
             mash_dendrogram_from_wd(wd, plot_dir=plot_dir)
         except BaseException as e:
             logging.info('Failed to make plot #1: ' + str(e))
+            traceback.print_exc()
 
     # 2) Secondary clustering dendrogram
     if '2' in to_plot:
@@ -66,6 +70,7 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #2: ' + str(e))
+            traceback.print_exc()
 
     # 3) Secondary clusters MDS
     if '3' in to_plot:
@@ -73,6 +78,7 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_secondary_mds_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #3: ' + str(e))
+            traceback.print_exc()
 
     # 4) Comparison scatterplots
     if '4' in to_plot:
@@ -80,6 +86,7 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_scatterplots_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #4: ' + str(e))
+            traceback.print_exc()
 
     # 5) Complex bin scorring
     if '5' in to_plot:
@@ -87,6 +94,7 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_binscoring_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #5: ' + str(e))
+            traceback.print_exc()
 
     # 6) Winning plot
     if '6' in to_plot:
@@ -94,6 +102,7 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_winners_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #6: ' + str(e))
+            traceback.print_exc()
 
 
 def mash_dendrogram_from_wd(wd, plot_dir=False):
@@ -327,6 +336,9 @@ def plot_binscoring_from_wd(wd, plot_dir, **kwargs):
     # Deal with genome quality
     Gdb = drep.d_filter._get_run_genomeInfo(wd, Bdb, no_run=True)
 
+    # Only keep things you want
+    Gdb = Gdb[[c for c in Gdb.columns if c in ['genome', 'location', 'N50', 'length', 'completeness', 'contamination', 'strain_heterogeneity']]]
+
     # Make the plot
     logging.info("Plotting bin scorring plot")
     plot_winner_scoring_complex(Wdb, Sdb, Cdb, Gdb, plot_dir = plot_dir, **kwargs)
@@ -352,6 +364,9 @@ def plot_winners_from_wd(wd, plot_dir, **kwargs):
 
     # Deal with genome quality
     Gdb = drep.d_filter._get_run_genomeInfo(wd, Bdb, no_run=True)
+
+    # Only keep things you want
+    Gdb = Gdb[[c for c in Gdb.columns if c in ['genome', 'location', 'N50', 'length', 'completeness', 'contamination', 'strain_heterogeneity']]]
 
     # Get optional data
     Wndb = wd.get_db('Wndb')
@@ -830,7 +845,8 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
     if Wndb is not None:
         # Make a ANIn linkage for the dendrogram
         d = Wndb.copy()
-        d['av_ani'] = d.apply(lambda row: drep.d_cluster.average_ani (row,d),axis=1)
+        drep.d_cluster.add_avani(d)
+        #d['av_ani'] = d.apply(lambda row: drep.d_cluster.average_ani (row,d),axis=1)
         d['dist'] = 1 - d['av_ani']
         db = d.pivot("reference", "querry", "dist")
         names = list(db.columns)
@@ -851,7 +867,8 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         # Make a ANIn linkage for the filtered dendrogram
         d = Wndb.copy()
         d.loc[d['alignment_coverage'] <= 0.1, 'ani'] = 0
-        d['av_ani'] = d.apply(lambda row: drep.d_cluster.average_ani (row,d),axis=1)
+        drep.d_cluster.add_avani(d)
+        #d['av_ani'] = d.apply(lambda row: drep.d_cluster.average_ani (row,d),axis=1)
         d['dist'] = 1 - d['av_ani']
         db = d.pivot("reference", "querry", "dist")
         names = list(db.columns)
@@ -998,6 +1015,8 @@ def normalize(df):
     result = df.copy()
     for feature_name in df.columns:
         if feature_name in ['genome', 'location']:
+            continue
+        if not np.issubdtype(df[feature_name].dtype, np.number):
             continue
         max_value = max(df[feature_name].max(),0)
         result[feature_name] = [max((x / max_value) if max_value != 0 else 0,0) for x in result[feature_name].tolist()]
@@ -1487,7 +1506,8 @@ def cluster_test_wrapper(wd, **kwargs):
         Xdb.loc[Xdb['alignment_coverage'] <= cov_thresh, 'ani'] = 0
 
     # Make it symmetrical
-    Xdb['av_ani'] = Xdb.apply(lambda row: drep.d_cluster.average_ani (row,Xdb),axis=1)
+    drep.d_cluster.add_avani(Xdb)
+    #Xdb['av_ani'] = Xdb.apply(lambda row: drep.d_cluster.average_ani (row,Xdb),axis=1)
     Xdb['dist'] = 1 - Xdb['av_ani']
     db = Xdb.pivot("reference","querry","dist")
 

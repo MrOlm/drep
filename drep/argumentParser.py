@@ -103,7 +103,7 @@ def parse_args(args):
         + "ANImf = (RECOMMENDED) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
         + "ANIn  = Align whole genomes with nucmer; compare aligned regions\n" \
         + "gANI  = Identify and align ORFs; compare aligned ORFS\n", \
-                        default='ANImf', choices={'ANIn','gANI','ANImf'})
+                        default='ANImf', choices={'ANIn','gANI','ANImf', 'goANI'})
     Clustflags.add_argument("-n_PRESET", help= "R|Presets to pass to nucmer\n" \
         + "tight   = only align highly conserved regions\n" \
         + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')
