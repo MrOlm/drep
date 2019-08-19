@@ -158,7 +158,11 @@ def _validate_genomeInfo(Idb, bdb):
     '''
     # Make sure it has required columns
     for r in ['completeness', 'contamination', 'genome']:
-        assert r in Idb.columns, "{0} missing from GenomeInfo".format(r)
+        if r not in Idb.columns:
+            logging.error("{0} missing from GenomeInfo".format(r))
+            logging.error("Columns in GenomeInfo are {0}".format(" ".join(Idb.columns)))
+            logging.error("GenomeInfo is {0}".format(Idb))
+        assert r in Idb.columns
 
     # Make sure correct datatypes
     for r in ['completeness', 'contamination', 'strain_heterogeneity']:
