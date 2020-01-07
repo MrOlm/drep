@@ -3,7 +3,7 @@
 dRep is a python program for rapidly comparing large numbers of genomes. dRep can also "de-replicate" a genome set by identifying groups of highly similar genomes and choosing the best representative genome for each genome set.
 
 Manual, installation instructions, and API are at available at
-[ReadTheDocs](http://drep.readthedocs.io/en/master/)
+[ReadTheDocs](https://drep.readthedocs.io/en/latest/)
 
 Publication is available at
 [ISMEJ](http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html)
