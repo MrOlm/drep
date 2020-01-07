@@ -497,11 +497,11 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     # Run checkM initial
     if checkm_method == 'taxonomy_wf':
          cmd = [check_exe,checkm_method,'domain','Bacteria',genome_folder,checkm_outf,'-f',\
-            checkm_outf + '/results.tsv','--tab_table','-t',str(t),'-g','-x','faa', '--force_overwrite']
+            checkm_outf + '/results.tsv','--tab_table','-t',str(t),'-g','-x','faa']
     else:
          cmd = [check_exe,checkm_method,genome_folder,checkm_outf,'-f',\
             checkm_outf + '/results.tsv','--tab_table','-t',str(t),'--pplacer_threads',\
-            str(t),'-g','-x','faa', '--force_overwrite']
+            str(t),'-g','-x','faa']
 
     logging.debug("Running CheckM with command: {0}".format(cmd))
 

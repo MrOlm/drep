@@ -140,7 +140,7 @@ class VerifyDereplicateWf():
         sanity_check(WorkDirectory(s_wd_loc))
 
         args = argumentParser.parse_args(['dereplicate',wd_loc,'-g'] + genomes \
-            + ['--checkM_method', 'taxonomy_wf'])
+            + ['--checkM_method', 'taxonomy_wf', '--debug'])
         controller = Controller()
         controller.parseArguments(args)
 
@@ -1494,8 +1494,8 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    test_unit()
-    test_quick()
+    # test_unit()
+    # test_quick()
     #test_short()
     test_long()
 
