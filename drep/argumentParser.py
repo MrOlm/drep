@@ -40,7 +40,9 @@ def printHelp():
     print('                ...::: dRep v' + VERSION + ' :::...''')
     print('''\
 
-  Choose one of the operations below for more detailed help.
+  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017
+
+  Choose one of the operations below for more detailed help. See https://drep.readthedocs.io/en/latest/index.html for documenation
   Example: dRep dereplicate -h
 
   Workflows:

@@ -531,8 +531,7 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     try:
         chdb = pd.read_table(desired_file,sep='\t')
     except:
-        logging.error("!!! checkM failed !!!\nIf using pyenv, make sure both python2 and " +\
-            "python3 are available (for example: pyenv global 3.5.1 2.7.9)")
+        logging.error("!!! checkM failed !!!\nYou can run again with the --debug option to see what went wrong (command logs will be created in the log folder)")
         sys.exit()
 
     # Return table

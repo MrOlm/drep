@@ -51,13 +51,7 @@ Programs need to be installed to the system path, so that you can call them from
   If you already have information on your genome's completeness and contamination, you can input that to dRep without the need to install checkM (see :doc:`advanced_use`))
 
 
-pyenv
+CheckM
 -----
 
-Because dRep is written in python3 and CheckM is written in python2, you may need to use `pyenv <https://github.com/yyuu/pyenv>`_ to be able to call both.
-
-With CheckM installed in a python2 installation of pyenv, and dRep installed in the python3 version, the following command should set allow both python2 and python3 commands to be called::
-
- $ pyenv global 3.5.1 2.7.9
-
-Alternatively, you could add python2 to your CheckM shebang line (though I have not confirmed that this works)
+CheckM is the program that dRep uses to calculate completeness and contamination. It's not required for all dRep commands, but if you'd like to de-dereplicate your genome set using completeness and contamination it is required. It takes a bit of work to install (including setting a root directory and downloading a reference database). Installation instructions can be found `here <https://github.com/Ecogenomics/CheckM/wiki/Installation#how-to-install-checkm>`
