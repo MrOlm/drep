@@ -364,6 +364,8 @@ def estimate_time(comps, alg):
         time = comps * .33
     elif alg == 'gANI':
         time = comps * .1
+    elif alg == 'goANI':
+        time = comps * .1
     elif alg == 'ANImf':
         time = comps * .5
     return time
@@ -438,6 +440,7 @@ def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
     except:
         logging.error("The database passed in is not symmetrical!")
         logging.error(arr)
+        logging.error(names)
         sys.exit()
     linkage = scipy.cluster.hierarchy.linkage(arr, method= linkage_method)
 
@@ -674,6 +677,29 @@ def gen_gANI_cmd(file, g1, g2, exe):
         cmd = [exe,'-genome1fna',g1,'-genome2fna',g2,'-outfile',file,'-outdir',file + 'TEMP']
     return cmd
 
+def gen_goANI_cmd(file, g1, g2, exe):
+    '''
+    Generate a command to run goANI
+
+    Will return [] if g1 == g2
+
+    Args:
+        file: output file name
+        g1: location of the genes of genome1
+        g2: location of the genes of genome2
+        exe: location of nsimscan executible
+
+    Returns:
+        list: command to run
+    '''
+    # Don't do self-comparions
+    if g1 == g2:
+        return []
+
+    else:
+        cmd = [exe,'--om','TABX', g1, g2, file]
+    return cmd
+
 def process_deltafiles(deltafiles, org_lengths, logger=None, **kwargs):
     '''
     Parse a list of delta files into a pandas dataframe
@@ -742,6 +768,47 @@ def process_deltafiles(deltafiles, org_lengths, logger=None, **kwargs):
     for c, t in dTypes.items():
         df[c] = df[c].astype(t)
     return df
+
+def process_goani_files(files):
+    '''
+    From a list of nsimscan files, return a parsed DataFrame like normal,
+    and a special one for calculating dn/ds
+
+    Args:
+        list: files
+
+    Returns:
+        DataFrame: Ndb
+    '''
+    Table = {'querry':[],'reference':[],'ani':[],'alignment_coverage':[]}
+    for file in files:
+        results = parse_nsim_file(file)
+        results['reference'] = os.path.basename(file).split('_vs_')[0]
+        results['querry'] = os.path.basename(file).split('_vs_')[1][:-4]
+
+        # Add forward results
+        Table['reference'].append(results['reference'])
+        Table['querry'].append(results['querry'])
+        Table['ani'].append(float(results['ani'])/100)
+        Table['alignment_coverage'].append(results['af'])
+        #Table['alignment_coverage'].append(results['rq_coverage'])
+
+        # Add reverse results [they're the same]
+        # Table['reference'].append(results['querry'])
+        # Table['querry'].append(results['reference'])
+        # Table['ani'].append(float(results['ani'])/100)
+        # Table['alignment_coverage'].append(results['af'])
+        #Table['alignment_coverage'].append(results['qr_coverage'])
+
+    # Add self comparisons
+    for g in set(Table['reference']):
+        Table['reference'].append(g)
+        Table['querry'].append(g)
+        Table['ani'].append(1)
+        Table['alignment_coverage'].append(1)
+
+    Gdb = pd.DataFrame(Table)
+    return Gdb
 
 def process_gani_files(files):
     '''
@@ -834,6 +901,20 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
 
         working_data_folder = os.path.join(data_folder, 'gANI_files/')
         df = run_pairwise_gANI(bdb, working_data_folder, \
+                prod_folder=prod_folder, **kwargs)
+        return df
+
+    elif algorithm == 'goANI':
+        # Figure out prodigal folder
+        wd = kwargs.get('wd', False)
+        if not wd:
+            prod_folder = kwargs.pop('prod_folder', False)
+            assert prod_folder != False
+        else:
+            prod_folder = wd.get_dir('prodigal')
+
+        working_data_folder = os.path.join(data_folder, 'goANI_files/')
+        df = run_pairwise_goANI(bdb, working_data_folder, \
                 prod_folder=prod_folder, **kwargs)
         return df
 
@@ -1055,6 +1136,90 @@ def run_pairwise_gANI(bdb, gANI_folder, prod_folder, **kwargs):
 
     return df
 
+def run_pairwise_goANI(bdb, goANI_folder, prod_folder, **kwargs):
+    '''
+    Run pairwise goANI on a list of Genomes
+
+    Args:
+        bdb: DataFrame with ['genome', 'location']
+        goANI_folder: folder to store gANI output
+        prod_folder: folder containing prodigal output from genomes (will run if needed)
+
+    Keyword arguments:
+        debug: log all of the commands
+        wd: if you want to log commands, you also need the wd
+        processors: threads to use
+
+    Returns:
+        DataFrame: Ndb for gANI
+    '''
+    p = kwargs.get('processors',6)
+    nsimscan_exe = drep.get_exe('nsimscan')
+    genomes = bdb['location'].tolist()
+
+    # Make folders
+    if not os.path.exists(goANI_folder):
+        os.makedirs(goANI_folder)
+    if not os.path.exists(prod_folder):
+        os.makedirs(prod_folder)
+
+    # Run prodigal
+    logging.debug("Running prodigal...")
+    drep.d_filter.run_prodigal(bdb['location'].tolist(), prod_folder, **kwargs)
+
+    # Gen gANI commands
+    logging.debug("Running goANI...")
+    cmds = []
+    files = []
+    for i, g1 in enumerate(genomes):
+        # Make it so each reference is it's own folder, to spread out .delta files
+        cur_folder = os.path.join(goANI_folder, _get_genome_name_from_fasta(g1))
+        if not os.path.exists(cur_folder):
+            os.makedirs(cur_folder)
+
+        for j, g2 in enumerate(genomes):
+            if i != j:
+                name1= _get_genome_name_from_fasta(g1)
+                name2= _get_genome_name_from_fasta(g2)
+                file_name = "{0}/{1}_vs_{2}.sim".format(cur_folder, \
+                            name1, name2)
+                files.append(file_name)
+
+                # If the file doesn't already exist, add it to what needs to be run
+                if not os.path.isfile(file_name):
+                    fna1 = "{0}.fna".format(os.path.join(prod_folder,name1))
+                    fna2 = "{0}.fna".format(os.path.join(prod_folder,name2))
+                    cmds.append(gen_goANI_cmd(file_name,fna1,fna2,nsimscan_exe))
+
+    # Run commands
+    if len(cmds) > 0:
+        logging.debug('Running goANI commands: {0}'.format('\n'.join([' '.join(x) for x in cmds])))
+        if ('wd' in kwargs) and (kwargs.get('debug', False) == True):
+            logdir = kwargs.get('wd').get_dir('cmd_logs')
+        else:
+            logdir = False
+            #logdir = "/home/mattolm/Programs/drep/tests/test_backend/logs/"
+        drep.thread_cmds(cmds, logdir=logdir, t=int(p))
+
+    else:
+        logging.debug("goANI already run- will not re-run")
+
+    # Parse output
+    df = process_goani_files(files)
+
+    # Add self-comparisons if there is only one genome
+    if len(genomes) == 1:
+        Table = {'querry':[],'reference':[],'ani':[],'alignment_coverage':[]}
+        for g in genomes:
+            Table['reference'].append(_get_genome_name_from_fasta(g))
+            Table['querry'].append(_get_genome_name_from_fasta(g))
+            Table['ani'].append(1)
+            Table['alignment_coverage'].append(1)
+        d = pd.DataFrame(Table)
+        df = pd.concat([df,d],ignore_index=True)
+
+    return df
+
 def parse_gani_file(file):
     '''
     Parse gANI file, return dictionary of results
@@ -1082,6 +1247,59 @@ def parse_gani_file(file):
     dict['reference'] = dict['reference'][:-4]
     dict['querry'] = dict['querry'][:-4]
     return dict
+
+def parse_nsim_file(file):
+    '''
+    Parse nsim file, return dictionary of results and gene datatable
+
+    Args:
+        file: location of nsimscan file
+
+    Returns:
+        dict: results in the gANI file
+        db: gene-based alignment results
+    '''
+    # Load
+    db = pd.read_csv(file, sep='\t')
+    db = db.rename(columns={'#qry_id':'qry_id'})
+
+    # Filter
+    db = _filter_nsimscan(db)
+
+    # Make summary results
+    x = _summarize_nsimsan(db)
+
+    return x
+
+def _filter_nsimscan(db1, minAF=0.7, minANI=70):
+    '''
+    Filter a single nsim scan file
+    '''
+    db1 = db1.sort_values(['al_len','qry_id', 'sbj_id'], ascending=False)
+
+    # Filter like gANI
+    db1['af'] = [a/min(o,t) for a,o,t in zip(db1['al_len'],
+                                             db1['qry_len'],
+                                             db1['sbj_len'])]
+    db1 = db1[(db1['af'] >= minAF) & (db1['p_inden'] >= minANI)]
+
+    return db1
+
+def _summarize_nsimsan(db):
+    '''
+    Take all those aligned genes and return a summary ANI
+    '''
+    table = {}
+    if len(db) > 0:
+        table['ani'] = sum([p * l for p, l in zip(db['p_inden'], db['al_len'])]) \
+                        / db['al_len'].sum()
+        table['af'] = db['al_len'].sum() / db['qry_len'].sum()
+    else:
+        table['ani'] = 0
+        table['af'] = 0
+
+    return table
+
 
 def gen_nucmer_cmd(prefix,ref,querry,c='65',noextend=False,maxgap='90',method='mum'):
     '''
