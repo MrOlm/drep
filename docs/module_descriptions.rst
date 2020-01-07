@@ -79,45 +79,56 @@ Filter is used filter the genome set (for why this is necessary, see :doc:`choos
 To see the command-line options, check the help::
 
   $ dRep filter -h
-  usage: dRep filter [-p PROCESSORS] [-d] [-o] [-h] [-l LENGTH]
-                     [-comp COMPLETENESS] [-con CONTAMINATION] [-str STRAIN_HTR]
-                     [--skipCheckM] [-g [GENOMES [GENOMES ...]]] [--Chdb CHDB]
-                     [--checkM_method {lineage_wf,taxonomy_wf}]
-                     work_directory
+  usage: dRep filter [-p PROCESSORS] [-d] [-h] [-l LENGTH] [-comp COMPLETENESS]
+                   [-con CONTAMINATION] [--ignoreGenomeQuality]
+                   [-g [GENOMES [GENOMES ...]]] [--genomeInfo GENOMEINFO]
+                   [--checkM_method {taxonomy_wf,lineage_wf}]
+                   [--set_recursion SET_RECURSION]
+                   work_directory
 
   positional arguments:
-    work_directory        Directory where data and output
-                          *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
 
   SYSTEM PARAMETERS:
-    -p PROCESSORS, --processors PROCESSORS
-                          threads (default: 6)
-    -d, --dry             dry run- dont do anything (default: False)
-    -o, --overwrite       overwrite existing data in work folder (default:
-                          False)
-    -h, --help            show this help message and exit
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --debug           make extra debugging output (default: False)
+  -h, --help            show this help message and exit
 
   FILTERING OPTIONS:
-    -l LENGTH, --length LENGTH
-                          Minimum genome length (default: 500000)
-    -comp COMPLETENESS, --completeness COMPLETENESS
-                          Minumum genome completeness (default: 75)
-    -con CONTAMINATION, --contamination CONTAMINATION
-                          Maximum genome contamination (default: 25)
-    -str STRAIN_HTR, --strain_htr STRAIN_HTR
-                          Maximum strain heterogeneity (default: 25)
-    --skipCheckM          Don't run checkM- will ignore con and comp settings
-                          (default: False)
+  -l LENGTH, --length LENGTH
+                        Minimum genome length (default: 50000)
+  -comp COMPLETENESS, --completeness COMPLETENESS
+                        Minumum genome completeness (default: 75)
+  -con CONTAMINATION, --contamination CONTAMINATION
+                        Maximum genome contamination (default: 25)
+  --ignoreGenomeQuality
+                        Don't run checkM or do any quality filtering. NOT
+                        RECOMMENDED! This is useful for use with
+                        bacteriophages or eukaryotes or things where checkM
+                        scoring does not work. Will only choose genomes based
+                        on length and N50 (default: False)
 
   I/O PARAMETERS:
-    -g [GENOMES [GENOMES ...]], --genomes [GENOMES [GENOMES ...]]
-                          genomes to filter in .fasta format. Not necessary if
-                          Bdb or Wdb already exist (default: None)
-    --Chdb CHDB           checkM run already completed. Must be in --tab_table
-                          format. (default: None)
-    --checkM_method {lineage_wf,taxonomy_wf}
-                          Either lineage_wf (more accurate) or taxonomy_wf
-                          (faster) (default: lineage_wf)
+  -g [GENOMES [GENOMES ...]], --genomes [GENOMES [GENOMES ...]]
+                        genomes to filter in .fasta format. Not necessary if
+                        Bdb or Wdb already exist (default: None)
+  --genomeInfo GENOMEINFO
+                        location of .csv file containing quality information
+                        on the genomes. Must contain: ["genome"(basename of
+                        .fasta file of that genome), "completeness"(0-100
+                        value for completeness of the genome),
+                        "contamination"(0-100 value of the contamination of
+                        the genome)] (default: None)
+  --checkM_method {taxonomy_wf,lineage_wf}
+                        Either lineage_wf (more accurate) or taxonomy_wf
+                        (faster) (default: lineage_wf)
+  --set_recursion SET_RECURSION
+                        Increases the python recursion limit. NOT RECOMMENDED
+                        unless checkM is crashing due to recursion issues.
+                        Recommended to set to 2000 if needed, but setting this
+                        could crash python (default: 0)
 
 Cluster
 -------
@@ -127,57 +138,67 @@ Cluster is the module that does the actual primary and secondary comparisons. Ch
 To see the command-line options, check the help::
 
   $ dRep cluster -h
-  usage: dRep cluster [-p PROCESSORS] [-d] [-o] [-h] [-ms MASH_SKETCH]
-                      [-pa P_ANI] [--S_algorithm {ANIn,gANI}] [-sa S_ANI]
-                      [-nc COV_THRESH] [-n_PRESET {normal,tight}]
-                      [--clusterAlg CLUSTERALG] [--SkipMash] [--SkipSecondary]
-                      [-g [GENOMES [GENOMES ...]]]
-                      work_directory
+  usage: dRep cluster [-p PROCESSORS] [-d] [-h] [-ms MASH_SKETCH]
+                    [--S_algorithm {ANIn,gANI,ANImf,goANI}]
+                    [-n_PRESET {normal,tight}] [-pa P_ANI] [-sa S_ANI]
+                    [--SkipMash] [--SkipSecondary] [-nc COV_THRESH]
+                    [-cm {total,larger}] [--clusterAlg CLUSTERALG]
+                    [-g [GENOMES [GENOMES ...]]]
+                    work_directory
 
   positional arguments:
-    work_directory        Directory where data and output
-                          *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
 
   SYSTEM PARAMETERS:
-    -p PROCESSORS, --processors PROCESSORS
-                          threads (default: 6)
-    -d, --dry             dry run- dont do anything (default: False)
-    -o, --overwrite       overwrite existing data in work folder (default:
-                          False)
-    -h, --help            show this help message and exit
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --debug           make extra debugging output (default: False)
+  -h, --help            show this help message and exit
+
+  GENOME COMPARISON PARAMETERS:
+  -ms MASH_SKETCH, --MASH_sketch MASH_SKETCH
+                        MASH sketch size (default: 1000)
+  --S_algorithm {ANIn,gANI,ANImf,goANI}
+                        Algorithm for secondary clustering comaprisons:
+                        ANImf = (RECOMMENDED) Align whole genomes with nucmer; filter alignment; compare aligned regions
+                        ANIn  = Align whole genomes with nucmer; compare aligned regions
+                        gANI  = Identify and align ORFs; compare aligned ORFS
+                         (default: ANImf)
+  -n_PRESET {normal,tight}
+                        Presets to pass to nucmer
+                        tight   = only align highly conserved regions
+                        normal  = default ANIn parameters (default: normal)
 
   CLUSTERING PARAMETERS:
-    -ms MASH_SKETCH, --MASH_sketch MASH_SKETCH
-                          MASH sketch size (default: 1000)
-    -pa P_ANI, --P_ani P_ANI
-                          ANI threshold to form primary (MASH) clusters
-                          (default: 0.9)
-    --S_algorithm {ANIn,gANI}
-                          Algorithm for secondary clustering comaprisons
-                          (default: ANIn)
-    -sa S_ANI, --S_ani S_ANI
-                          ANI threshold to form secondary clusters (default:
-                          0.99)
-    -nc COV_THRESH, --cov_thresh COV_THRESH
-                          Minmum level of overlap between genomes when doing
-                          secondary comparisons (default: 0.1)
-    -n_PRESET {normal,tight}
-                          Presents to pass to nucmer
-                          tight   = only align highly conserved regions
-                          normal  = default ANIn parameters (default: normal)
-    --clusterAlg CLUSTERALG
-                          Algorithm used to cluster genomes (passed to
-                          scipy.cluster.hierarchy.linkage (default: average)
-    --SkipMash            Skip MASH clustering, just do secondary clustering on
-                          all genomes (default: False)
-    --SkipSecondary       Skip secondary clustering, just perform MASH
-                          clustering (default: False)
+  -pa P_ANI, --P_ani P_ANI
+                        ANI threshold to form primary (MASH) clusters
+                        (default: 0.9)
+  -sa S_ANI, --S_ani S_ANI
+                        ANI threshold to form secondary clusters (default:
+                        0.99)
+  --SkipMash            Skip MASH clustering, just do secondary clustering on
+                        all genomes (default: False)
+  --SkipSecondary       Skip secondary clustering, just perform MASH
+                        clustering (default: False)
+  -nc COV_THRESH, --cov_thresh COV_THRESH
+                        Minmum level of overlap between genomes when doing
+                        secondary comparisons (default: 0.1)
+  -cm {total,larger}, --coverage_method {total,larger}
+                        Method to calculate coverage of an alignment
+                        (for ANIn/ANImf only; gANI can only do larger method)
+                        total   = 2*(aligned length) / (sum of total genome lengths)
+                        larger  = max((aligned length / genome 1), (aligned_length / genome2))
+                         (default: larger)
+  --clusterAlg CLUSTERALG
+                        Algorithm used to cluster genomes (passed to
+                        scipy.cluster.hierarchy.linkage (default: average)
 
   I/O PARAMETERS:
-    -g [GENOMES [GENOMES ...]], --genomes [GENOMES [GENOMES ...]]
-                          genomes to cluster in .fasta format. Not necessary if
-                          already loaded sequences with the "filter" operation
-                          (default: None)
+  -g [GENOMES [GENOMES ...]], --genomes [GENOMES [GENOMES ...]]
+                        genomes to cluster in .fasta format. Not necessary if
+                        already loaded sequences with the "filter" operation
+                        (default: None)
 
 Choose
 ------
@@ -191,45 +212,57 @@ Where A-E are command-line arguments, and the genome with the highest score is t
 To see the command-line options, check the help::
 
   $ dRep choose -h
-  usage: dRep choose [-p PROCESSORS] [-d] [-o] [-h] [-comW COMPLETENESS_WEIGHT]
-                     [-conW CONTAMINATION_WEIGHT]
-                     [-strW STRAIN_HETEROGENEITY_WEIGHT] [-N50W N50_WEIGHT]
-                     [-sizeW SIZE_WEIGHT]
-                     [--checkM_method {taxonomy_wf,lineage_wf}]
-                     work_directory
+  usage: dRep choose [-p PROCESSORS] [-d] [-h] [-comW COMPLETENESS_WEIGHT]
+                   [-conW CONTAMINATION_WEIGHT]
+                   [-strW STRAIN_HETEROGENEITY_WEIGHT] [-N50W N50_WEIGHT]
+                   [-sizeW SIZE_WEIGHT]
+                   [--checkM_method {lineage_wf,taxonomy_wf}]
+                   [--genomeInfo GENOMEINFO] [--ignoreGenomeQuality]
+                   work_directory
 
   positional arguments:
-    work_directory        Directory where data and output
-                          *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
 
   SYSTEM PARAMETERS:
-    -p PROCESSORS, --processors PROCESSORS
-                          threads (default: 6)
-    -d, --dry             dry run- dont do anything (default: False)
-    -o, --overwrite       overwrite existing data in work folder (default:
-                          False)
-    -h, --help            show this help message and exit
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --debug           make extra debugging output (default: False)
+  -h, --help            show this help message and exit
 
   SCORING CRITERIA
   Based off of the formula:
   A*Completeness - B*Contamination + C*(Contamination * (strain_heterogeneity/100)) + D*log(N50) + E*log(size)
 
   A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weight; D = N50_weight; E = size_weight:
-    -comW COMPLETENESS_WEIGHT, --completeness_weight COMPLETENESS_WEIGHT
-                          completeness weight (default: 1)
-    -conW CONTAMINATION_WEIGHT, --contamination_weight CONTAMINATION_WEIGHT
-                          contamination weight (default: 5)
-    -strW STRAIN_HETEROGENEITY_WEIGHT, --strain_heterogeneity_weight STRAIN_HETEROGENEITY_WEIGHT
-                          strain heterogeneity weight (default: 1)
-    -N50W N50_WEIGHT, --N50_weight N50_WEIGHT
-                          weight of log(genome N50) (default: 0.5)
-    -sizeW SIZE_WEIGHT, --size_weight SIZE_WEIGHT
-                          weight of log(genome size) (default: 0)
+  -comW COMPLETENESS_WEIGHT, --completeness_weight COMPLETENESS_WEIGHT
+                        completeness weight (default: 1)
+  -conW CONTAMINATION_WEIGHT, --contamination_weight CONTAMINATION_WEIGHT
+                        contamination weight (default: 5)
+  -strW STRAIN_HETEROGENEITY_WEIGHT, --strain_heterogeneity_weight STRAIN_HETEROGENEITY_WEIGHT
+                        strain heterogeneity weight (default: 1)
+  -N50W N50_WEIGHT, --N50_weight N50_WEIGHT
+                        weight of log(genome N50) (default: 0.5)
+  -sizeW SIZE_WEIGHT, --size_weight SIZE_WEIGHT
+                        weight of log(genome size) (default: 0)
 
   OTHER:
-    --checkM_method {taxonomy_wf,lineage_wf}
-                          Either lineage_wf (more accurate) or taxonomy_wf
-                          (faster) (default: lineage_wf)
+  --checkM_method {lineage_wf,taxonomy_wf}
+                        Either lineage_wf (more accurate) or taxonomy_wf
+                        (faster) (default: lineage_wf)
+  --genomeInfo GENOMEINFO
+                        location of .csv file containing quality information
+                        on the genomes. Must contain: ["genome"(basename of
+                        .fasta file of that genome), "completeness"(0-100
+                        value for completeness of the genome),
+                        "contamination"(0-100 value of the contamination of
+                        the genome)] (default: None)
+  --ignoreGenomeQuality
+                        Don't run checkM or do any quality filtering. NOT
+                        RECOMMENDED! This is useful for use with
+                        bacteriophages or eukaryotes or things where checkM
+                        scoring does not work. Will only choose genomes based
+                        on length and N50 (default: False)
 
 Analyze
 -------
@@ -239,10 +272,7 @@ Analyze is the module that makes all of the figures.
 To see the command-line options, check the help::
 
   $ dRep analyze -h
-  usage: dRep analyze [-p PROCESSORS] [-d] [-o] [-h] [-c CLUSTER] [-t THRESHOLD]
-                      [-m {ANIn,gANI}] [-mc MINIMUM_COVERAGE]
-                      [-a {complete,average,single,weighted}]
-                      [-pl [PLOTS [PLOTS ...]]]
+  usage: dRep analyze [-p PROCESSORS] [-d] [-h] [-pl [PLOTS [PLOTS ...]]]
                       work_directory
 
   positional arguments:
@@ -252,9 +282,7 @@ To see the command-line options, check the help::
   SYSTEM PARAMETERS:
     -p PROCESSORS, --processors PROCESSORS
                           threads (default: 6)
-    -d, --dry             dry run- dont do anything (default: False)
-    -o, --overwrite       overwrite existing data in work folder (default:
-                          False)
+    -d, --debug           make extra debugging output (default: False)
     -h, --help            show this help message and exit
 
   PLOTTING:
@@ -262,7 +290,7 @@ To see the command-line options, check the help::
                           Plots. Input 'all' or 'a' to plot all
                           1) Primary clustering dendrogram
                           2) Secondary clustering dendrograms
-                          3) Secondary clusters heatmaps
+                          3) Secondary clustering MDS
                           4) Comparison scatterplots
                           5) Cluster scorring plot
                           6) Winning genomes
@@ -280,39 +308,37 @@ Evaluate performs a series of checks to alert the user to potential problems wit
 To see the command-line options, check the help::
 
   $ dRep evaluate -h
-  usage: dRep evaluate [-p PROCESSORS] [-d] [-o] [-h] [--warn_dist WARN_DIST]
-                       [--warn_sim WARN_SIM] [--warn_aln WARN_ALN]
-                       [-e [EVALUATE [EVALUATE ...]]]
-                       work_directory
+  usage: dRep evaluate [-p PROCESSORS] [-d] [-h] [--warn_dist WARN_DIST]
+                     [--warn_sim WARN_SIM] [--warn_aln WARN_ALN]
+                     [-e [EVALUATE [EVALUATE ...]]]
+                     work_directory
 
   positional arguments:
-    work_directory        Directory where data and output
-                          *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+  work_directory        Directory where data and output
+                        *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
 
   SYSTEM PARAMETERS:
-    -p PROCESSORS, --processors PROCESSORS
-                          threads (default: 6)
-    -d, --dry             dry run- dont do anything (default: False)
-    -o, --overwrite       overwrite existing data in work folder (default:
-                          False)
-    -h, --help            show this help message and exit
+  -p PROCESSORS, --processors PROCESSORS
+                        threads (default: 6)
+  -d, --debug           make extra debugging output (default: False)
+  -h, --help            show this help message and exit
 
   WARNINGS:
-    --warn_dist WARN_DIST
-                          How far from the threshold to throw cluster warnings
-                          (default: 0.25)
-    --warn_sim WARN_SIM   Similarity threshold for warnings between dereplicated
-                          genomes (default: 0.98)
-    --warn_aln WARN_ALN   Minimum aligned fraction for warnings between
-                          dereplicated genomes (ANIn) (default: 0.25)
+  --warn_dist WARN_DIST
+                        How far from the threshold to throw cluster warnings
+                        (default: 0.25)
+  --warn_sim WARN_SIM   Similarity threshold for warnings between dereplicated
+                        genomes (default: 0.98)
+  --warn_aln WARN_ALN   Minimum aligned fraction for warnings between
+                        dereplicated genomes (ANIn) (default: 0.25)
 
   EVALUATIONS:
-    -e [EVALUATE [EVALUATE ...]], --evaluate [EVALUATE [EVALUATE ...]]
-                          Things to evaluate Input 'all' or 'a' to evaluate all
-                          1) Evaluate de-replicated genome similarity
-                          2) Throw warnings for clusters that were almost different
-                          3) Generate a database of information on winning genomes
-                           (default: None)
+  -e [EVALUATE [EVALUATE ...]], --evaluate [EVALUATE [EVALUATE ...]]
+                        Things to evaluate Input 'all' or 'a' to evaluate all
+                        1) Evaluate de-replicated genome similarity
+                        2) Throw warnings for clusters that were almost different
+                        3) Generate a database of information on winning genomes
+                         (default: None)
 
 Bonus
 -----

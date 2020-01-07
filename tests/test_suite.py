@@ -106,9 +106,9 @@ class VerifyDereplicateWf():
         pass
 
     def run(self):
-        # self.setUp()
-        # self.functional_test_1()
-        # self.tearDown()
+        self.setUp()
+        self.functional_test_1()
+        self.tearDown()
 
         self.setUp()
         self.functional_test_2()
@@ -1496,7 +1496,7 @@ def test_unit():
 if __name__ == '__main__':
     test_unit()
     test_quick()
-    test_short()
+    #test_short()
     test_long()
 
     #filter_test()

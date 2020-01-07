@@ -42,7 +42,7 @@ def printHelp():
 
   Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017
 
-  Choose one of the operations below for more detailed help. See https://drep.readthedocs.io/en/latest/index.html for documenation
+  Choose one of the operations below for more detailed help. See https://drep.readthedocs.io/en/latest/index.html for documentation
   Example: dRep dereplicate -h
 
   Workflows:
@@ -267,7 +267,7 @@ def parse_args(args):
                         + "2) Secondary clustering dendrograms\n"
                         + "3) Secondary clustering MDS\n"
                         + "4) Comparison scatterplots\n"
-                        + "5) Cluster scorring plot\n"
+                        + "5) Cluster scoring plot\n"
                         + "6) Winning genomes\n",
                         nargs='*')
 

@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.4.0] - 2020-01-07
+### Changed
+- Updated warnings and documentation to reflect checkM being in python3 now
+- Updated help to link to documentation
+- Updated documenation in other little ways
+
 ## [2.3.2] - 2019-03-28
 ### Fixed
 - print tracebacks when plots fail
