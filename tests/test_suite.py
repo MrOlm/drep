@@ -140,7 +140,7 @@ class VerifyDereplicateWf():
         sanity_check(WorkDirectory(s_wd_loc))
 
         args = argumentParser.parse_args(['dereplicate',wd_loc,'-g'] + genomes \
-            + ['--checkM_method', 'taxonomy_wf'])
+            + ['--checkM_method', 'taxonomy_wf', '--debug'])
         controller = Controller()
         controller.parseArguments(args)
 
@@ -380,20 +380,24 @@ class VerifyCluster():
             shutil.rmtree(self.test_dir)
 
     def run(self):
-        # self.setUp()
-        # self.test_all_vs_all_mash()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.test_cluster_mash_database()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.time_compare_genomes()
-        # self.tearDown()
+        self.setUp()
+        self.test_all_vs_all_mash()
+        self.tearDown()
+
+        self.setUp()
+        self.test_cluster_mash_database()
+        self.tearDown()
+
+        self.setUp()
+        self.time_compare_genomes()
+        self.tearDown()
 
         self.setUp()
         self.test_goANI()
+        self.tearDown()
+
+        self.setUp()
+        self.test_goANI2()
         self.tearDown()
 
         self.setUp()
@@ -485,6 +489,47 @@ class VerifyCluster():
         p_folder = os.path.join(data_folder, 'data/prodigal/')
         shutil.copytree(os.path.join(self.s_wd_loc, 'data/prodigal'), \
             p_folder)
+
+        # Try goANI
+        p_folder = os.path.join(data_folder, 'data/prodigal/')
+        Ndb = drep.d_cluster.compare_genomes(bdb, 'goANI', data_folder, \
+            prod_folder = p_folder)
+        db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+            & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+
+        assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
+
+    def test_goANI2(self):
+        '''
+        Test goANI in the case where the genomes share no genes
+        '''
+        import time
+
+        bdb = drep.d_cluster.load_genomes(self.genomes)
+        data_folder = self.test_dir
+
+        # Copy over prodigal
+        self.s_wd_loc = load_solutions_wd()
+        p_folder = os.path.join(data_folder, 'data/prodigal/')
+        shutil.copytree(os.path.join(self.s_wd_loc, 'data/prodigal'), \
+            p_folder)
+
+        # Remove all but one gene in one of the prodigal files
+        p_folder = os.path.join(data_folder, 'data/prodigal/')
+        for f in glob.glob(p_folder + '*'):
+            if 'Escherichia_coli_Sakai.fna.fna' in f:
+                new_file = open(f + '.2', 'w')
+                old_file = open(f, 'r')
+                j = 0
+                for line in old_file.readlines():
+                    if ((line[0] == '>') & (j != 0)):
+                        break
+                    j += 1
+                    new_file.write(line.strip() + '/')
+                new_file.close()
+                old_file.close()
+                os.remove(f)
+                shutil.copy(f + '.2', f)
 
         # Try goANI
         p_folder = os.path.join(data_folder, 'data/prodigal/')
@@ -1496,14 +1541,13 @@ def test_unit():
 if __name__ == '__main__':
     test_unit()
     test_quick()
-    #test_short()
     test_long()
 
     #filter_test()
     #choose_test()
     #analyze_test()
     #dereplicate_test()
-    #cluster_test()
+    # cluster_test()
     #taxonomy_test()
 
     # verifyCluster = VerifyCluster()

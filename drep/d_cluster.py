@@ -1261,6 +1261,12 @@ def parse_nsim_file(file):
     '''
     # Load
     db = pd.read_csv(file, sep='\t')
+
+    if len(db) == 0:
+        logging.warning("File {0} is empty, indicating a nsimscan failure! Run with --debug and check the log folder for details".format(file))
+        
+        return _summarize_nsimsan(db)
+
     db = db.rename(columns={'#qry_id':'qry_id'})
 
     # Filter

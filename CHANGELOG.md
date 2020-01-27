@@ -4,6 +4,12 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.4.1] - 2020-01-23
+### Changed
+- Changed the flag -n_PRESET to --n_PRESET
+- Handle the case where a nsimscan run completely fails in goANI mode
+- Remove "--force_overwrite" from checkM since its no longer supported
+
 ## [2.4.0] - 2020-01-07
 ### Changed
 - Updated warnings and documentation to reflect checkM being in python3 now
