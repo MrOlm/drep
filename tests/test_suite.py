@@ -1539,8 +1539,9 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    test_unit()
-    test_quick()
+    # test_unit()
+    # test_quick()
+    #test_short()
     test_long()
 
     #filter_test()
