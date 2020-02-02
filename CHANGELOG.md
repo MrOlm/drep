@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.4.2] - 2020-02-01
+### Changed
+- More edits to make goANI work (what a bizarre bug with the output sometimes having different headers?)
+
 ## [2.4.1] - 2020-01-23
 ### Changed
 - Changed the flag -n_PRESET to --n_PRESET

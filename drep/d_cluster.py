@@ -1264,13 +1264,18 @@ def parse_nsim_file(file):
 
     if len(db) == 0:
         logging.warning("File {0} is empty, indicating a nsimscan failure! Run with --debug and check the log folder for details".format(file))
-        
+
         return _summarize_nsimsan(db)
 
-    db = db.rename(columns={'#qry_id':'qry_id'})
+    db = db.rename(columns={'#qry_id':'qry_id', '#Q_id':'qry_id', 'S_id':'sbj_id', 'trg_len':'sbj_len'})
 
     # Filter
-    db = _filter_nsimscan(db)
+    try:
+        db = _filter_nsimscan(db)
+    except:
+        print("ERROR! FILE {0}".format(file))
+        print(db)
+        return _summarize_nsimsan(pd.DataFrame())
 
     # Make summary results
     x = _summarize_nsimsan(db)
