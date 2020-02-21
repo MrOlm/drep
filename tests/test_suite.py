@@ -140,7 +140,8 @@ class VerifyDereplicateWf():
         sanity_check(WorkDirectory(s_wd_loc))
 
         args = argumentParser.parse_args(['dereplicate',wd_loc,'-g'] + genomes \
-            + ['--checkM_method', 'taxonomy_wf', '--debug'])
+            + ['--checkM_method', 'taxonomy_wf', '--debug', '--S_algorithm',
+                        'ANImf'])
         controller = Controller()
         controller.parseArguments(args)
 
@@ -381,6 +382,10 @@ class VerifyCluster():
 
     def run(self):
         self.setUp()
+        self.test_list_genome_load()
+        self.tearDown()
+
+        self.setUp()
         self.test_all_vs_all_mash()
         self.tearDown()
 
@@ -388,9 +393,9 @@ class VerifyCluster():
         self.test_cluster_mash_database()
         self.tearDown()
 
-        self.setUp()
-        self.time_compare_genomes()
-        self.tearDown()
+        # self.setUp()
+        # self.time_compare_genomes()
+        # self.tearDown()
 
         self.setUp()
         self.test_goANI()
@@ -401,11 +406,19 @@ class VerifyCluster():
         self.tearDown()
 
         self.setUp()
+        self.test_fastANI()
+        self.tearDown()
+
+        self.setUp()
         self.test_compare_genomes()
         self.tearDown()
 
         self.setUp()
         self.test_genome_hierarchical_clustering()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_4()
         self.tearDown()
 
         self.setUp()
@@ -423,6 +436,47 @@ class VerifyCluster():
         self.setUp()
         self.skipsecondary_test()
         self.tearDown()
+
+    def test_list_genome_load(self):
+        '''
+        Test inputing a list of genomes via a text file
+        '''
+        bdb = drep.d_cluster.load_genomes(self.genomes)
+        data_folder = self.test_dir
+
+        # Make the list of genomes
+        if not os.path.exists(data_folder):
+            os.mkdir(data_folder)
+        genome_loc = os.path.join(data_folder, 'genomes.txt')
+        with open(genome_loc, 'w') as o:
+            for i, row in bdb.iterrows():
+                o.write(row['location'] + '\n')
+
+        # Test it out
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
+            'fastANI','-g',genome_loc])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Cdb.csv is correct
+        db1 = Swd.get_db('Cdb')
+        del db1['comparison_algorithm']
+        db2 =  wd.get_db('Cdb')
+        del db2['comparison_algorithm']
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
+
+        Ndb = drep.d_cluster.compare_genomes(bdb, 'fastANI', data_folder)
+        db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+            & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+
+        assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
 
     def test_genome_hierarchical_clustering(self):
         '''
@@ -540,6 +594,19 @@ class VerifyCluster():
 
         assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
 
+    def test_fastANI(self):
+        '''
+        Test fastANI
+        '''
+        bdb = drep.d_cluster.load_genomes(self.genomes)
+        data_folder = self.test_dir
+
+        Ndb = drep.d_cluster.compare_genomes(bdb, 'fastANI', data_folder)
+        db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+            & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+
+        assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
+
     def time_compare_genomes(self):
         '''
         Time d_cluster.compare_genomes
@@ -549,15 +616,17 @@ class VerifyCluster():
         bdb = drep.d_cluster.load_genomes(self.genomes)
         data_folder = self.test_dir
 
-        # Try ANImf
-        start = time.time()
-        Ndb = drep.d_cluster.compare_genomes(bdb, 'ANImf', data_folder)
-        db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
-            & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
-        assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
-        end = time.time()
+        for method in ['fastANI', 'ANIn', 'ANImf']:
+            # Try ANImf
+            start = time.time()
+            Ndb = drep.d_cluster.compare_genomes(bdb, method, data_folder, processors=1)
+            db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+                & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+            assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.9)
+            end = time.time()
 
-        print("Time: {0:.2f}".format(end-start))
+            comps = len(bdb) * len(bdb)
+            print("{1} time: {0:.2f} seconds for {2} comparisons ({3:.2f} seconds per comparison)".format(end-start, method, comps, (end-start)/comps))
 
     def test_all_vs_all_mash(self):
         '''
@@ -676,6 +745,31 @@ class VerifyCluster():
 
         args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
             'ANImf','-g']+genomes)
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(s_wd_loc)
+        wd   = WorkDirectory(wd_loc)
+
+        # Confirm Cdb.csv is correct
+        db1 = Swd.get_db('Cdb')
+        del db1['comparison_algorithm']
+        db2 =  wd.get_db('Cdb')
+        del db2['comparison_algorithm']
+        assert compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
+
+    def functional_test_4(self):
+        '''
+        Cluster the 5 genomes using fastANI
+        '''
+
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+        s_wd_loc = self.s_wd_loc
+
+        args = argumentParser.parse_args(['cluster',wd_loc,'--S_algorithm',\
+            'fastANI','-g']+genomes)
         controller = Controller()
         controller.parseArguments(args)
 
@@ -1227,10 +1321,14 @@ class QuickTests():
             db1 = Swd.get_db(db)
             db2 =  wd.get_db(db)
 
-            # get rid of some precision on the ANI
+            # get rid of some precision on the ANI; you are comparing fastANI with ANImf
             if db == 'Ndb':
-                db1['ani'] = [float("{0:.4f}".format(x)) for x in db1['ani']]
-                db2['ani'] = [float("{0:.4f}".format(x)) for x in db2['ani']]
+                db1['ani'] = [round(x, 4) for x in db1['ani']]
+                db2['ani'] = [round(x, 4) for x in db2['ani']]
+
+            if db == 'Cdb':
+                db1 = db1[['genome', 'secondary_cluster']]
+                db2 = db2[['genome', 'secondary_cluster']]
 
             if compare_dfs(db1, db2) == False:
                 # # db1['solution'] = True
@@ -1539,19 +1637,13 @@ def test_unit():
     unit_test()
 
 if __name__ == '__main__':
-    test_unit()
-    test_quick()
-    # test_short()
-    test_long()
-
-    #filter_test()
-    #choose_test()
-    #analyze_test()
-    #dereplicate_test()
-    # cluster_test()
-    #taxonomy_test()
-
-    # verifyCluster = VerifyCluster()
-    # verifyCluster.run()
+    rerun_test()
+    unit_test()
+    dereplicate_test()
+    filter_test()
+    cluster_test()
+    choose_test()
+    analyze_test()
+    # taxonomy_test()
 
     print("Everything seems to be working swimmingly!")

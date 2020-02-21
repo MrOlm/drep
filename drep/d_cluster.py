@@ -368,6 +368,8 @@ def estimate_time(comps, alg):
         time = comps * .1
     elif alg == 'ANImf':
         time = comps * .5
+    elif alg == 'fastANI':
+        time = comps * 0.00667
     return time
 
 def _parse_cluster_arguments(workDirectory, **kwargs):
@@ -890,6 +892,12 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
         df = run_pairwise_ANIn(genome_list, working_data_folder, **kwargs)
         return df
 
+    elif algorithm == 'fastANI':
+        genome_list = bdb['location'].tolist()
+        working_data_folder = os.path.join(data_folder, 'fastANI_files/')
+        df = run_pairwise_fastANI(genome_list, working_data_folder, **kwargs)
+        return df
+
     elif algorithm == 'gANI':
         # Figure out prodigal folder
         wd = kwargs.get('wd', False)
@@ -919,7 +927,7 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
         return df
 
     else:
-        logging.error("{0} not supported".format(algorithm))
+        logging.error("{0} not supportedd".format(algorithm))
         sys.exit()
 
 def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
@@ -1045,6 +1053,79 @@ def run_pairwise_ANImf(genome_list, ANIn_folder, **kwargs):
     df = process_deltafiles(deltafiles, org_lengths, **kwargs)
 
     return df
+
+def run_pairwise_fastANI(genome_list, outdir, **kwargs):
+    p = kwargs.get('processors',6)
+
+    # Make folders
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    tmp_dir = os.path.join(outdir, 'tmp/')
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+
+    # Make genome list
+    glist = os.path.join(tmp_dir, 'genomeList')
+    glist = _make_glist(genome_list, glist)
+
+    # Gen command
+    exe_loc = drep.get_exe('fastANI')
+    out_base = os.path.join(outdir, 'fastANI_out')
+    cmd = [exe_loc, '--ql', glist, '--rl', glist, '-o', out_base, '--matrix', '-t', str(p), '--minFraction', str(0)]
+    logging.debug(' '.join(cmd))
+
+    # Run command
+    if ('wd' in kwargs) and (kwargs.get('debug', False)):
+        logdir = kwargs.get('wd').get_dir('cmd_logs')
+    else:
+        logdir = False
+    drep.thread_cmds([cmd], shell=False, logdir=logdir, t=1)
+
+    # Load results
+    fdb = load_fastani(out_base)
+
+    # fix missing ones
+    fdb = _fix_fastani(fdb)
+
+    # Return
+    return fdb
+
+def load_fastani(file):
+    fdb = pd.read_csv(file, names=['reference', 'querry', 'ANI', 'j1', 'j2'], delim_whitespace=True)
+    for c in ['reference', 'querry']:
+        fdb[c] = [_get_genome_name_from_fasta(x) for x in fdb[c]]
+    fdb = fdb.rename(columns={'ANI':'ani'})
+    fdb['alignment_coverage'] = [(j1/j2) for j1, j2 in zip(fdb['j1'], fdb['j2'])]
+    fdb = fdb[['reference', 'querry', 'ani', 'alignment_coverage']]
+    fdb['ani'] = [x/100 for x in fdb['ani']]
+
+    return fdb
+
+def _fix_fastani(odb):
+    # Add back missing genomes
+    fdb = odb.pivot('reference', 'querry', 'ani')
+    fdb.reset_index(level=0, inplace=True)
+    fdb.fillna(0, inplace=True)
+    fdb = fdb.melt(id_vars=['reference']).rename(
+            columns={'value':'ani'})
+
+    # Add back alignment coverage
+    fdb = pd.merge(fdb, odb[['reference', 'querry', 'alignment_coverage']], on=['reference', 'querry'], how='outer')
+    fdb['alignment_coverage'] = fdb['alignment_coverage'].fillna(0)
+
+    assert len(fdb['reference'].unique()) == len(fdb['querry'].unique())
+    assert len(fdb) == (len(fdb['reference'].unique()) * len(fdb['querry'].unique()))
+
+    return fdb
+
+def _make_glist(genomes, floc):
+    o = open(floc, 'w')
+    for g in genomes:
+        loc = os.path.abspath(g)
+        assert os.path.isfile(g)
+        o.write(loc + '\n')
+    o.close()
+    return floc
 
 def run_pairwise_gANI(bdb, gANI_folder, prod_folder, **kwargs):
     '''
@@ -1399,13 +1480,33 @@ def load_genomes(genome_list):
     Returns:
         DataFrame: pandas dataframe with columns ['genome', 'location']
     '''
-    Table = {'genome':[],'location':[]}
+    assert type(genome_list) == type(list())
+
+    # Load from a text file
+    if len(genome_list) == 1:
+        logging.info('Loading genomes from a list')
+        try:
+            Table = {'genome':[],'location':[]}
+            with open(genome_list[0], 'r') as o:
+                for line in o.readlines():
+                    genome = line.strip()
+                    assert os.path.isfile(genome), "{0} is not a file".format(genome)
+                    Table['genome'].append(os.path.basename(genome))
+                    Table['location'].append(os.path.abspath(genome))
+            Bdb = pd.DataFrame(Table)
+            return Bdb
+        except:
+            logging.info('Nevermind! Ill try loading as a genome now')
+
+    Table = {'genome':[], 'location':[]}
     for genome in genome_list:
         assert os.path.isfile(genome), "{0} is not a file".format(genome)
         Table['genome'].append(os.path.basename(genome))
         Table['location'].append(os.path.abspath(genome))
     Bdb = pd.DataFrame(Table)
     return Bdb
+
+
 
 def add_avani(db):
     '''

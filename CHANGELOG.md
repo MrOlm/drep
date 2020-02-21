@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.5.0] - 2020-02-20
+### Added
+- FastANI is now an option for secondary comparisons
+- You can now feed in a list of genomes via the -g option
+
 ## [2.4.2] - 2020-02-01
 ### Changed
 - More edits to make goANI work (what a bizarre bug with the output sometimes having different headers?)

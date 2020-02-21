@@ -102,10 +102,12 @@ def parse_args(args):
     Clustflags = cluster_parent.add_argument_group('GENOME COMPARISON PARAMETERS')
     Clustflags.add_argument("-ms","--MASH_sketch",help="MASH sketch size", default=1000)
     Clustflags.add_argument("--S_algorithm", help="R|Algorithm for secondary clustering comaprisons:\n" \
-        + "ANImf = (RECOMMENDED) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
-        + "ANIn  = Align whole genomes with nucmer; compare aligned regions\n" \
-        + "gANI  = Identify and align ORFs; compare aligned ORFS\n", \
-                        default='ANImf', choices={'ANIn','gANI','ANImf', 'goANI'})
+        + "fastANI = Kmer-based approach; very fast\n" \
+        + "ANImf   = (DEFAULT) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
+        + "ANIn    = Align whole genomes with nucmer; compare aligned regions\n" \
+        + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
+        + "goANI   = Open source version of gANI; requires nsmimscan\n",
+                        default='ANImf', choices={'ANIn','gANI','ANImf', 'goANI', 'fastANI'})
     Clustflags.add_argument("--n_PRESET", help= "R|Presets to pass to nucmer\n" \
         + "tight   = only align highly conserved regions\n" \
         + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')
@@ -123,7 +125,7 @@ def parse_args(args):
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
         genomes when doing secondary comparisons", default=0.1, type=float)
     Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \
-        + "(for ANIn/ANImf only; gANI can only do larger method)\n"
+        + "(for ANIn/ANImf only; gANI and fastANI can only do larger method)\n"
         + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
         + "larger  = max((aligned length / genome 1), (aligned_length / genome2))\n",
                         choices=['total', 'larger'], default='larger')
@@ -327,7 +329,7 @@ def parse_args(args):
 
     # I/O
     Iflags = dereplicate_parser.add_argument_group('I/O PARAMETERS')
-    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format')
+    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format; can pass a number of .fasta files or a single text file listing the locations of all .fasta files')
     Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
                             + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
                             default = 'lineage_wf')
@@ -346,7 +348,7 @@ def parse_args(args):
 
     # I/O
     Iflags = dereplicate_parser.add_argument_group('I/O PARAMETERS')
-    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format')
+    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format; can pass a number of .fasta files or a single text file listing the locations of all .fasta files')
 
     '''
     ####### PARSE THE ARGUMENTS ######
