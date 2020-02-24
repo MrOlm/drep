@@ -10,6 +10,8 @@ import os
 import glob
 import shutil
 import logging
+import random
+import string
 import sys
 import json
 import scipy.cluster.hierarchy
@@ -198,8 +200,12 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
             logging.debug('running cluster {0}'.format(name))
             #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
             ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
-            ndb['primary_cluster'] = name
-            Ndb = Ndb.append(ndb)
+
+            if len(ndb) > 0:
+                ndb['primary_cluster'] = name
+                Ndb = Ndb.append(ndb)
+            else:
+                logging.error("CRITICAL ERROR WITH PRIMARY CLUSTER {0}; SKIPPING".foramt(name))
 
         if debug:
             logging.debug("Debug mode on - saving Ndb ASAP")
@@ -1056,6 +1062,7 @@ def run_pairwise_ANImf(genome_list, ANIn_folder, **kwargs):
 
 def run_pairwise_fastANI(genome_list, outdir, **kwargs):
     p = kwargs.get('processors',6)
+    code = _randomString(stringLength=10)
 
     # Make folders
     if not os.path.exists(outdir):
@@ -1070,9 +1077,9 @@ def run_pairwise_fastANI(genome_list, outdir, **kwargs):
 
     # Gen command
     exe_loc = drep.get_exe('fastANI')
-    out_base = os.path.join(outdir, 'fastANI_out')
+    out_base = os.path.join(outdir, 'fastANI_out_{0}'.format(code))
     cmd = [exe_loc, '--ql', glist, '--rl', glist, '-o', out_base, '--matrix', '-t', str(p), '--minFraction', str(0)]
-    logging.debug(' '.join(cmd))
+    logging.debug(' '.join(cmd) + ' ' + code)
 
     # Run command
     if ('wd' in kwargs) and (kwargs.get('debug', False)):
@@ -1085,10 +1092,14 @@ def run_pairwise_fastANI(genome_list, outdir, **kwargs):
     fdb = load_fastani(out_base)
 
     # fix missing ones
-    fdb = _fix_fastani(fdb)
+    try:
+        fdb = _fix_fastani(fdb)
+        return fdb
 
-    # Return
-    return fdb
+    # handle broken self
+    except:
+        logging.error("CRITICAL ERROR WITH SECONDARY CLUSTERING CODE {0}; SKIPPING".format(code))
+        return pd.DataFrame()
 
 def load_fastani(file):
     fdb = pd.read_csv(file, names=['reference', 'querry', 'ANI', 'j1', 'j2'], delim_whitespace=True)
@@ -1591,3 +1602,8 @@ def _print_time_estimate(Bdb, Cdb, algorithm, cores):
     time = time / int(cores)
     logging.info("Running {0} {1} comparisons- should take ~ {2:.1f} min".format(\
             comps, algorithm, time))
+
+def _randomString(stringLength=10):
+    """Generate a random string of fixed length """
+    letters = string.ascii_lowercase
+    return ''.join(random.choice(letters) for i in range(stringLength))

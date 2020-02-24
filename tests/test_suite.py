@@ -25,6 +25,9 @@ from drep.d_bonus import find_program
 def load_test_genomes():
     return glob.glob(os.path.join(str(os.getcwd()) + '/genomes/*'))
 
+def load_broken_genome():
+    return glob.glob(os.path.join(str(os.getcwd()),'../tests/test_backend/other/broken_genome.fasta'))[0]
+
 def load_test_wd_loc():
     loc = os.path.join(str(os.getcwd()),'../tests/test_backend/ecoli_wd')
     return loc
@@ -361,6 +364,7 @@ class VerifyCluster():
 
     def setUp(self):
         self.genomes = load_test_genomes()
+        self.broken_genome = load_broken_genome()
         self.wd_loc = load_test_wd_loc()
         self.test_dir = load_random_test_dir()
         self.s_wd_loc = load_solutions_wd()
