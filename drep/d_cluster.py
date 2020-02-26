@@ -199,13 +199,23 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         for bdb, name in iteratre_clusters(Bdb,Cdb):
             logging.debug('running cluster {0}'.format(name))
             #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
-            ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
-
-            if len(ndb) > 0:
+            try:
+                ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
                 ndb['primary_cluster'] = name
                 Ndb = Ndb.append(ndb)
-            else:
-                logging.error("CRITICAL ERROR WITH PRIMARY CLUSTER {0}; SKIPPING".foramt(name))
+
+            except:
+                logging.error("CRITICAL ERROR WITH PRIMARY CLUSTER {0}; TRYING AGAIN".format(name))
+
+                try:
+                    ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
+                    if len(ndb) > 0:
+                        ndb['primary_cluster'] = name
+                        Ndb = Ndb.append(ndb)
+                    else:
+                        logging.error("CRITICAL ERROR AGAIN WITH PRIMARY CLUSTER {0}; SKIPPING".format(name))
+                except:
+                    logging.error("DOUBLE CRITICAL ERROR AGAIN WITH PRIMARY CLUSTER {0}; SKIPPING".format(name))
 
         if debug:
             logging.debug("Debug mode on - saving Ndb ASAP")

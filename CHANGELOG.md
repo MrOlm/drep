@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.5.2] - 2020-02-26
+### Fixed
+- The bug I tried to fix in 2.5.1 is able to fix itself
+
 ## [2.5.1] - 2020-02-24
 ### Fixed
 - Instead of crashing out, FastANI will report the error and keep going if parsing fails
