@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.5.3] - 2020-02-27
+### Fixed
+- More bug fixes related to FastANI
+- Allow loading of cached Ndb.csv
+
 ## [2.5.2] - 2020-02-26
 ### Fixed
 - The bug I tried to fix in 2.5.1 is able to fix itself

@@ -193,33 +193,40 @@ def cluster_genomes(genome_list, data_folder, **kwargs):
         kwargs.get('wd')._wipe_secondary_clusters()
 
     if not kwargs.get('SkipSecondary', False):
+        # See if cached
+        cached = (debug and wd.hasDb('Ndb'))
+
+        if cached:
+            logging.info('3. Loading cached secondary clustering')
+            Ndb = wd.get_db('Ndb')
+
+            # Get rid of broken ones
+            Ndb = Ndb.dropna(subset=['reference'])
+
+            logging.info('3. Secondary clustering cache loaded')
+
         # Run comparisons, make Ndb
-        _print_time_estimate(Bdb, Cdb, algorithm, kwargs.get('processors', 6))
-        Ndb = pd.DataFrame()
-        for bdb, name in iteratre_clusters(Bdb,Cdb):
-            logging.debug('running cluster {0}'.format(name))
-            #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
-            try:
+        else:
+            _print_time_estimate(Bdb, Cdb, algorithm, kwargs.get('processors', 6))
+            Ndb = pd.DataFrame()
+            for bdb, name in iteratre_clusters(Bdb,Cdb):
+                logging.debug('running cluster {0}'.format(name))
+                #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
                 ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
-                ndb['primary_cluster'] = name
-                Ndb = Ndb.append(ndb)
 
-            except:
-                logging.error("CRITICAL ERROR WITH PRIMARY CLUSTER {0}; TRYING AGAIN".format(name))
-
-                try:
+                if len(ndb) == 0:
+                    logging.error("CRITICAL ERROR WITH PRIMARY CLUSTER {0}; TRYING AGAIN".format(name))
                     ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
-                    if len(ndb) > 0:
-                        ndb['primary_cluster'] = name
-                        Ndb = Ndb.append(ndb)
-                    else:
-                        logging.error("CRITICAL ERROR AGAIN WITH PRIMARY CLUSTER {0}; SKIPPING".format(name))
-                except:
+
+                if len(ndb) > 0:
+                    ndb['primary_cluster'] = name
+                    Ndb = Ndb.append(ndb)
+                else:
                     logging.error("DOUBLE CRITICAL ERROR AGAIN WITH PRIMARY CLUSTER {0}; SKIPPING".format(name))
 
-        if debug:
-            logging.debug("Debug mode on - saving Ndb ASAP")
-            wd.store_db(Ndb, 'Ndb')
+            if debug:
+                logging.debug("Debug mode on - saving Ndb ASAP")
+                wd.store_db(Ndb, 'Ndb')
 
         # Run clustering on Ndb
         Cdb, c2ret = _cluster_Ndb(Ndb, comp_method=algorithm, **kwargs)
