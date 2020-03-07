@@ -596,8 +596,8 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     uCols = ['genome1','genome2','dist']
     dTypes = {'genome1':'category', 'genome2':'category', 'dist':np.float32}
     Mdb = pd.read_csv(file, names=iniCols, usecols=uCols, dtype=dTypes, sep='\t')
-    Mdb['genome1'] = Mdb['genome1'].apply(_get_genome_name_from_fasta)
-    Mdb['genome2'] = Mdb['genome2'].apply(_get_genome_name_from_fasta)
+    Mdb['genome1'] = Mdb['genome1'].apply(_get_genome_name_from_fasta).astype('category')
+    Mdb['genome2'] = Mdb['genome2'].apply(_get_genome_name_from_fasta).astype('category')
     Mdb['similarity'] = 1 - Mdb['dist']
 
     # Filter out those genomes that are in the MASH folder but shouldn't be in Mdb

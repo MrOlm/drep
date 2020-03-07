@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.5.4] - 2020-03-06
+- Trying to fix a bug related to pandas categories
+
 ## [2.5.3] - 2020-02-27
 ### Fixed
 - More bug fixes related to FastANI
