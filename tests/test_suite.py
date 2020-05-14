@@ -6,11 +6,12 @@
 #
 ###############################################################################
 
-import glob
 import os
+import glob
 import pytest
 import shutil
 import logging
+import subprocess
 import pandas as pd
 
 from collections import defaultdict
@@ -352,6 +353,84 @@ class VerifyFilter():
         # Confirm genome is in Bdb.csv
         Gdb = wd.get_db('genomeInfo')
         assert Gdb['completeness'].tolist()[0] == 98.28
+
+    def tearDown(self):
+        #logging.shutdown()
+        if os.path.isdir(self.wd_loc):
+            shutil.rmtree(self.wd_loc)
+
+class VerifyBonus():
+    def __init__(self):
+        pass
+
+    def setUp(self):
+        self.genomes = load_test_genomes()
+        self.wd_loc = load_test_wd_loc()
+        self.s_wd_loc = load_solutions_wd()
+
+        #logging.shutdown()
+        if os.path.isdir(self.wd_loc):
+            shutil.rmtree(self.wd_loc)
+
+    def run(self):
+        self.setUp()
+        self.test_drep_scaffold_level()
+        self.tearDown()
+
+        self.setUp()
+        self.test_drep_scaffold_level2()
+        self.tearDown()
+
+    def test_drep_scaffold_level(self):
+        '''
+        test drep.d_filter.chdb_to_genomeInfo
+        '''
+        script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/ScaffoldLevel_dRep.py')
+
+        cmd = "{0} -f {1} {1} -o {2}".format(script_loc, self.genomes[0], self.wd_loc)
+        print(cmd)
+        subprocess.call(cmd, shell=True)
+
+        outs = glob.glob(self.wd_loc + '/*')
+        print(outs)
+        f = [o for o in outs if 'DereplicationInfo.csv' in o][0]
+        Rdb = pd.read_csv(f)
+        assert len(Rdb) == 5
+
+    def test_drep_scaffold_level2(self):
+        '''
+        test drep.d_filter.chdb_to_genomeInfo
+        '''
+        script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/ScaffoldLevel_dRep.py')
+
+        cmd = "{0} -f {1} {1} -o {2} --IgnoreSameScaffolds".format(script_loc, self.genomes[0], self.wd_loc)
+        print(cmd)
+        subprocess.call(cmd, shell=True)
+
+        outs = glob.glob(self.wd_loc + '/*')
+        print(outs)
+        f = [o for o in outs if 'DereplicationInfo.csv' in o][0]
+        Rdb = pd.read_csv(f)
+        assert len(Rdb) == 0
+
+
+        # genomes = self.genomes
+        # workDirectory = drep.WorkDirectory.WorkDirectory(self.s_wd_loc)
+        #
+        # # Load chdb
+        # chdb = workDirectory.get_db('Chdb')
+        # # Make bdb
+        # bdb = drep.d_cluster.load_genomes(genomes)
+        # # Make Gdb
+        # Gdb = drep.d_filter.calc_genome_info(genomes)
+        #
+        # # Run
+        # Idb = drep.d_filter.chdb_to_genomeInfo(chdb)
+        # Tdb = drep.d_filter._validate_genomeInfo(Idb, bdb)
+        # Tdb = drep.d_filter._add_lengthN50(Tdb, bdb)
+        # t = Tdb[Tdb['genome'] == 'Enterococcus_casseliflavus_EC20.fasta']
+        # assert t['completeness'].tolist()[0] == 98.28
+        # assert t['length'].tolist()[0] == 3427276
 
     def tearDown(self):
         #logging.shutdown()
@@ -1601,6 +1680,11 @@ def choose_test():
     verifyChoose= VerifyChoose()
     verifyChoose.run()
 
+def bonus_test():
+    ''' test the choose operation '''
+    verifyBonus= VerifyBonus()
+    verifyBonus.run()
+
 def dereplicate_test():
     ''' test the dereplicate operation '''
     verifyDereplicateWf = VerifyDereplicateWf()
@@ -1648,6 +1732,7 @@ if __name__ == '__main__':
     cluster_test()
     choose_test()
     analyze_test()
+    bonus_test()
     # taxonomy_test()
 
     print("Everything seems to be working swimmingly!")

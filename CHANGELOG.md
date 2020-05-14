@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [2.6.0] - 2020-05-14
+- Add helper scripts ScaffoldLevel_dRep.py and parse_stb.py
+
 ## [2.5.4] - 2020-03-06
 - Trying to fix a bug related to pandas categories
 

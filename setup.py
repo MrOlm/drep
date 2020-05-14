@@ -15,7 +15,7 @@ setup(name='drep',
       license='MIT',
       package_data={'drep': ['VERSION']},
       packages=['drep'],
-      scripts=['bin/dRep'],
+      scripts=['bin/dRep', 'helper_scripts/parse_stb.py', 'helper_scripts/ScaffoldLevel_dRep.py'],
       install_requires=[
           'numpy',
           'pandas',
