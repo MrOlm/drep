@@ -6,12 +6,10 @@
 # 02.15.19
 # https://biotite.berkeley.edu/j/user/mattolm/notebooks/OtherProjects/OneOffs/AlexaPhage_1_writtingProgram.ipynb
 
-__author__ = "Matt Olm"
-__version__ = "0.1.0"
-__license__ = "MIT"
 
 import os
 import sys
+import gzip
 import glob
 import textwrap
 import shutil
@@ -20,10 +18,24 @@ import argparse
 import pandas as pd
 
 from shutil import copyfile
+import subprocess
 from subprocess import call
 from collections import defaultdict
 
+from tqdm import tqdm
+
 from Bio import SeqIO
+
+import drep
+
+def version():
+    versionFile = open(os.path.join(drep.__path__[0], 'VERSION'))
+    return versionFile.read().strip()
+
+__author__ = "Matt Olm"
+__license__ = "MIT"
+__version__ = version()
+
 
 class abstractCommand():
     '''
@@ -91,10 +103,13 @@ class ANImCommand(abstractCommand):
 
         # 1) call the program
         cmd = gen_mummer_cmd(**self.config)
-        if dry:
-            print(cmd)
-        else:
-            call(cmd)
+        #print(' '.join(cmd))
+        if not dry:
+            code = call(cmd)
+            if code != 0:
+                print("!!! nucmer failed with exit code {0}. Im going to crash now !!!".format(code))
+                print(cmd)
+                raise Exception("!!! nucmer failed with exit code {0}. Im going to crash now !!!".format(code))
 
         # 2) Mark that this command has been run
         self.run = True
@@ -149,7 +164,7 @@ def gen_mummer_cmd(**kwargs):
     '''
 
     cmd = [kwargs['exe'],'--' + kwargs['method'],'-p',kwargs['prefix'], '-c', \
-        kwargs['c'], '-g', kwargs['maxgap']]
+        kwargs['c'], '-g', kwargs['maxgap'], '-t', str(kwargs['p'])]
 
     if kwargs['noextend'] == 'True':
         cmd.append('--noextend')
@@ -297,6 +312,7 @@ def filter_delta(delta, filter_exe=False):
 
     filter_loc = get_filtered_loc(delta)
     cmd = gen_filter_cmd(delta=delta, filter_exe=filter_exe)
+    #print(cmd)
     call(cmd, shell=True)
 
     return filter_loc
@@ -311,6 +327,7 @@ def get_snps(delta, snp_exe=False):
 
     snp_loc = get_snp_loc(delta)
     cmd = gen_snp_cmd(delta=delta, snp_exe=snp_exe)
+    #print(cmd)
     call(cmd, shell=True)
 
     return snp_loc
@@ -474,8 +491,7 @@ def main(args):
         # args.outdir))
         # sys.exit()
 
-    dereplicate_scaffolds(args.fastas, args.outdir, minCov=args.minCov, minANI=args.minANI, verbose=False,
-                        IgnoreSameScaffolds=args.IgnoreSameScaffolds)
+    dereplicate_scaffolds(args.fasta_files, args.outdir, **vars(args))
 
 def get_default_args(settings):
     '''
@@ -487,7 +503,7 @@ def get_default_args(settings):
         return {}
 
 
-def dereplicate_scaffolds(fastas, output_folder, minCov=0.5, minANI=0.95, verbose=False, IgnoreSameScaffolds=False):
+def dereplicate_scaffolds(fastas, output_folder, **kwargs):
     '''
     De-replicate several lists of scaffolds
 
@@ -495,8 +511,9 @@ def dereplicate_scaffolds(fastas, output_folder, minCov=0.5, minANI=0.95, verbos
         fastas = List of .fasta files to be de-replicated on a scaffold level, in priority order
         output_folder = Folder to store output files
     '''
+    verbose = kwargs.get('verbose', False)
+
     # Do some quick validating
-    assert len(fastas) > 1
     if output_folder[-1] != '/':
         output_folder = output_folder + '/'
     assert os.path.isdir(output_folder)
@@ -505,15 +522,25 @@ def dereplicate_scaffolds(fastas, output_folder, minCov=0.5, minANI=0.95, verbos
         print("Step 1- Load scaffold to length for .fasta files")
     scaffDb = load_fastas(fastas)
 
+    assert len(fastas) >= 1
+    selfCompairson = False
+    if len(fastas) == 1:
+        kwargs['IgnoreSameScaffolds'] = True
+        selfCompairson = True
+
+        # Duplicate the scaffold
+        scaffDb2 = scaffDb.copy()
+        scaffDb2['priority'] = 1
+        scaffDb = pd.concat([scaffDb, scaffDb2]).reset_index(drop=True)
+
     if verbose:
         print("Step 2- Run comparisons and dereplicate scaffolds")
-    final_file, RMdb = compare_scaffolds(scaffDb, output_folder,
-                        minCov=minCov, minANI=minANI, verbose=verbose,
-                        IgnoreSameScaffolds=IgnoreSameScaffolds)
+    final_file, RMdb, Sdb = compare_scaffolds(scaffDb, output_folder, **kwargs)
 
     if verbose:
         print("Step 3- Generate report")
-    gen_report(output_folder, final_file, RMdb, scaffDb, verbose=verbose)
+    gen_report(output_folder, final_file, RMdb, Sdb, scaffDb, verbose=verbose,
+                selfCompairson=selfCompairson)
 
 def load_fastas(fastas):
     '''
@@ -534,16 +561,19 @@ def load_fastas(fastas):
 
     return Sdb
 
-def compare_scaffolds(scaffDb, output_folder, minCov=0.5, minANI=0.95, verbose=False, IgnoreSameScaffolds=False):
+def compare_scaffolds(scaffDb, output_folder, **kwargs):
     '''
     De-replicate scaffolds
 
     This follows a couple of steps:
     '''
+    verbose = kwargs.get('verbose')
+
     if verbose:
         print("Step 2.1- Prepare a directory")
     temp_folder = os.path.join(output_folder + 'comparisons/')
-    os.mkdir(temp_folder)
+    if not os.path.exists(temp_folder):
+        os.mkdir(temp_folder)
 
     if verbose:
         print("Step 2.2- Run comparisons")
@@ -556,24 +586,28 @@ def compare_scaffolds(scaffDb, output_folder, minCov=0.5, minANI=0.95, verbose=F
     RMdb = pd.DataFrame()
 
     for i in indecies:
+        # Scaffolds that are in new and current will be removed from new
         new = scaffDb[scaffDb['priority'] == i]['loc'].unique()[0]
 
         if verbose:
             print('comparing {0} and {1}'.format(current, new))
-        Ddb, Sdb = compare(current, new, scaffDb, temp_folder, verbose=verbose)
+        Ddb, Sdb = compare_wrapper(current, new, scaffDb, temp_folder, **kwargs)
 
         if verbose:
-            print('de-replicating')
+            print('De-replicating scaffolds')
+
+        # Make a new file where scaffolds that were in new and current are removed from new
         newfile = os.path.join(temp_folder, "deReplication_v{0}.fasta".format(i))
-        rmdb = reconsile(Sdb, current, new, newfile, temp_folder, verbose=verbose,
-                minCov=minCov, minANI=0.95, IgnoreSameScaffolds=IgnoreSameScaffolds)
+        rmdb = reconsile(Sdb, current, new, newfile, temp_folder, **kwargs)
+
+        # Keep track of what was removed
         RMdb = RMdb.append(rmdb)
 
         current = newfile
 
-    return current, RMdb
+    return current, RMdb, Sdb
 
-def gen_report(output_folder, final_file, RMdb, scaffDb, verbose=False):
+def gen_report(output_folder, final_file, RMdb, Sdb, scaffDb, verbose=False, selfCompairson=False):
     '''
     Generate report
     '''
@@ -597,7 +631,11 @@ def gen_report(output_folder, final_file, RMdb, scaffDb, verbose=False):
     $$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$$
     """)
 
-    indecies = sorted(list(scaffDb['priority'].unique()))
+    if selfCompairson:
+        indecies = [0]
+    else:
+        indecies = sorted(list(scaffDb['priority'].unique()))
+
     for i in indecies:
         db = scaffDb[scaffDb['priority'] == i]
         loc = db['loc'].unique()[0]
@@ -608,6 +646,12 @@ def gen_report(output_folder, final_file, RMdb, scaffDb, verbose=False):
     print('\nDereplicated scaffolds located at {0}'.format(ffile))
     print('Details on scaffolds removed located at {0}'.format(rfile))
 
+    if selfCompairson:
+        # Save the ANI table
+        rfile = os.path.join(output_folder + 'Scaffold_ANI_values.csv')
+        Sdb.to_csv(rfile, index=False)
+        print('Details on scaffolds removed located at {0}'.format(rfile))
+
 
 def load_scaffold2length(fasta):
     '''
@@ -615,9 +659,15 @@ def load_scaffold2length(fasta):
     '''
     table = defaultdict(list)
 
-    for seq_record in SeqIO.parse(str(fasta), "fasta"):
-        table['scaffold'].append(seq_record.id)
-        table['length'].append(len(seq_record))
+    if fasta[-3:] == '.gz':
+        with gzip.open(fasta, "rt") as handle:
+            for seq_record in SeqIO.parse(handle, "fasta"):
+                table['scaffold'].append(seq_record.id)
+                table['length'].append(len(seq_record))
+    else:
+        for seq_record in SeqIO.parse(str(fasta), "fasta"):
+            table['scaffold'].append(seq_record.id)
+            table['length'].append(len(seq_record))
     return pd.DataFrame(table)
 
 def add_cov_ani(Ddb, s2l):
@@ -652,7 +702,90 @@ def add_cov_ani(Ddb, s2l):
 
     return Ddb, Sdb
 
-def compare(current, new, scaffDb, temp_folder, verbose=False):
+def split_into_chunks(file, max_len, temp_folder):
+    '''
+    Split the file "file" into numerous files of max_len size
+    '''
+    newfile_base = os.path.join(temp_folder, os.path.basename(file))
+    chunks = []
+
+    chunk_number = 0
+    records = []
+    chunk_len = 0
+    for r in SeqIO.parse(file, "fasta"):
+        records.append(r)
+        chunk_len += len(r)
+
+        if chunk_len > max_len:
+            # Save this chunk
+            new_loc = newfile_base + '_CHUNK_{0}.fasta'.format(chunk_number)
+            SeqIO.write(records, new_loc, "fasta")
+            chunks.append(new_loc)
+
+            chunk_len = 0
+            chunk_number += 1
+            records = []
+
+    # Save the final chunk
+    if len(records) > 0:
+        new_loc = newfile_base + '_CHUNK_{0}.fasta'.format(chunk_number)
+        SeqIO.write(records, new_loc, "fasta")
+        chunks.append(new_loc)
+
+    return chunks
+
+def compare_wrapper(current, new, scaffDb, temp_folder, **kwargs):
+    '''
+    A wrapper around compare that can split and paralellize if needed
+    '''
+    p = kwargs.get('processes')
+    verbose = kwargs.get('verbose')
+    max_len = kwargs.get('max_len')
+
+    # Get length of current
+    if current in set(scaffDb['loc']):
+        clen = scaffDb[scaffDb['loc'] == current]['length'].sum()
+    else:
+        print("YOU HAVENT CODED THE ABILITY TO SPLIT NEW .FASTAS YET!!!")
+        clen = max_len - 1
+
+    # Get length of new
+    if new in set(scaffDb['loc']):
+        nlen = scaffDb[scaffDb['loc'] == new]['length'].sum()
+    else:
+        print("YOU HAVENT CODED THE ABILITY TO SPLIT NEW .FASTAS YET!!!")
+        nlen = max_len - 1
+
+    # See if either of them need to be split
+    if clen > max_len:
+        c_chunks = split_into_chunks(current, max_len, temp_folder)
+    else:
+        c_chunks = [current]
+
+    if nlen > max_len:
+        n_chunks = split_into_chunks(new, max_len, temp_folder)
+    else:
+        n_chunks = [new]
+
+    # Pairwise comparisons
+    ddbs = []
+    sdbs = []
+    pbar = tqdm(desc='Running comparisons: ', total=(len(n_chunks) * len(c_chunks)))
+    for c, c_chunk in enumerate(c_chunks):
+        for n, n_chunk in enumerate(n_chunks):
+            ddb, sdb = compare(c_chunk, n_chunk, scaffDb, temp_folder, p=p, verbose=verbose)
+            ddb['c_chunk'] = c
+            ddb['n_chunk'] = n
+            sdb['c_chunk'] = c
+            sdb['n_chunk'] = n
+            ddbs.append(ddb)
+            sdbs.append(sdb)
+            pbar.update(1)
+
+    pbar.close()
+    return pd.concat(ddbs).reset_index(drop=True), pd.concat(sdbs).reset_index(drop=True)
+
+def compare(current, new, scaffDb, temp_folder, p=1, verbose=False):
     '''
     Run mummer comparisons between .fasta files
     '''
@@ -665,6 +798,7 @@ def compare(current, new, scaffDb, temp_folder, verbose=False):
     ANIm_cmd.config['querry'] = current
     ANIm_cmd.config['reference'] = new
     ANIm_cmd.config['out_dir'] = temp_folder
+    ANIm_cmd.config['p'] = p
     ANIm_cmd.config['exe'] = shutil.which('nucmer')
     ANIm_cmd.verify()
 
@@ -695,10 +829,15 @@ def compare(current, new, scaffDb, temp_folder, verbose=False):
     #Return
     return Ddb, Sdb
 
-def reconsile(Sdb, current, new, newFile, temp_folder, verbose=False, minCov=0.5, minANI=0.95, IgnoreSameScaffolds=False):
+def reconsile(Sdb, current, new, newFile, temp_folder, **kwargs):
     '''
     Make a new .fasta file combining current and new, based on Ddb and Sdb
     '''
+    IgnoreSameScaffolds = kwargs.get('IgnoreSameScaffolds')
+    minCov = kwargs.get('minCov')
+    minANI = kwargs.get('minANI')
+    verbose = kwargs.get('verbose')
+
     Rdb = Sdb.copy()
     Rdb = Rdb[(Rdb['coverage'] >= minCov) & (Rdb['ani'] >= minANI)]
     if IgnoreSameScaffolds:
@@ -718,9 +857,14 @@ def reconsile(Sdb, current, new, newFile, temp_folder, verbose=False, minCov=0.5
     new_current = newFile
     with open(new_current, 'w') as outfile:
         for fname in [current, new_ref]:
-            with open(fname) as infile:
-                for line in infile:
-                    outfile.write(line)
+            if fname[-3:] == '.gz':
+                with gzip.open(fname,'r') as infile:
+                    for line in infile:
+                        outfile.write(line.decode('utf-8'))
+            else:
+                with open(fname) as infile:
+                    for line in infile:
+                        outfile.write(line)
 
     # Make an ourput to return
     Rdb = Rdb[['r_scaff', 'q_scaff', 'coverage', 'ani']]
@@ -734,8 +878,17 @@ def write_new(ori_loc, new_loc, to_rm, verbose=False):
     '''
     Write a new .fasta file removing certain scaffolds
     '''
-    ori_len = len([r for r in SeqIO.parse(ori_loc, "fasta")])
-    records = (r for r in SeqIO.parse(ori_loc, "fasta") if r.id not in to_rm)
+    records = []
+    if ori_loc[-3:] == '.gz':
+        with gzip.open(ori_loc, "rt") as handle:
+            for r in SeqIO.parse(handle, "fasta"):
+                records.append(r)
+    else:
+        for r in SeqIO.parse(ori_loc, "fasta"):
+            records.append(r)
+
+    ori_len = len(records)
+    records = (r for r in records if r.id not in to_rm)
     count = SeqIO.write(records, new_loc, "fasta")
     if verbose:
         print("Removed {0} scaffolds from {1}".format(ori_len - count, ori_loc))
@@ -829,6 +982,9 @@ if __name__ == "__main__":
          The third file will then be compared to a combination of the first and second
          files, ect.
 
+         If only one .fasta file is given it will be compared with itself, and
+         --IgnoreSameScaffolds will be automatically enabled
+
          -o Is the directory where all output will be created. Check in the "comparisons" folder
          for raw information
 
@@ -840,11 +996,14 @@ if __name__ == "__main__":
          to be the same
          '''))
 
-    parser.add_argument("-f", "--fastas", nargs='*', help='fasta files to dereplicate on a per-scaffold level')
+    parser.add_argument("-f", "--fasta_files", nargs='*', help='fasta files to dereplicate on a per-scaffold level')
     parser.add_argument("-o", "--outdir", help='output directory')
     parser.add_argument("-c", "--minCov", help='minimum alignment coverage', default=0.5, type=float)
     parser.add_argument("-a", "--minANI", help='minimum alignment coverage', default=0.95, type=float)
+    parser.add_argument("-m", "--max_len", help='maximum length (in bp) of each .fasta file. Split .fasta files above this length. Making this number lower will increase run-time and decrease RAM usage', default=1000000000, type=int)
     parser.add_argument("--IgnoreSameScaffolds", help='Dont dereplicate scaffolds with same name', action='store_true', default=False)
+    parser.add_argument("-p", "--processes", help='number of processes to use', default=6, type=int)
+    parser.add_argument('-d', "--debug", help='print extra output', action='store_true', default=False)
 
     # Specify output of "--version"
     parser.add_argument(

@@ -1,13 +1,12 @@
 #!/usr/bin/env python
 
 import os
+import gzip
 import logging
+import textwrap
 import argparse
 
 from Bio import SeqIO
-
-# Version 0.1
-# 11.17.16
 
 def extract_bins(fasta, stb_file, out_base):
     if out_base != '':
@@ -28,23 +27,43 @@ def extract_bins(fasta, stb_file, out_base):
 
     # Make a bunch of fasta files
     opened = {}
-    for seq_record in SeqIO.parse(fasta, "fasta"):
-        id = str(seq_record.id).strip()
-        if id not in stb:
-            #print("{0} not in stb".format(id))
-            continue
-        fasta = stb[id]
-        if fasta not in opened:
-            opened[fasta] = open("{0}{1}.fa".format(out_base, fasta), 'w')
-        opened[fasta].write('\n'.join([">{0}".format(id), str(seq_record.seq), '']))
+    if fasta[-3:] == '.gz':
+        with gzip.open(fasta, "rt") as handle:
+            for seq_record in SeqIO.parse(handle, "fasta"):
+                id = str(seq_record.id).strip()
+                if id not in stb:
+                    #print("{0} not in stb".format(id))
+                    continue
+                fasta = stb[id]
+                if fasta not in opened:
+                    opened[fasta] = open("{0}{1}.fa".format(out_base, fasta), 'w')
+                opened[fasta].write('\n'.join([">{0}".format(id), str(seq_record.seq), '']))
+                
+    else:
+        for seq_record in SeqIO.parse(fasta, "fasta"):
+            id = str(seq_record.id).strip()
+            if id not in stb:
+                #print("{0} not in stb".format(id))
+                continue
+            fasta = stb[id]
+            if fasta not in opened:
+                opened[fasta] = open("{0}{1}.fa".format(out_base, fasta), 'w')
+            opened[fasta].write('\n'.join([">{0}".format(id), str(seq_record.seq), '']))
 
 def gen_stb(fastas):
     stb = {}
     for fasta in fastas:
         bin = os.path.basename(fasta)
-        for seq_record in SeqIO.parse(fasta, "fasta"):
-            id = str(seq_record.id).strip()
-            stb[id] = bin
+        if bin[-3:] == '.gz':
+            with gzip.open(fasta, "rt") as handle:
+                for seq_record in SeqIO.parse(handle, "fasta"):
+                    id = str(seq_record.id).strip()
+                    stb[id] = bin
+        else:
+            iter = SeqIO.parse(fasta, "fasta")
+            for seq_record in iter:
+                id = str(seq_record.id).strip()
+                stb[id] = bin
     return stb
 
 def print_stb(stb, output):
@@ -62,34 +81,26 @@ class SmartFormatter(argparse.HelpFormatter):
         return argparse.HelpFormatter._split_lines(self, text, width)
 
 if __name__ == '__main__':
-    help_text = ' '.join("""
-    The program has two uses related to scaffold to bin (.stb) files./NEW
-    .stb files should be tab-separated, with no header, and two columns: scaffold and bin
-    /NEW
-    /NEW
+    parser = argparse.ArgumentParser(formatter_class=argparse.ArgumentDefaultsHelpFormatter,
+        usage=textwrap.dedent('''\
+         \n
+         The program has two uses related to scaffold to bin (.stb) files.
+         .stb files should be tab-separated, with no header, and two columns: scaffold and bin
 
-    Use 1) Pass a list of genomes to generate a .stb file.
-    /NEW
+         Use 1) Pass a list of genomes to generate a .stb file.
 
-    Example:
-    /NEW
-    parse_stb.py --reverse -f dereplicate_genomes/* -o representitve_genomes.stb
-    /NEW
-    /NEW
+         Example:
+         parse_stb.py --reverse -f dereplicate_genomes/* -o representitve_genomes.stb
 
-    Use 2) Pass a single .fasta file and a scaffold to bin file (.stb) to generate a number of
-    fasta files based on the .stb file.
-    /NEW
+         Use 2) Pass a single .fasta file and a scaffold to bin file (.stb) to generate a number of
+         fasta files based on the .stb file.
 
-    Example:
-    /NEW
-    parse_stb.py -f concat_genomes.fasta -s scaffold_to_bin.tsv -o genomeList_1
-    """.split()).replace('/NEW', '\n')
+         Example:
+         parse_stb.py -f concat_genomes.fasta -s scaffold_to_bin.tsv -o genomeList_1
+         '''))
 
-    parser = argparse.ArgumentParser(formatter_class=argparse.RawTextHelpFormatter,
-            description=(help_text))
     parser.add_argument('-s','--stb',help='scaffold to bin file')
-    parser.add_argument('-f','--fasta',help='fasta file to extract scaffolds from',nargs='*')
+    parser.add_argument('-f','--fasta',help='fasta file to extract scaffolds from. Will treat as compressed if ends in .gz',nargs='*')
     parser.add_argument('-o','--output',help='output base name', default = '')
 
     parser.add_argument('--reverse',help='generate a stb from a list of genomes',\
