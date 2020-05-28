@@ -49,6 +49,9 @@ def load_solutions_taxonomy_wd():
     return loc
 
 def ensure_identicle(Swd, wd, skip = None):
+    '''
+    Compare two work directories
+    '''
     if skip == None:
         skip = []
 
@@ -61,8 +64,8 @@ def ensure_identicle(Swd, wd, skip = None):
         db2 =  wd.get_db(d, return_none=False)
 
         if d == 'Ndb':
-            db1 = db1[['reference', 'querry', 'ani']]
-            db2 = db2[['reference', 'querry', 'ani']]
+            db1 = db1[['reference', 'querry', 'ani']].sort_values(['reference', 'querry'])
+            db2 = db2[['reference', 'querry', 'ani']].sort_values(['reference', 'querry'])
 
         assert compare_dfs(db1, db2, verbose=True), "{0} is not the same!".format(d)
 
@@ -83,7 +86,7 @@ def sanity_check(Swd):
 
     return
 
-def compare_dfs(db1, db2, round=4, verbose=False):
+def compare_dfs(db1, db2, round=3, verbose=False):
     '''
     Return True if dataframes are equal (order of dataframes doesn't matter)
     '''
@@ -215,6 +218,7 @@ class VerifyFilter():
         self.genomes = load_test_genomes()
         self.wd_loc = load_test_wd_loc()
         self.s_wd_loc = load_solutions_wd()
+        self.testdir = load_random_test_dir()
 
         #logging.shutdown()
         if os.path.isdir(self.wd_loc):
@@ -229,6 +233,10 @@ class VerifyFilter():
 
         self.functional_test_1()
 
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_2()
         self.tearDown()
 
     def test_chdb_to_genomeInfo(self):
@@ -356,6 +364,48 @@ class VerifyFilter():
         # Confirm genome is in Bdb.csv
         Gdb = wd.get_db('genomeInfo')
         assert Gdb['completeness'].tolist()[0] == 98.28
+
+    def functional_test_2(self):
+        '''
+        Call filter on 'Escherichia_coli_Sakai.fna' with GenomeInfo provivded
+        '''
+        genomes = self.genomes
+        wd_loc  = self.wd_loc
+
+        # make sure calling it on the right genome
+        genome = [g for g in genomes if g.endswith('Enterococcus_faecalis_T2.fna')]
+        assert len(genome) == 1
+        genome = genome[0]
+
+        table = {}
+        atts = ['completeness', 'contamination', 'strain_heterogeneity']
+        for a in atts:
+            table[a] = []
+        table['genome'] = []
+        table['location'] = []
+        for g in [genome]:
+            table['genome'].append(os.path.basename(g))
+            table['location'].append(g)
+            for a in atts:
+                table[a].append(10)
+        Idb = pd.DataFrame(table)
+
+        if not os.path.isdir(self.testdir):
+            os.mkdir(self.testdir)
+        GI_loc = os.path.join(self.testdir, 'genomeInfo.csv')
+        Idb.to_csv(GI_loc, index=False)
+
+        args = argumentParser.parse_args(['filter',wd_loc,'-g',genome] \
+            + ['--genomeInfo', GI_loc])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Confirm Chdb.csv is correct
+        wd = drep.WorkDirectory.WorkDirectory(wd_loc)
+
+        # Confirm genome is in Bdb.csv
+        Gdb = wd.get_db('genomeInfo')
+        assert Gdb['completeness'].tolist()[0] == 10
 
     def tearDown(self):
         #logging.shutdown()
@@ -1823,11 +1873,11 @@ def test_unit():
 if __name__ == '__main__':
     # rerun_test()
     # unit_test()
-    # dereplicate_test()
-    # filter_test()
-    # cluster_test()
-    # choose_test()
-    # analyze_test()
+    dereplicate_test()
+    filter_test()
+    cluster_test()
+    choose_test()
+    analyze_test()
     bonus_test()
     # taxonomy_test()
 

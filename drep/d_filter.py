@@ -107,6 +107,7 @@ def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
     Returns:
         DataFrame: genomeInfo
     '''
+
     if kwargs.get('genomeInfo', None) != None:
         logging.debug("Loading provided genome quality information")
         try:
@@ -156,6 +157,13 @@ def _validate_genomeInfo(Idb, bdb):
     Returns:
         DataFrame: Validated genomeInfo
     '''
+    try:
+        logging.debug("HERE IS GENOME INFO:")
+        logging.debug('\n' + str(Idb.head()))
+        logging.debug("There are the columns: {0}".format(list(Idb.columns)))
+    except:
+        logging.warning(Idb)
+
     # Make sure it has required columns
     for r in ['completeness', 'contamination', 'genome']:
         assert r in Idb.columns, "{0} missing from GenomeInfo".format(r)
