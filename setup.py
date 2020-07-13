@@ -23,6 +23,7 @@ setup(name='drep',
           'matplotlib',
           'biopython',
           'scikit-learn',
+          'tqdm',
           'pytest'
       ],
       zip_safe=False)
