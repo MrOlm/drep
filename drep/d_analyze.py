@@ -5,6 +5,11 @@ d_analyze - a subset of drep
 Make plots based on de-replication
 '''
 import matplotlib
+
+import drep.d_cluster.cluster_utils
+import drep.d_cluster.compare_utils
+import drep.d_cluster.controller
+
 matplotlib.use('Agg')
 
 import logging
@@ -828,8 +833,8 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         db['dist'] = 1 - db['similarity']
         linkage_db = db.pivot("genome1","genome2","dist")
         names = list(linkage_db.columns)
-        Cdb, linkage = drep.d_cluster.cluster_hierarchical(linkage_db, linkage_method= 'average', \
-                                    linkage_cutoff= 0)
+        Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(linkage_db, linkage_method='average', \
+                                                                         linkage_cutoff= 0)
 
         # Make the MASH dendrogram
         _make_dendrogram(linkage,names)
@@ -850,8 +855,8 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         d['dist'] = 1 - d['av_ani']
         db = d.pivot("reference", "querry", "dist")
         names = list(db.columns)
-        Cdb, linkage = drep.d_cluster.cluster_hierarchical(db, linkage_method= 'average', \
-                                    linkage_cutoff= 0)
+        Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(db, linkage_method='average', \
+                                                                         linkage_cutoff= 0)
 
         # Make the ANIn dendrogram
         _make_dendrogram(linkage,names)
@@ -872,8 +877,8 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         d['dist'] = 1 - d['av_ani']
         db = d.pivot("reference", "querry", "dist")
         names = list(db.columns)
-        Cdb, linkage = drep.d_cluster.cluster_hierarchical(db, linkage_method= 'average', \
-                                    linkage_cutoff= 0)
+        Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(db, linkage_method='average', \
+                                                                         linkage_cutoff= 0)
 
         # Make the ANIn dendrogram
         _make_dendrogram(linkage,names)
@@ -1499,7 +1504,7 @@ def cluster_test_wrapper(wd, **kwargs):
         kwargs['genome2taxonomy'] = genome2taxonomy
 
     # Make the comparison database
-    Xdb = drep.d_cluster.compare_genomes(bdb,comp_method,wd,**kwargs)
+    Xdb = drep.d_cluster.compare_utils.compare_genomes(bdb, comp_method, wd, **kwargs)
 
     # Remove values without enough coverage
     if comp_method == 'ANIn':
@@ -1514,8 +1519,8 @@ def cluster_test_wrapper(wd, **kwargs):
     # Cluster it
     if threshold == None:
         threshold = float(0)
-    cdb, linkage = drep.d_cluster.cluster_hierarchical(db, linkage_method = clust_method, \
-                            linkage_cutoff = threshold)
+    cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(db, linkage_method = clust_method, \
+                                                                     linkage_cutoff = threshold)
 
     # Make the plot
     names = list(db.columns)

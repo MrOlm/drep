@@ -7,6 +7,8 @@ import sys
 
 import drep
 import drep.WorkDirectory
+import drep.d_cluster.compare_utils
+import drep.d_cluster.controller
 import drep.d_filter
 import drep.d_cluster
 import drep.d_analyze
@@ -64,10 +66,10 @@ def compare_winners(wd, **kwargs):
     comp_method = kwargs.get('comp_method','ANIn')
 
     # Generate MASH db
-    Wmdb = drep.d_cluster.all_vs_all_MASH(Bdb,data_folder)
+    Wmdb = drep.d_cluster.compare_utils.all_vs_all_MASH(Bdb, data_folder)
 
     # Generate ANIn db
-    Wndb = drep.d_cluster.compare_genomes(Bdb,comp_method,wd,**kwargs)
+    Wndb = drep.d_cluster.compare_utils.compare_genomes(Bdb, comp_method, wd, **kwargs)
 
     return Wmdb, Wndb
 

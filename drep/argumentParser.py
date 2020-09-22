@@ -132,6 +132,11 @@ def parse_args(args):
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage",default='average')
 
+    Compflags.add_argument("--primary_chunksize", help="If you have more than this many genomes, process them in chunks of this size",
+                           default=5000)
+    Compflags.add_argument("--multiround_primary_clustering]", help='For each primary chunk, cluster seperately and merge. Will be done with single clustering',
+                           action='store_true')
+
     #
     # Make a parent parser for scoring
     #

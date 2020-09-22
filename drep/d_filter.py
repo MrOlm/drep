@@ -62,7 +62,7 @@ def d_filter_wrapper(wd, **kwargs):
         bdb = wd.get_db('Bdb')
     else:
         logging.info("Will filter the genome list")
-        bdb = drep.d_cluster.load_genomes(kwargs['genomes'])
+        bdb = drep.d_cluster.utils.load_genomes(kwargs['genomes'])
 
     # Calculate the length and N50 of all genomes
     logging.info("Calculating genome info of genomes")

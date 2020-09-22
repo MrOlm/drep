@@ -11,6 +11,9 @@ import pickle
 import drep.WorkDirectory
 import drep as dm
 import drep.d_cluster as dClust
+import drep.d_cluster.cluster_utils
+import drep.d_cluster.compare_utils
+import drep.d_cluster.controller
 import drep.d_filter as d_filter
 import drep.d_choose as dChoose
 
@@ -165,7 +168,7 @@ def adjust_cluster_wrapper(wd, **kwargs):
     bdb = Bdb[Bdb['genome'].isin(genomes)]
 
     # Make the comparison database
-    Xdb = dClust.compare_genomes(bdb,comp_method,wd,**kwargs)
+    Xdb = drep.d_cluster.compare_utils.compare_genomes(bdb, comp_method, wd, **kwargs)
 
     # Remove values without enough coverage
     Xdb.loc[Xdb['alignment_coverage'] <= cov_thresh, 'ani'] = 0
@@ -178,8 +181,8 @@ def adjust_cluster_wrapper(wd, **kwargs):
     # Cluster it
     if threshold == None:
         threshold = float(0)
-    cdb, linkage = dClust.cluster_hierarchical(db, linkage_method = clust_method, \
-                            linkage_cutoff = threshold)
+    cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(db, linkage_method = clust_method, \
+                                                                     linkage_cutoff = threshold)
 
     # Save the pickle
     data_folder = wd.location + '/data/Clustering_files/'

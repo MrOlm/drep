@@ -6,6 +6,7 @@ import pandas as pd
 import sys
 
 import drep.WorkDirectory
+import drep.d_cluster.controller
 import drep.d_filter
 import drep.d_cluster
 import drep.d_choose
@@ -33,7 +34,7 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    drep.d_cluster.d_cluster_wrapper(wd, **kwargs)
+    drep.d_cluster.controller.d_cluster_wrapper(wd, **kwargs)
 
     message = """\
 ***************************************************
@@ -93,7 +94,7 @@ def compare_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    drep.d_cluster.d_cluster_wrapper(wd, **kwargs)
+    drep.d_cluster.controller.d_cluster_wrapper(wd, **kwargs)
 
     message = """\
 ***************************************************

@@ -83,7 +83,7 @@ def validate_arguments(wd, **kwargs):
         if kwargs.get('genomes',None) == None:
             logging.error("I don't have anything to determine the taxonomy of! Give me a genome list")
             sys.exit()
-        Bdb = drep.d_cluster.load_genomes(kwargs['genomes'])
+        Bdb = drep.d_cluster.utils.load_genomes(kwargs['genomes'])
 
     prod_dir = wd.get_dir('prodigal')
     cent_dir = wd.get_dir('centrifuge')

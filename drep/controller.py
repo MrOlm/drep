@@ -22,6 +22,7 @@ import os
 import sys
 
 import drep
+import drep.d_cluster.controller
 from drep.WorkDirectory import WorkDirectory
 import drep.d_cluster
 import drep.d_analyze
@@ -53,7 +54,7 @@ class Controller():
             sys.exit()
 
         logging.debug("Starting the clustering operation")
-        drep.d_cluster.d_cluster_wrapper(kwargs['work_directory'],**kwargs)
+        drep.d_cluster.controller.d_cluster_wrapper(kwargs['work_directory'], **kwargs)
         logging.debug("!!! Finished the clustering operation !!!")
 
     def analyze_operation(self, **kwargs):

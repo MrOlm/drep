@@ -121,7 +121,7 @@ class WorkDirectory(object):
         '''
         pickles = [os.path.join(loc, t) for t in os.listdir(loc) if os.path.isfile(os.path.join(loc, t))]
         for p in pickles:
-            assert p.endswith('.pickle'), "{0} is incorrectly in the data/Clustering_files folder".format(t)
+            assert p.endswith('.pickle'), "{0} is incorrectly in the data/Clustering_files folder".format(p)
 
             f = open(p,'rb')
             try:

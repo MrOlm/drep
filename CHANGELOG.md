@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.0.0] - UNCOMITTED
+- Refactoring the test suite and the d_cluster module
+
 ## [2.6.2] - 2020-05-28
 - Log information about GenomeInformation when loading it
 

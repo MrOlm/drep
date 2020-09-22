@@ -7,243 +7,26 @@ Clusters a list of genomes with both primary and secondary clustering
 
 import pandas as pd
 import os
-import glob
 import shutil
 import logging
 import random
 import string
 import sys
-import json
-import scipy.cluster.hierarchy
-import scipy.spatial.distance as ssd
 import numpy as np
-import pickle
-import time
 import glob
 
 import drep
+import drep.d_cluster.cluster_utils
+import drep.d_cluster.compare_utils
 import drep.d_filter
 import drep.d_bonus
 
-# from memory_profiler import profile
-# import psutil
-# process = psutil.Process(os.getpid())
+# from drep.d_cluster import genomeChunk
+import drep.d_cluster.controller
+#from drep.d_cluster.controller import genomeChunk, genome_hierarchical_clustering, iteratre_clusters, cluster_hierarchical
 
 # This is to make pandas shut up with it's warnings
 pd.options.mode.chained_assignment = None
-
-def d_cluster_wrapper(workDirectory, **kwargs):
-    '''
-    Controller for the dRep cluster operation
-
-    Validates arguments, calls cluster_genomes, then stores the output
-
-    Args:
-        wd (WorkDirectory): The current workDirectory
-        **kwargs: Command line arguments
-
-    Keyword Args:
-        processors: Threads to use with checkM / prodigal
-        overwrite: Overwrite existing data in the work folder
-        debug: If True, make extra output when running external scripts
-
-        MASH_sketch: MASH sketch size
-        S_algorithm: Algorithm for secondary clustering comaprisons {ANImf,gANI,ANIn}
-        n_PRESET: Presets to pass to nucmer {normal, tight}
-
-        P_ANI: ANI threshold to form primary (MASH) clusters (default: 0.9)
-        S_ANI: ANI threshold to form secondary clusters (default: 0.99)
-        SkipMash: Skip MASH clustering, just do secondary clustering on all genomes
-        SkipSecondary: Skip secondary clustering, just perform MASH clustering
-        COV_THRESH: Minmum level of overlap between genomes when doing secondary comparisons (default: 0.1)
-        coverage_method: Method to calculate coverage of an alignment {total,larger}
-        CLUSTERALG: Algorithm used to cluster genomes (passed to scipy.cluster.hierarchy.linkage (default: average)
-
-        genomes: genomes to cluster in .fasta format. Not necessary if already loaded sequences with the "filter" operation
-
-    Returns:
-        Stores Cdb, Mdb, Ndb, Bdb
-    '''
-    # Load the WorkDirectory.
-    logging.debug("Loading work directory")
-    workDirectory = drep.WorkDirectory.WorkDirectory(workDirectory)
-    logging.debug(str(workDirectory))
-    wd = workDirectory
-
-    # Parse arguments
-    Bdb = _parse_cluster_arguments(workDirectory, **kwargs)
-    data_folder = wd.get_dir('data')
-
-    # Run the main program
-    logging.debug("Calling cluster genomes")
-    Cdb, Mdb, Ndb = cluster_genomes(list(Bdb['location'].tolist()), \
-        data_folder, wd=workDirectory, **kwargs)
-
-    # Save the output
-    logging.debug("Main program run complete- saving output to {0}".format(data_folder))
-    wd.store_db(Cdb, 'Cdb')
-    wd.store_db(Mdb, 'Mdb')
-    wd.store_db(Ndb, 'Ndb')
-    if not wd.hasDb('Bdb'):
-        wd.store_db(Bdb, 'Bdb')
-
-    # Log arguments
-    wd.store_special('cluster_log', kwargs)
-
-def cluster_genomes(genome_list, data_folder, **kwargs):
-    """
-    Clusters a set of genomes using the dRep primary and secondary clustering method
-
-    Takes a number of command line arguments and returns a couple pandas
-    dataframes. Done in a number of steps
-
-    Args:
-        genomes: list of genomes to be clustered
-        data_folder: location where MASH and ANIn data will be stored
-
-    Keyword Args:
-        processors: Threads to use with checkM / prodigal
-        overwrite: Overwrite existing data in the work folder
-        debug: If True, make extra output when running external scripts
-
-        MASH_sketch: MASH sketch size
-        S_algorithm: Algorithm for secondary clustering comaprisons {ANImf,gANI,ANIn}
-        n_PRESET: Presets to pass to nucmer {normal, tight}
-
-        P_ANI: ANI threshold to form primary (MASH) clusters (default: 0.9)
-        S_ANI: ANI threshold to form secondary clusters (default: 0.99)
-        SkipMash: Skip MASH clustering, just do secondary clustering on all genomes
-        SkipSecondary: Skip secondary clustering, just perform MASH clustering
-        COV_THRESH: Minmum level of overlap between genomes when doing secondary comparisons (default: 0.1)
-        coverage_method: Method to calculate coverage of an alignment {total,larger}
-        CLUSTERALG: Algorithm used to cluster genomes (passed to scipy.cluster.hierarchy.linkage (default: average)
-
-        n_c: nucmer argument c
-        n_maxgap: nucmer argument maxgap
-        n_noextend: nucmer argument noextend
-        n_method: nucmer argument method
-        n_preset: preset nucmer arrangements: {tight,normal}
-
-        wd: workDirectory (needed to store clustering results and run prodigal)
-
-    Returns:
-        list: [Mdb(db of primary clustering), Ndb(db of secondary clustering, Cdb(clustering information))]
-    """
-    # Handle debug mode
-    if kwargs.get('debug', False):
-        debug = True
-        wd = kwargs.get('wd')
-    else:
-        debug = False
-
-    logging.info("Clustering Step 1. Parse Arguments")
-
-    Bdb = load_genomes(genome_list)
-    algorithm = kwargs.get('S_algorithm', 'ANImf')
-
-    # Deal with nucmer presets
-    if kwargs.get('n_preset', None) != None:
-        kwargs['n_c'], kwargs['n_maxgap'], kwargs['n_noextend'], kwargs['n_method'] \
-        = _nucmer_preset(kwargs['n_PRESET'])
-    logging.debug("kwargs to cluster: {0}".format(kwargs))
-
-    logging.info("Clustering Step 2. Perform MASH (primary) clustering")
-    #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
-    # figure out if you have cached Mdb / CdbF
-    cached = (debug and wd.hasDb('Mdb') and wd.hasDb('CdbF'))
-
-    if kwargs.get('SkipMash', False):
-        logging.info("2. Nevermind! Skipping Mash")
-        # Make a "Cdb" where all genomes are in the same cluster
-        Cdb = _gen_nomash_cdb(Bdb)
-        # Make a blank "Mdb" for storage anyways
-        Mdb = pd.DataFrame({'Blank':[]})
-
-    elif cached:
-        logging.info('2. Nevermind! Loading cached primary clustering')
-        Mdb = wd.get_db('Mdb')
-        Cdb = wd.get_db('CdbF')
-        logging.info('2. Primary clustering cache loaded')
-
-    else:
-        logging.info("2a. Run pair-wise MASH clustering")
-        Mdb = all_vs_all_MASH(Bdb, data_folder, **kwargs)
-
-        if debug:
-            logging.debug("Debug mode on - saving Mdb ASAP")
-            wd.store_db(Mdb, 'Mdb')
-
-        logging.info("2b. Cluster pair-wise MASH clustering")
-        Cdb, cluster_ret = cluster_mash_database(Mdb, **kwargs)
-
-        if debug:
-            logging.debug("Debug mode on - saving CdbF ASAP")
-            wd.store_db(Cdb, 'CdbF')
-
-        # Store the primary clustering results
-        if kwargs.get('wd', None) != None:
-            kwargs.get('wd').store_special('primary_linkage', cluster_ret)
-
-    logging.info("{0} primary clusters made".format(len(Cdb['primary_cluster'].unique())))
-    logging.info("Step 3. Perform secondary clustering")
-    #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
-
-    # Wipe any old secondary clusters
-    if kwargs.get('wd', None) != None:
-        kwargs.get('wd')._wipe_secondary_clusters()
-
-    if not kwargs.get('SkipSecondary', False):
-        # See if cached
-        cached = (debug and wd.hasDb('Ndb'))
-
-        if cached:
-            logging.info('3. Loading cached secondary clustering')
-            Ndb = wd.get_db('Ndb')
-
-            # Get rid of broken ones
-            Ndb = Ndb.dropna(subset=['reference'])
-
-            logging.info('3. Secondary clustering cache loaded')
-
-        # Run comparisons, make Ndb
-        else:
-            _print_time_estimate(Bdb, Cdb, algorithm, kwargs.get('processors', 6))
-            Ndb = pd.DataFrame()
-            for bdb, name in iteratre_clusters(Bdb,Cdb):
-                logging.debug('running cluster {0}'.format(name))
-                #logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
-                ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
-
-                if len(ndb) == 0:
-                    logging.error("CRITICAL ERROR WITH PRIMARY CLUSTER {0}; TRYING AGAIN".format(name))
-                    ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
-
-                if len(ndb) > 0:
-                    ndb['primary_cluster'] = name
-                    Ndb = Ndb.append(ndb)
-                else:
-                    logging.error("DOUBLE CRITICAL ERROR AGAIN WITH PRIMARY CLUSTER {0}; SKIPPING".format(name))
-
-            if debug:
-                logging.debug("Debug mode on - saving Ndb ASAP")
-                wd.store_db(Ndb, 'Ndb')
-
-        # Run clustering on Ndb
-        Cdb, c2ret = _cluster_Ndb(Ndb, comp_method=algorithm, **kwargs)
-
-        # Store the secondary clustering results
-        if kwargs.get('wd', None) != None:
-            kwargs.get('wd').store_special('secondary_linkages', c2ret)
-
-    else:
-        logging.info("3. Nevermind! Skipping secondary clustering")
-        Cdb = _gen_nomani_cdb(Cdb, data_folder = data_folder, **kwargs)
-        Ndb = pd.DataFrame({'Blank':[]})
-
-    logging.info(
-    "Step 4. Return output")
-
-    return Cdb, Mdb, Ndb
 
 def _cluster_Ndb(Ndb, id='primary_cluster', **kwargs):
     '''
@@ -262,72 +45,12 @@ def _cluster_Ndb(Ndb, id='primary_cluster', **kwargs):
     Cdb = pd.DataFrame()
     c2ret = {}
     for name, ndb in Ndb.groupby(id):
-        cdb, cluster_ret = genome_hierarchical_clustering(ndb, cluster=name, **kwargs)
+        cdb, cluster_ret = drep.d_cluster.cluster_utils.genome_hierarchical_clustering(ndb, cluster=name, **kwargs)
         cdb[id] = name
         Cdb = pd.concat([Cdb,cdb], ignore_index=True)
         c2ret[name] = cluster_ret
 
     return Cdb, c2ret
-
-def genome_hierarchical_clustering(Ndb, **kwargs):
-    '''
-    Cluster ANI database
-
-    Args:
-        Ndb: result of secondary clustering
-
-    Keyword arguments:
-        clusterAlg: how to cluster the database (default = single)
-        S_ani: thershold to cluster at (default = .99)
-        cov_thresh: minumum coverage to be included in clustering (default = .5)
-        cluster: name of the cluster
-        comp_method: comparison algorithm used
-
-    Returns:
-        list: [Cdb, {cluster:[linkage, linkage_db, arguments]}]
-    '''
-    logging.debug('Clustering ANIn database')
-
-    S_Lmethod = kwargs.get('clusterAlg', 'single')
-    S_Lcutoff = 1 - kwargs.get('S_ani', .99)
-    cov_thresh = float(kwargs.get('cov_thresh',0.5))
-    cluster = kwargs.get('cluster','')
-    comp_method = kwargs.get('comp_method', 'unk')
-
-    Table = {'genome':[],'secondary_cluster':[]}
-
-    # Handle the case where there's only one genome
-    if len(Ndb['reference'].unique()) == 1:
-        Table['genome'].append(os.path.basename(Ndb['reference'].unique().tolist()[0]))
-        Table['secondary_cluster'].append("{0}_0".format(cluster))
-        cluster_ret = []
-
-    else:
-        # Make linkage Ndb
-        Ldb = make_linkage_Ndb(Ndb, **kwargs)
-
-        # 3) Cluster the linkagedb
-        Gdb, linkage = cluster_hierarchical(Ldb, linkage_method= S_Lmethod, \
-                                    linkage_cutoff= S_Lcutoff)
-
-        # 4) Extract secondary clusters
-        for clust, d in Gdb.groupby('cluster'):
-            for genome in d['genome'].tolist():
-                Table['genome'].append(genome)
-                Table['secondary_cluster'].append("{0}_{1}".format(cluster,clust))
-
-        # 5) Save the linkage
-        arguments = {'linkage_method':S_Lmethod,'linkage_cutoff':S_Lcutoff,\
-                    'comparison_algorithm':comp_method,'minimum_coverage':cov_thresh}
-        cluster_ret = [linkage, Ldb, arguments]
-
-    # Return the database
-    Gdb = pd.DataFrame(Table)
-    Gdb['threshold'] = S_Lcutoff
-    Gdb['cluster_method'] = S_Lmethod
-    Gdb['comparison_algorithm'] = comp_method
-
-    return Gdb, cluster_ret
 
 
 def make_linkage_Ndb(Ndb, **kwargs):
@@ -356,21 +79,6 @@ def make_linkage_Ndb(Ndb, **kwargs):
 
     return db
 
-def iteratre_clusters(Bdb, Cdb, id='primary_cluster'):
-    '''
-    An iterator: Given Bdb and Cdb, yeild smaller Bdb's in the same cluster
-
-    Args:
-        Bdb: [genome, location]
-        Cdb: [genome, id]
-        id: what to iterate on (default = 'primary_cluster')
-
-    Returns:
-        list: [d(subset of b), cluster(name of cluster)]
-    '''
-    Bdb = pd.merge(Bdb,Cdb)
-    for cluster, d in Bdb.groupby(id):
-        yield d, cluster
 
 def estimate_time(comps, alg):
     '''
@@ -395,87 +103,8 @@ def estimate_time(comps, alg):
         time = comps * 0.00667
     return time
 
-def _parse_cluster_arguments(workDirectory, **kwargs):
-    '''
-    Parse and validate clustering arguments
 
-    Figure out what genomes you're going to be clustering, make sure there's no
-    conflicts with the workDirectory
 
-    Args:
-        workDirectory: self explainatory
-
-    Returns:
-        DataFrame: Bdb
-    '''
-    # Make sure you have the required program installed
-    loc = shutil.which('mash')
-    if loc == None:
-        logging.error('Cannot locate the program {0}- make sure its in the system path'\
-            .format('mash'))
-
-    # If genomes are provided, load them
-    if kwargs.get('genomes',None) != None:
-        assert workDirectory.hasDb("Bdb") == False, \
-            "Don't provide new genomes- you already have them in the work directory"
-        Bdb = load_genomes(kwargs['genomes'])
-
-    # If genomes are not provided, don't load them
-    if kwargs.get('genomes',None) == None:
-        assert workDirectory.hasDb("Bdb") != False, \
-        "Must either provide a genome list, or run the 'filter' operation with the same work directory"
-        Bdb = workDirectory.get_db('Bdb')
-
-    # Make sure this isn't going to overwrite old data
-    # overwrite = kwargs.get('overwrite', True)
-    # for db in ['Cdb','Mdb','Ndb']:
-    #     if workDirectory.hasDb(db):
-    #         if not overwrite:
-    #             logging.error("clustering already exists; run with --overwrite to continue")
-    #             sys.exit()
-    #         logging.debug("THIS WILL OVERWRITE {0}".format(db))
-
-    # Make sure people weren't dumb with their cutoffs
-    for v in ['P_ani', 'S_ani']:
-        if kwargs.get(v) > 1:
-            logging.warning("{0} is set to {1}- this should be \
-                between 0-1, not 1-100".format(v, kwargs.get(v)))
-
-    return Bdb
-
-def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
-    '''
-    Perform hierarchical clustering on a symmetrical distiance matrix
-
-    Args:
-        db: result of db.pivot usually
-        linkage_method: passed to scipy.cluster.hierarchy.fcluster
-        linkage_cutoff: distance to draw the clustering line (default = .1)
-
-    Returns:
-        list: [Cdb, linkage]
-    '''
-    # Save names
-    names = list(db.columns)
-
-    # Generate linkage dataframe
-    arr =  np.asarray(db)
-    try:
-        arr = ssd.squareform(arr)
-    except:
-        logging.error("The database passed in is not symmetrical!")
-        logging.error(arr)
-        logging.error(names)
-        sys.exit()
-    linkage = scipy.cluster.hierarchy.linkage(arr, method= linkage_method)
-
-    # Form clusters
-    fclust = scipy.cluster.hierarchy.fcluster(linkage,linkage_cutoff, \
-                    criterion='distance')
-    # Make Cdb
-    Cdb = _gen_cdb_from_fclust(fclust,names)
-
-    return Cdb, linkage
 
 def _gen_cdb_from_fclust(fclust,names):
     '''
@@ -495,156 +124,150 @@ def _gen_cdb_from_fclust(fclust,names):
 
     return pd.DataFrame(Table)
 
-def all_vs_all_MASH(Bdb, data_folder, **kwargs):
-    """
-    Run MASH pairwise within all samples in Bdb
 
-    Args:
-        Bdb: dataframe with genome, location
-        data_folder: location to store output files
-
-    Keyword Args:
-        MASH_sketch: size of mash sketches
-        dry: dont actually run anything
-        processors: number of processors to multithread with
-        mash_exe: location of mash excutible (will try and find with shutil if not provided)
-        groupSize: max number of mash sketches to hold in each folder
-        debug: if True, log all of the commands
-        wd: if you want to log commands, you also need the wd
-    """
-
-    MASH_s = kwargs.get('MASH_sketch',1000)
-    dry = kwargs.get('dry',False)
-    # overwrite = kwargs.get('overwrite', False)
-    mash_exe = kwargs.get('mash_exe', None)
-    p = kwargs.get('processors',6)
-    groupSize = kwargs.get('groupSize', 1000)
-
-    # set up logdir
-    if ('wd' in kwargs) and (kwargs.get('debug', False) == True):
-        logdir = kwargs.get('wd').get_dir('cmd_logs')
-    else:
-        logdir = False
-
-    # Find mash
-    mash_exe = kwargs.get('exe_loc', None)
-    if mash_exe == None:
-        mash_exe = drep.get_exe('mash')
-
-    # Set up folders
-    MASH_folder = os.path.join(data_folder, 'MASH_files/')
-    if not os.path.exists(MASH_folder):
-        os.makedirs(MASH_folder)
-
-    sketch_folder = os.path.join(MASH_folder, 'sketches/')
-    if not os.path.exists(sketch_folder):
-        os.makedirs(sketch_folder)
-
-    # Make chunks
-    l2g = Bdb.set_index('location')['genome'].to_dict()
-    locations = list(Bdb['location'].unique())
-    chunks = [locations[x:x+groupSize] for x in range(0, len(locations), groupSize)]
-
-    # Make the MASH sketches
-    cmds = []
-    chunk_folders = []
-    for i, chunk in enumerate(chunks):
-        chunk_folder = os.path.join(sketch_folder, "chunk_{0}".format(i))
-        chunk_folders.append(chunk_folder)
-        if not os.path.exists(chunk_folder):
-            os.makedirs(chunk_folder)
-        for fasta in chunk:
-            genome = l2g[fasta]
-            file = os.path.join(chunk_folder, genome)
-            if not os.path.isfile(file + '.msh'):
-                cmd = [mash_exe, 'sketch', fasta, '-s', str(MASH_s), '-o',
-                    file]
-                cmds.append(cmd)
-
-    if not dry:
-        if len(cmds) > 0:
-            drep.thread_cmds(cmds, logdir=logdir, t=int(p))
-
-    # Combine MASH sketches within chunk
-    cmds = []
-    alls = []
-    for chunk_folder in chunk_folders:
-        all_file = os.path.join(chunk_folder, 'chunk_all.msh')
-        cmd = [mash_exe, 'paste', all_file] \
-                + glob.glob(os.path.join(chunk_folder, '*'))
-        cmds.append(cmd)
-        alls.append(all_file)
-    if not dry:
-        if len(cmds) > 0:
-            drep.thread_cmds(cmds, logdir=logdir, t=int(p))
-
-    # Combine MASH sketches of all chunks
-    all_file = os.path.join(MASH_folder, 'ALL.msh')
-    cmd = [mash_exe, 'paste', all_file] + alls
-    drep.run_cmd(cmd, dry, shell=False, logdir=logdir)
-
-    # Calculate distances
-    cmd = [mash_exe, 'dist','-p', str(p), all_file, all_file, '>', MASH_folder
-            + 'MASH_table.tsv']
-    cmd = ' '.join(cmd)
-    drep.run_cmd(cmd, dry, shell=True, logdir=logdir)
-
-    # Make Mdb based on all genomes in the MASH folder
-    file = MASH_folder + 'MASH_table.tsv'
-
-    iniCols = ['genome1','genome2','dist','p','kmers']
-    uCols = ['genome1','genome2','dist']
-    dTypes = {'genome1':'category', 'genome2':'category', 'dist':np.float32}
-    Mdb = pd.read_csv(file, names=iniCols, usecols=uCols, dtype=dTypes, sep='\t')
+def parse_mash_table(location):
+    iniCols = ['genome1', 'genome2', 'dist', 'p', 'kmers']
+    uCols = ['genome1', 'genome2', 'dist']
+    dTypes = {'genome1': 'category', 'genome2': 'category', 'dist': np.float32}
+    Mdb = pd.read_csv(location, names=iniCols, usecols=uCols, dtype=dTypes, sep='\t')
     Mdb['genome1'] = Mdb['genome1'].apply(_get_genome_name_from_fasta).astype('category')
     Mdb['genome2'] = Mdb['genome2'].apply(_get_genome_name_from_fasta).astype('category')
     Mdb['similarity'] = 1 - Mdb['dist']
 
-    # Filter out those genomes that are in the MASH folder but shouldn't be in Mdb
-    genomes = Bdb['genome'].unique()
-    Mdb = Mdb[Mdb['genome1'].isin(genomes)]
-    Mdb = Mdb[Mdb['genome2'].isin(genomes)]
-
-    # Reorder categories to be correct
-    for g in ['genome1', 'genome2']:
-        Mdb[g] = Mdb[g].cat.remove_unused_categories()
-        Mdb[g] = Mdb[g].cat.reorder_categories(sorted((Mdb[g].unique())), ordered=True)
-
     return Mdb
 
-def cluster_mash_database(db, **kwargs):
-    '''
-    From a Mash database, cluster and return Cdb
 
-    Args:
-        db: Mdb (all_vs_all Mash results)
+def merge_genome_chunks(mash_exe, genome_chunks, sketch_folder, MASH_folder):
+    all_file = os.path.join(MASH_folder, 'ALL.msh')
+    cmd = [mash_exe, 'paste', all_file] + [gc.all_file for gc in genome_chunks]
 
-    Keyword arguments:
-        clusterAlg: how to cluster database (default = single)
-        P_ani: threshold to cluster at (default = 0.9)
+    new_locs = []
+    new_names = []
+    for gc in genome_chunks:
+        new_locs += gc.genome_locations
+        new_names += gc.genome_names
 
-    Returns:
-        list: [Cdb, [linkage, linkage_db, arguments]]
-    '''
-    logging.debug('Clustering MASH database')
+    new_gc = drep.d_cluster.compare_utils.genomeChunk(new_locs, 'all', sketch_folder, new_names, no_create=True)
+    new_gc.all_file = all_file
 
-    # Load key words
-    P_Lmethod = kwargs.get('clusterAlg','single')
-    P_Lcutoff = 1 - kwargs.get('P_ani',.9)
+    return cmd, new_gc
 
-    # Do the actual clustering
-    db['dist'] = 1 - db['similarity']
-    linkage_db = db.pivot("genome1","genome2","dist")
-    Cdb, linkage = cluster_hierarchical(linkage_db, linkage_method= P_Lmethod, \
-                                linkage_cutoff= P_Lcutoff)
-    Cdb = Cdb.rename(columns={'cluster':'primary_cluster'})
 
-    # Preparing clustering for return
-    arguments = {'linkage_method':P_Lmethod,'linkage_cutoff':P_Lcutoff,\
-                    'comparison_algorithm':'MASH'}
-    cluster_ret = [linkage, linkage_db, arguments]
-
-    return Cdb, cluster_ret
+# def all_vs_all_MASH(Bdb, data_folder, **kwargs):
+#     """
+#     Run MASH pairwise within all samples in Bdb
+#
+#     Args:
+#         Bdb: dataframe with genome, location
+#         data_folder: location to store output files
+#
+#     Keyword Args:
+#         MASH_sketch: size of mash sketches
+#         dry: dont actually run anything
+#         processors: number of processors to multithread with
+#         mash_exe: location of mash excutible (will try and find with shutil if not provided)
+#         groupSize: max number of mash sketches to hold in each folder
+#         debug: if True, log all of the commands
+#         wd: if you want to log commands, you also need the wd
+#     """
+#
+#     MASH_s = kwargs.get('MASH_sketch',1000)
+#     dry = kwargs.get('dry',False)
+#     # overwrite = kwargs.get('overwrite', False)
+#     p = kwargs.get('processors',6)
+#     groupSize = kwargs.get('groupSize', 1000)
+#
+#     # set up logdir
+#     if ('wd' in kwargs) and (kwargs.get('debug', False) == True):
+#         logdir = kwargs.get('wd').get_dir('cmd_logs')
+#     else:
+#         logdir = False
+#
+#     # Find mash
+#     mash_exe = kwargs.get('exe_loc', None)
+#     if mash_exe == None:
+#         mash_exe = drep.get_exe('mash')
+#
+#     # Set up folders
+#     MASH_folder = os.path.join(data_folder, 'MASH_files/')
+#     if not os.path.exists(MASH_folder):
+#         os.makedirs(MASH_folder)
+#
+#     sketch_folder = os.path.join(MASH_folder, 'sketches/')
+#     if not os.path.exists(sketch_folder):
+#         os.makedirs(sketch_folder)
+#
+#     # Make chunks
+#     l2g = Bdb.set_index('location')['genome'].to_dict()
+#     locations = list(Bdb['location'].unique())
+#     chunks = [locations[x:x+groupSize] for x in range(0, len(locations), groupSize)]
+#
+#     # Make the MASH sketches
+#     cmds = []
+#     chunk_folders = []
+#     for i, chunk in enumerate(chunks):
+#         chunk_folder = os.path.join(sketch_folder, "chunk_{0}".format(i))
+#         chunk_folders.append(chunk_folder)
+#         if not os.path.exists(chunk_folder):
+#             os.makedirs(chunk_folder)
+#         for fasta in chunk:
+#             genome = l2g[fasta]
+#             file = os.path.join(chunk_folder, genome)
+#             if not os.path.isfile(file + '.msh'):
+#                 cmd = [mash_exe, 'sketch', fasta, '-s', str(MASH_s), '-o',
+#                     file]
+#                 cmds.append(cmd)
+#
+#     if not dry:
+#         if len(cmds) > 0:
+#             drep.thread_cmds(cmds, logdir=logdir, t=int(p))
+#
+#     # Combine MASH sketches within chunk
+#     cmds = []
+#     alls = []
+#     for chunk_folder in chunk_folders:
+#         all_file = os.path.join(chunk_folder, 'chunk_all.msh')
+#         cmd = [mash_exe, 'paste', all_file] \
+#                 + glob.glob(os.path.join(chunk_folder, '*'))
+#         cmds.append(cmd)
+#         alls.append(all_file)
+#     if not dry:
+#         if len(cmds) > 0:
+#             drep.thread_cmds(cmds, logdir=logdir, t=int(p))
+#
+#     # Combine MASH sketches of all chunks
+#     all_file = os.path.join(MASH_folder, 'ALL.msh')
+#     cmd = [mash_exe, 'paste', all_file] + alls
+#     drep.run_cmd(cmd, dry, shell=False, logdir=logdir)
+#
+#     # Calculate distances
+#     cmd = [mash_exe, 'dist','-p', str(p), all_file, all_file, '>', MASH_folder
+#             + 'MASH_table.tsv']
+#     cmd = ' '.join(cmd)
+#     drep.run_cmd(cmd, dry, shell=True, logdir=logdir)
+#
+#     # Make Mdb based on all genomes in the MASH folder
+#     file = MASH_folder + 'MASH_table.tsv'
+#
+#     iniCols = ['genome1','genome2','dist','p','kmers']
+#     uCols = ['genome1','genome2','dist']
+#     dTypes = {'genome1':'category', 'genome2':'category', 'dist':np.float32}
+#     Mdb = pd.read_csv(file, names=iniCols, usecols=uCols, dtype=dTypes, sep='\t')
+#     Mdb['genome1'] = Mdb['genome1'].apply(_get_genome_name_from_fasta).astype('category')
+#     Mdb['genome2'] = Mdb['genome2'].apply(_get_genome_name_from_fasta).astype('category')
+#     Mdb['similarity'] = 1 - Mdb['dist']
+#
+#     # Filter out those genomes that are in the MASH folder but shouldn't be in Mdb
+#     genomes = Bdb['genome'].unique()
+#     Mdb = Mdb[Mdb['genome1'].isin(genomes)]
+#     Mdb = Mdb[Mdb['genome2'].isin(genomes)]
+#
+#     # Reorder categories to be correct
+#     for g in ['genome1', 'genome2']:
+#         Mdb[g] = Mdb[g].cat.remove_unused_categories()
+#         Mdb[g] = Mdb[g].cat.reorder_categories(sorted((Mdb[g].unique())), ordered=True)
+#
+#     return Mdb
 
 def _get_genome_name_from_fasta(fasta):
     '''
@@ -875,83 +498,6 @@ def process_gani_files(files):
 
     Gdb = pd.DataFrame(Table)
     return Gdb
-
-
-def compare_genomes(bdb, algorithm, data_folder, **kwargs):
-    '''
-    Compare a list of genomes using the algorithm specified
-
-    This method takes in bdb (a table with the columns location and genome), runs
-    pair-wise comparisons between all genomes in the sample, and returns a table
-    with at least the columns 'reference', 'querry', 'ani','coverage', depending
-    on what algorithm is called
-
-    Args:
-        bdb: DataFrame with ['genome', 'location'] (drep.d_filter.load_genomes)
-        algorithm: options are ANImf, ANIn, gANI
-        data_folder: location to store output files
-
-    Keyword Arguments:
-        wd: either this or prod_folder needed for gANI
-        prod_folder: either this or wd needed for gANI
-
-    Return:
-        DataFrame: Ndb (['reference', 'querry', 'ani','coverage'])
-    '''
-    # To handle other versions of this method which passed in a WorkDirectory
-    # instead of data_folder string
-    if isinstance(data_folder, drep.WorkDirectory.WorkDirectory):
-        data_folder = data_folder.get_dir('data')
-
-    if algorithm == 'ANImf':
-        genome_list = bdb['location'].tolist()
-        working_data_folder = os.path.join(data_folder, 'ANImf_files/')
-        df = run_pairwise_ANImf(genome_list, working_data_folder, **kwargs)
-        return df
-
-    elif algorithm == 'ANIn':
-        genome_list = bdb['location'].tolist()
-        working_data_folder = os.path.join(data_folder, 'ANIn_files/')
-        df = run_pairwise_ANIn(genome_list, working_data_folder, **kwargs)
-        return df
-
-    elif algorithm == 'fastANI':
-        genome_list = bdb['location'].tolist()
-        working_data_folder = os.path.join(data_folder, 'fastANI_files/')
-        df = run_pairwise_fastANI(genome_list, working_data_folder, **kwargs)
-        return df
-
-    elif algorithm == 'gANI':
-        # Figure out prodigal folder
-        wd = kwargs.get('wd', False)
-        if not wd:
-            prod_folder = kwargs.pop('prod_folder', False)
-            assert prod_folder != False
-        else:
-            prod_folder = wd.get_dir('prodigal')
-
-        working_data_folder = os.path.join(data_folder, 'gANI_files/')
-        df = run_pairwise_gANI(bdb, working_data_folder, \
-                prod_folder=prod_folder, **kwargs)
-        return df
-
-    elif algorithm == 'goANI':
-        # Figure out prodigal folder
-        wd = kwargs.get('wd', False)
-        if not wd:
-            prod_folder = kwargs.pop('prod_folder', False)
-            assert prod_folder != False
-        else:
-            prod_folder = wd.get_dir('prodigal')
-
-        working_data_folder = os.path.join(data_folder, 'goANI_files/')
-        df = run_pairwise_goANI(bdb, working_data_folder, \
-                prod_folder=prod_folder, **kwargs)
-        return df
-
-    else:
-        logging.error("{0} not supportedd".format(algorithm))
-        sys.exit()
 
 def run_pairwise_ANIn(genome_list, ANIn_folder, **kwargs):
     '''
@@ -1534,8 +1080,6 @@ def load_genomes(genome_list):
     Bdb = pd.DataFrame(Table)
     return Bdb
 
-
-
 def add_avani(db):
     '''
     add a column titled 'av_ani' to the passed in dataframe
@@ -1611,7 +1155,7 @@ def _print_time_estimate(Bdb, Cdb, algorithm, cores):
         algorthm: algorithm to estimate time with
     '''
     comps = 0
-    for bdb, name in iteratre_clusters(Bdb,Cdb):
+    for bdb, name in drep.d_cluster.cluster_utils.iteratre_clusters(Bdb, Cdb):
         g = len(bdb['genome'].unique())
         comps += (g * g)
 
