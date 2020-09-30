@@ -10,6 +10,10 @@ def load_test_wd_loc():
     loc = os.path.join(str(os.getcwd()),'../tests/test_backend/ecoli_wd')
     return loc
 
+def load_test_wd_loc_2():
+    loc = os.path.join(str(os.getcwd()),'../tests/test_backend/ecoli_wd2')
+    return loc
+
 def load_test_genomes():
     return glob.glob(os.path.join(str(os.getcwd()) + '/genomes/*'))
 
@@ -26,6 +30,11 @@ def load_random_test_dir():
 def load_solutions_taxonomy_wd():
     loc = os.path.join(str(os.getcwd()),'../tests/test_solutions/ecoli_taxonomy')
     return loc
+
+def load_large_genome_set():
+    loc = '/Users/mattolm/Programs/testing_house/test_genomes_Hadza/'
+    genomes = glob.glob(loc + '*.fna')
+    return genomes
 
 def compare_dfs(db1, db2, round=3, verbose=False):
     '''

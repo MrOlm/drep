@@ -5,6 +5,8 @@ import pandas as pd
 import importlib
 import logging
 
+import pytest
+
 import tests.test_utils as test_utils
 
 import drep
@@ -217,3 +219,28 @@ class test_rerun():
         assert len(glob.glob(log_folder + '*')) == 3
 
 
+    def unit_tests_2(self):
+        '''
+        Test cluster with --SkipSecondary
+        '''
+        # run
+        args = argumentParser.parse_args(['cluster', self.working_wd_loc, '-g'] + \
+                                         self.genomes + ['--SkipSecondary'])
+        controller = Controller()
+        controller.parseArguments(args)
+
+        # Verify
+        Swd = WorkDirectory(self.s_wd_loc)
+        wd = WorkDirectory(self.working_wd_loc)
+
+        # Confirm the following are the same:
+        # for db in ['Mdb']:
+        #     db1 = Swd.get_db(db)
+        #     db2 =  wd.get_db(db)
+        #     assert test_utils.compare_dfs(db1, db2), "{0} is not the same!".format(db)
+
+        # Confirm the following are not the same:
+        for db in ['Cdb', 'Ndb']:
+            db1 = Swd.get_db(db)
+            db2 = wd.get_db(db)
+            assert not test_utils.compare_dfs(db1, db2), "{0} is the same! (and shouldn't be)".format(db)

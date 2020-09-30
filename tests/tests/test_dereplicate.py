@@ -15,17 +15,23 @@ class test_dereplicate():
 
     def setUp(self):
         self.genomes = test_utils.load_test_genomes()
+        self.large_genome_set = test_utils.load_large_genome_set()
         self.wd_loc = test_utils.load_test_wd_loc()
+        self.wd_loc2 = test_utils.load_test_wd_loc_2()
         self.s_wd_loc = test_utils.load_solutions_wd()
 
         importlib.reload(logging)
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
+        if os.path.isdir(self.wd_loc2):
+            shutil.rmtree(self.wd_loc2)
 
     def tearDown(self):
         logging.shutdown()
         if os.path.isdir(self.wd_loc):
             shutil.rmtree(self.wd_loc)
+        if os.path.isdir(self.wd_loc2):
+            shutil.rmtree(self.wd_loc2)
 
     def run(self):
         # self.setUp()
@@ -35,9 +41,13 @@ class test_dereplicate():
         # self.setUp()
         # self.functional_test_2()
         # self.tearDown()
+        #
+        # self.setUp()
+        # self.functional_test_3()
+        # self.tearDown()
 
         self.setUp()
-        self.functional_test_3()
+        self.functional_test_4()
         self.tearDown()
 
     def functional_test_1(self):
@@ -107,3 +117,40 @@ class test_dereplicate():
         # Perform sanity check to make sure solutions directiory isn't
         # being overwritten
         test_utils.sanity_check(s_wd)
+
+    def functional_test_4(self):
+        '''
+        Test the ability of primary clustering to take a large genome set and break it into chunks
+        '''
+        genomes  = self.large_genome_set
+        wd_loc   = self.wd_loc
+        wd_loc2  = self.wd_loc2
+
+        if len(genomes) == 0:
+            print("*** THIS TEST ONLY WORKS ON MO'S DEVELOPMENT MACHINE ***")
+            return
+
+        # Get normal results
+        args = argumentParser.parse_args(['compare', wd_loc2, '--S_algorithm',
+                                          'fastANI', '--SkipSecondary',
+                                          '--primary_chunksize', '50', '-g'] + genomes)
+        Controller().parseArguments(args)
+        wd = WorkDirectory(wd_loc2)
+        CSdb = wd.get_db('Cdb')
+
+        # Run with chunking
+        args = argumentParser.parse_args(['compare',wd_loc,'--S_algorithm',
+                    'fastANI','--SkipSecondary', '--multiround_primary_clustering',
+                    '--primary_chunksize', '50', '-g'] + genomes)
+        Controller().parseArguments(args)
+
+        # Verify they're the same
+        wd = WorkDirectory(wd_loc)
+        Cdb = wd.get_db('Cdb')
+
+        assert len(CSdb) == len(Cdb)
+        for c in ['primary_cluster', 'secondary_cluster']:
+            assert set(CSdb[c].value_counts().to_dict().values()) == set(Cdb[c].value_counts().to_dict().values())
+            assert set(CSdb[c].value_counts().to_dict().keys()) == set(Cdb[c].value_counts().to_dict().keys())
+        assert set(CSdb['genome'].tolist()) == set(Cdb['genome'].tolist())
+        assert set(Cdb.columns) - set(CSdb.columns) == set(['length', 'subcluster', 'primary_representitive'])

@@ -40,9 +40,11 @@ def printHelp():
     print('                ...::: dRep v' + VERSION + ' :::...''')
     print('''\
 
-  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017
+  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2020)
 
-  Choose one of the operations below for more detailed help. See https://drep.readthedocs.io/en/latest/index.html for documentation
+  See https://drep.readthedocs.io/en/latest/index.html for documentation
+  Choose one of the operations below for more detailed help. 
+  
   Example: dRep dereplicate -h
 
   Workflows:
@@ -61,9 +63,7 @@ def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=SmartFormatter)
     subparsers = parser.add_subparsers(help='Desired operation',dest='operation')
 
-    #
     # Make a parent parser for all of the subparsers
-    #
     parent_parser = argparse.ArgumentParser(add_help=False)
     parent_parser.add_argument("work_directory",help="R|Directory where data and output\
     \n*** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***")
@@ -72,34 +72,46 @@ def parse_args(args):
     Bflags.add_argument('-p','--processors',help='threads',default=6,type=int)
     Bflags.add_argument('-d','--debug',help='make extra debugging output',default=False,
                         action= "store_true")
-    # Bflags.add_argument('-o','--overwrite',help='overwrite existing data in work folder',
-    #                     default=False, action= "store_true")
     Bflags.add_argument("-h", "--help", action="help", help="show this help message and exit")
 
-    #
+    # Make a parent parser for genome input
+    genome_parser = argparse.ArgumentParser(add_help=False)
+    Gflags = genome_parser.add_argument_group('GENOME INPUT')
+    Gflags.add_argument('-g', '--genomes', nargs='*', help='genomes to filter in .fasta format.\
+                                    Not necessary if Bdb or Wdb already exist. Can also input a text file with paths to genomes, which results in fewer OS issues than wildcard expansion')
+
     # Make a parent parser for filter operation
-    #
-    filter_parent = argparse.ArgumentParser(add_help=False)
-    fiflags = filter_parent.add_argument_group('FILTERING OPTIONS')
+    filtering_parent = argparse.ArgumentParser(add_help=False)
+    fiflags = filtering_parent.add_argument_group('GENOME FILTERING OPTIONS')
     fiflags.add_argument("-l","--length", help= "Minimum genome length",default=50000,
                             type = float)
     fiflags.add_argument("-comp","--completeness", help="Minumum genome completeness",
                             default = 75, type = float)
     fiflags.add_argument("-con","--contamination", help="Maximum genome contamination",
                             default = 25, type = float)
-    # fiflags.add_argument("-str","--strain_htr", help="Maximum strain heterogeneity",
-    #                         default = 25, type = float)
     fiflags.add_argument("--ignoreGenomeQuality", help="Don't run checkM or do any \
             quality filtering. NOT RECOMMENDED! This is useful for use with bacteriophages\
             or eukaryotes or things where checkM scoring does not work. Will only \
             choose genomes based on length and N50", action='store_true')
 
-    #
+    quality_parent = argparse.ArgumentParser(add_help=False)
+    Iflags = quality_parent.add_argument_group('GENOME QUALITY ASSESSMENT OPTIONS')
+    Iflags.add_argument('--genomeInfo', help='location of .csv file containing quality \
+                    information on the genomes. Must contain: ["genome"(basename of .fasta file \
+                    of that genome), "completeness"(0-100 value for completeness of the genome), \
+                    "contamination"(0-100 value of the contamination of the genome)]')
+    Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) \
+                        or taxonomy_wf (faster)", choices={'taxonomy_wf', 'lineage_wf'}, \
+                        default='lineage_wf')
+    Iflags.add_argument("--set_recursion", help="Increases the python recursion limit. " \
+                                                + "NOT RECOMMENDED unless checkM is crashing due to recursion issues. " \
+                                                + "Recommended to set to 2000 if needed, but setting this could crash python", \
+                        default='0')
+
     # Make a parent parser for the cluster operation
-    #
     cluster_parent = argparse.ArgumentParser(add_help=False)
-    # Comparison Parameters
-    Clustflags = cluster_parent.add_argument_group('GENOME COMPARISON PARAMETERS')
+
+    Clustflags = cluster_parent.add_argument_group('GENOME COMPARISON OPTIONS')
     Clustflags.add_argument("-ms","--MASH_sketch",help="MASH sketch size", default=1000)
     Clustflags.add_argument("--S_algorithm", help="R|Algorithm for secondary clustering comaprisons:\n" \
         + "fastANI = Kmer-based approach; very fast\n" \
@@ -112,8 +124,7 @@ def parse_args(args):
         + "tight   = only align highly conserved regions\n" \
         + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')
 
-    # Clustering Parameters
-    Compflags = cluster_parent.add_argument_group('CLUSTERING PARAMETERS')
+    Compflags = cluster_parent.add_argument_group('GENOME CLUSTERING OPTIONS')
     Compflags.add_argument("-pa","--P_ani",help="ANI threshold to form primary (MASH) clusters",
                         default=0.9, type = float)
     Compflags.add_argument("-sa", "--S_ani", help="ANI threshold to form secondary clusters",
@@ -131,15 +142,12 @@ def parse_args(args):
                         choices=['total', 'larger'], default='larger')
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage",default='average')
-
     Compflags.add_argument("--primary_chunksize", help="If you have more than this many genomes, process them in chunks of this size",
-                           default=5000)
-    Compflags.add_argument("--multiround_primary_clustering]", help='For each primary chunk, cluster seperately and merge. Will be done with single clustering',
+                           default=5000, type=int)
+    Compflags.add_argument("--multiround_primary_clustering", help='For each primary chunk, cluster seperately and merge. Will be done with single clustering',
                            action='store_true')
 
-    #
     # Make a parent parser for scoring
-    #
     scoring_parent = argparse.ArgumentParser(add_help=False)
     Sflags = scoring_parent.add_argument_group('SCORING CRITERIA\n'+
               "Based off of the formula: \nA*Completeness - B*Contamination + C*(Contamination * (strain_heterogeneity/100)) " + \
@@ -159,9 +167,7 @@ def parse_args(args):
                         help='weight of log(genome size)')
 
 
-    #
     # Make a parent parser for taxonomy
-    #
     tax_parent = argparse.ArgumentParser(add_help=False)
     Tflags = tax_parent.add_argument_group('TAXONOMY')
     Tflags.add_argument("--run_tax",help='generate taxonomy information (Tdb)', \
@@ -175,9 +181,7 @@ def parse_args(args):
     Tflags.add_argument("--cent_index",help='path to centrifuge index (for example, ' + \
                     "/home/mattolm/download/centrifuge/indices/b+h+v")
 
-    #
     # Make a parent parser for evaluate
-    #
     evaluate_parent = argparse.ArgumentParser(add_help=False)
     Fflags = evaluate_parent.add_argument_group('WARNINGS')
     Fflags.add_argument("--warn_dist", default= 0.25, help= "How far from the threshold " +\
@@ -187,9 +191,7 @@ def parse_args(args):
     Fflags.add_argument("--warn_aln", default= 0.25, help= "Minimum aligned fraction for " +\
                         " warnings between dereplicated genomes (ANIn)")
 
-    #
     # Make a parent parser for adjust
-    #
     adjust_parent = argparse.ArgumentParser(add_help=False)
     Nflags = adjust_parent.add_argument_group('RE-CLUSTER PRIMARY CLUSETERS')
     Nflags.add_argument("-c","--cluster",help='primary cluster to be adjusted')
@@ -203,61 +205,28 @@ def parse_args(args):
                         to scipy.cluster.hierarchy.linkage)",default='average',choices=\
                         {'single','complete','average','weighted'})
 
+    # Make a parent for genome input
+
     '''
     ####### Arguments for filter operation ######
     '''
 
     filter_parser = subparsers.add_parser("filter",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, filter_parent], add_help=False)
-
-    # I/O Parameters
-    Iflags = filter_parser.add_argument_group('I/O PARAMETERS')
-    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to filter in .fasta format.\
-                        Not necessary if Bdb or Wdb already exist')
-    Iflags.add_argument('--genomeInfo',help='location of .csv file containing quality \
-            information on the genomes. Must contain: ["genome"(basename of .fasta file \
-            of that genome), "completeness"(0-100 value for completeness of the genome), \
-            "contamination"(0-100 value of the contamination of the genome)]')
-    Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
-                            + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
-                            default = 'lineage_wf')
-    Iflags.add_argument("--set_recursion", help="Increases the python recursion limit. "\
-                            + "NOT RECOMMENDED unless checkM is crashing due to recursion issues. "\
-                            + "Recommended to set to 2000 if needed, but setting this could crash python",\
-                            default = '0')
+                    parents = [parent_parser, genome_parser, filtering_parent, quality_parent], add_help=False)
 
     '''
     ####### Arguments for clustering operation ######
     '''
 
     cluster_parser = subparsers.add_parser("cluster",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, cluster_parent], add_help=False)
-
-    # I/O Parameters
-    Iflags = cluster_parser.add_argument_group('I/O PARAMETERS')
-    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format.\
-                        Not necessary if already loaded sequences with the "filter" operation')
+                    parents = [parent_parser, genome_parser, cluster_parent], add_help=False)
 
     '''
     ####### Arguments for choose operation ######
     '''
 
     choose_parser = subparsers.add_parser("choose",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, scoring_parent], add_help=False)
-
-    # Other
-    Oflags = choose_parser.add_argument_group('OTHER')
-    Oflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
-                            + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
-                            default = 'lineage_wf')
-    Oflags.add_argument('--genomeInfo',help='location of .csv file containing quality \
-            information on the genomes. Must contain: ["genome"(basename of .fasta file \
-            of that genome), "completeness"(0-100 value for completeness of the genome), \
-            "contamination"(0-100 value of the contamination of the genome)]')
-    Oflags.add_argument("--ignoreGenomeQuality", help="Don't run checkM or do any \
-            quality filtering. NOT RECOMMENDED! This is useful for use with bacteriophages\
-            or eukaryotes or things where checkM scoring does not work. Will only \
-            choose genomes based on length and N50", action='store_true')
+                    parents = [parent_parser, scoring_parent, quality_parent], add_help=False)
 
     '''
     ####### Arguments for analyze operation ######
@@ -297,16 +266,12 @@ def parse_args(args):
     '''
 
     bonus_parser = subparsers.add_parser("bonus",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, tax_parent], add_help=False)
+                    parents = [parent_parser, genome_parser, tax_parent], add_help=False)
 
     # Check_dependencies
     Cflags = bonus_parser.add_argument_group("DEBUGGING")
     Cflags.add_argument('--check_dependencies', action='store_true',\
                     help= "Check if program has access to all dependencies")
-
-    # I/O Parameters
-    Iflags = bonus_parser.add_argument_group('I/O PARAMETERS')
-    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to check in .fasta format')
 
     '''
     ####### Arguments for evaluate operation ######
@@ -328,32 +293,17 @@ def parse_args(args):
     ####### Arguments for dereplicate ######
     '''
     dereplicate_parser = subparsers.add_parser("dereplicate",formatter_class=SmartFormatter,\
-                        parents=[parent_parser, filter_parent, cluster_parent, scoring_parent,\
+                        parents=[parent_parser, genome_parser, filtering_parent, quality_parent, cluster_parent, scoring_parent,\
                         tax_parent, evaluate_parent], add_help=False, epilog=\
                         "Example: dRep dereplicate output_dir/ -g /path/to/genomes/*.fasta")
-
-    # I/O
-    Iflags = dereplicate_parser.add_argument_group('I/O PARAMETERS')
-    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format; can pass a number of .fasta files or a single text file listing the locations of all .fasta files')
-    Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) "\
-                            + "or taxonomy_wf (faster)", choices={'taxonomy_wf','lineage_wf'},\
-                            default = 'lineage_wf')
-    Iflags.add_argument('--genomeInfo',help='location of .csv file containing quality \
-            information on the genomes. Must contain: ["genome"(basename of .fasta file \
-            of that genome), "completeness"(0-100 value for completeness of the genome), \
-            "contamination"(0-100 value of the contamination of the genome)]')
 
     '''
     ####### Arguments for compare ######
     '''
     dereplicate_parser = subparsers.add_parser("compare",formatter_class=SmartFormatter,\
-                        parents=[parent_parser, cluster_parent, tax_parent, evaluate_parent],\
+                        parents=[parent_parser, genome_parser, cluster_parent, tax_parent, evaluate_parent],\
                          add_help=False, epilog=\
                         "Example: dRep compare output_dir/ -g /path/to/genomes/*.fasta")
-
-    # I/O
-    Iflags = dereplicate_parser.add_argument_group('I/O PARAMETERS')
-    Iflags.add_argument('-g','--genomes',nargs='*',help='genomes to cluster in .fasta format; can pass a number of .fasta files or a single text file listing the locations of all .fasta files')
 
     '''
     ####### PARSE THE ARGUMENTS ######

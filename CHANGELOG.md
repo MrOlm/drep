@@ -6,9 +6,10 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 
 ## [3.0.0] - UNCOMITTED
 - Refactoring the test suite and the d_cluster module
+- Adding help to the -g option
 
 ## [2.6.2] - 2020-05-28
-- Log information about GenomeInformation when loading it
+- Log information about GenomeInformation when l oading it
 
 ## [2.6.1] - 2020-05-22
 - Numerous improvements to ScaffoldLevel_dRep.py, including ability to process in chunks

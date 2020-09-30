@@ -45,7 +45,7 @@ class genomeChunk():
         return cmd
 
     def gen_dist_cmd(self, mash_exe, mash_folder, p):
-        dist_file = os.path.join(mash_folder, '{0}MASH_table.tsv'.format(self.name))
+        dist_file = os.path.join(mash_folder, '{0}_MASH_table.tsv'.format(self.name))
         self.dist_file = dist_file
         cmd = [mash_exe, 'dist', '-p', str(p), self.all_file, self.all_file, '>', dist_file]
         cmd = ' '.join(cmd)
@@ -100,6 +100,8 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
 
     # Set up chunks of genomes
     genome_chunks = prepare_genome_chunks(Bdb, sketch_folder, MASH_folder,  **kwargs)
+    if len(genome_chunks) > 1:
+        logging.info(f"  Will split genomes into {len(genome_chunks)} groups for primary clustering")
 
     # Process the chunks individually
     genome_chunks = run_mash_on_genome_chunks(genome_chunks, mash_exe, sketch_folder, MASH_folder, logdir,  **kwargs)
@@ -111,9 +113,13 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
         return Mdb, Cdb, cluster_ret
 
     # If there's multiple chunks, run a second round
+    logging.info("  Final step: comparing between all groups")
     return run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs)
 
 def prepare_mash(data_folder, **kwargs):
+    """
+    Make some folders and things
+    """
     append = kwargs.get('v2', '')
 
     # set up logdir
@@ -127,11 +133,12 @@ def prepare_mash(data_folder, **kwargs):
     if mash_exe == None:
         mash_exe = drep.get_exe('mash')
 
-    # Set up folders
+    # Make a folder to hold this information
     MASH_folder = os.path.join(data_folder, 'MASH_files{0}/'.format(append))
     if not os.path.exists(MASH_folder):
         os.makedirs(MASH_folder)
 
+    # Make a folder in there to store sketches
     sketch_folder = os.path.join(MASH_folder, 'sketches{0}/'.format(append))
     if not os.path.exists(sketch_folder):
         os.makedirs(sketch_folder)
@@ -177,8 +184,10 @@ def run_mash_on_genome_chunks(genome_chunks, mash_exe, sketch_folder, MASH_folde
 
     # Step 3) Run Mash on each chunk
     cmds = [GC.gen_dist_cmd(mash_exe, MASH_folder, p) for GC in genome_chunks]
-    for cmd in cmds:
+    for j, cmd in enumerate(cmds):
         if not dry:
+            if len(cmds) > 1:
+                logging.info(f"  Comparing group {j+1} of {len(cmds)}")
             drep.run_cmd(cmd, dry, shell=True, logdir=logdir)
 
     # Step 4) Load the Mash tables of each chunk
@@ -198,14 +207,14 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
     for gc in genome_chunks:
         gc.cluster_mash_table(**kwargs_copy)
         cdb = gc.Cdb
-        cdb['cluster'] = ["{0}_{1}".format(gc.name, x) for x in cdb['primary_cluster']]
+        cdb['subcluster'] = ["{0}_{1}".format(gc.name, x) for x in cdb['primary_cluster']]
         dbs.append(cdb)
     Cdb = pd.concat(dbs)
 
     # Step 2) Pick winners
     g2l = Bdb.set_index('genome')['length'].to_dict()
     Cdb['length'] = Cdb['genome'].map(g2l)
-    second_round_genomes = Cdb.sort_values('length').drop_duplicates(subset=['cluster'], keep='last')['genome'].tolist()
+    second_round_genomes = Cdb.sort_values('length').drop_duplicates(subset=['subcluster'], keep='last')['genome'].tolist()
 
     # Step 3) Run a second round
     logdir, MASH_folder, sketch_folder, mash_exe = prepare_mash(data_folder, **kwargs_copy)
@@ -221,8 +230,8 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
     # Step 5) Merge the new Cdb back in with the old
     del Cdb['primary_cluster']
     Cdb = pd.merge(Cdb, Cdb2, on='genome', how='outer')
-    o2n = Cdb[Cdb['primary_representitive'] == True].set_index('cluster')['primary_cluster'].to_dict()
-    Cdb['primary_cluster'] = Cdb['cluster'].map(o2n)
+    o2n = Cdb[Cdb['primary_representitive'] == True].set_index('subcluster')['primary_cluster'].to_dict()
+    Cdb['primary_cluster'] = Cdb['subcluster'].map(o2n).astype(int)
 
     return Mdb, Cdb, cluster_ret
 
@@ -252,6 +261,7 @@ def cluster_mash_database(db, **kwargs):
     Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(linkage_db, linkage_method= P_Lmethod, \
                                                                      linkage_cutoff= P_Lcutoff)
     Cdb = Cdb.rename(columns={'cluster':'primary_cluster'})
+    Cdb['primary_cluster'] = Cdb['primary_cluster'].astype(int)
 
     # Preparing clustering for return
     arguments = {'linkage_method':P_Lmethod,'linkage_cutoff':P_Lcutoff,\
