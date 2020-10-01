@@ -2,5 +2,7 @@
   "tests/test_suite.py::test_long",
   "tests/test_suite.py::test_short",
   "tests/test_suite.py::test_quick",
-  "tests/test_suite.py::test_unit"
+  "tests/test_suite.py::test_unit",
+  "tests/tests/test_choose.py::test_choose_1",
+  "tests/tests/test_choose.py::test_choose_2"
 ]

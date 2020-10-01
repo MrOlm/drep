@@ -89,13 +89,13 @@ def parse_args(args):
                             default = 75, type = float)
     fiflags.add_argument("-con","--contamination", help="Maximum genome contamination",
                             default = 25, type = float)
-    fiflags.add_argument("--ignoreGenomeQuality", help="Don't run checkM or do any \
-            quality filtering. NOT RECOMMENDED! This is useful for use with bacteriophages\
-            or eukaryotes or things where checkM scoring does not work. Will only \
-            choose genomes based on length and N50", action='store_true')
 
     quality_parent = argparse.ArgumentParser(add_help=False)
     Iflags = quality_parent.add_argument_group('GENOME QUALITY ASSESSMENT OPTIONS')
+    Iflags.add_argument("--ignoreGenomeQuality", help="Don't run checkM or do any \
+                quality filtering. NOT RECOMMENDED! This is useful for use with bacteriophages\
+                or eukaryotes or things where checkM scoring does not work. Will only \
+                choose genomes based on length and N50", action='store_true')
     Iflags.add_argument('--genomeInfo', help='location of .csv file containing quality \
                     information on the genomes. Must contain: ["genome"(basename of .fasta file \
                     of that genome), "completeness"(0-100 value for completeness of the genome), \

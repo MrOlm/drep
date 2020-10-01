@@ -111,6 +111,8 @@ def evaluate_warnings(wd, **kwargs):
         threshold = (1-threshold) * 100
         names = list(db.columns)
 
+        if linkage is None:
+            continue
 
         # Find cases where the cluster is close to the treshold used
         for node in linkage:

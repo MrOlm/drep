@@ -34,20 +34,24 @@ class test_dereplicate():
             shutil.rmtree(self.wd_loc2)
 
     def run(self):
-        # self.setUp()
-        # self.functional_test_1()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_2()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_3()
-        # self.tearDown()
+        self.setUp()
+        self.functional_test_1()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_2()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_3()
+        self.tearDown()
 
         self.setUp()
         self.functional_test_4()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_5()
         self.tearDown()
 
     def functional_test_1(self):
@@ -154,3 +158,40 @@ class test_dereplicate():
             assert set(CSdb[c].value_counts().to_dict().keys()) == set(Cdb[c].value_counts().to_dict().keys())
         assert set(CSdb['genome'].tolist()) == set(Cdb['genome'].tolist())
         assert set(Cdb.columns) - set(CSdb.columns) == set(['length', 'subcluster', 'primary_representitive'])
+
+    def functional_test_5(self):
+        '''
+        Test greedy clustering
+        '''
+        genomes = self.large_genome_set[:10]
+        wd_loc = self.wd_loc
+        wd_loc2 = self.wd_loc2
+
+        if len(genomes) == 0:
+            print("*** THIS TEST ONLY WORKS ON MO'S DEVELOPMENT MACHINE ***")
+            return
+
+        # Get greedy results
+        args = argumentParser.parse_args(['compare', wd_loc2, '--S_algorithm',
+                                          'fastANI', '--SkipMash',
+                                          '--clusterAlg', 'greedy', '-sa', '0.95', '-g'] + genomes)
+        Controller().parseArguments(args)
+        wd = WorkDirectory(wd_loc2)
+        CSdb = wd.get_db('Cdb')
+
+        # Run normal
+        args = argumentParser.parse_args(['compare', wd_loc, '--S_algorithm',
+                                          'fastANI', '--SkipMash',
+                                          '-sa', '0.95', '-g'] + genomes)
+        Controller().parseArguments(args)
+
+        # Verify they're the same
+        wd = WorkDirectory(wd_loc)
+        Cdb = wd.get_db('Cdb')
+
+        assert len(CSdb) == len(Cdb)
+        for c in ['primary_cluster', 'secondary_cluster']:
+            assert set(CSdb[c].value_counts().to_dict().values()) == set(Cdb[c].value_counts().to_dict().values()), c
+            assert set(CSdb[c].value_counts().to_dict().keys()) == set(Cdb[c].value_counts().to_dict().keys()), c
+        assert set(CSdb['genome'].tolist()) == set(Cdb['genome'].tolist())
+        assert set(CSdb.columns) - set(Cdb.columns) == set(['greedy_representative'])

@@ -4,6 +4,7 @@ import shutil
 import pandas as pd
 
 import drep
+import drep.d_cluster.external
 import drep.d_cluster.utils
 import drep.d_cluster.compare_utils
 
@@ -65,7 +66,7 @@ class GenomeClusterController(object):
                             between 0-1, not 1-100".format(v, self.kwargs.get(v)))
 
         # Load length and N50 if you need it
-        if self.kwargs.get('multiround_primary_clustering', False):
+        if self.kwargs.get('multiround_primary_clustering', False) | (self.kwargs.get('clusterAlg', False)  == 'greedy'):
             Bdb = drep.d_filter._add_lengthN50(Bdb, Bdb)
 
         # Store the genomes
@@ -81,7 +82,7 @@ class GenomeClusterController(object):
         if self.kwargs.get('SkipMash', False):
             logging.info("Nevermind! Skipping Mash")
             # Make a "Cdb" where all genomes are in the same cluster
-            Cdb = drep.d_cluster.utils._gen_nomash_cdb(self.Bdb)
+            Cdb = drep.d_cluster.external._gen_nomash_cdb(self.Bdb)
             # Make a blank "Mdb" for storage anyways
             Mdb = pd.DataFrame({'Blank': []})
 
@@ -116,11 +117,7 @@ class GenomeClusterController(object):
         algorithm = self.kwargs.get('S_algorithm', 'ANImf')
         cached = (self.debug and self.wd.hasDb('Ndb'))
         p = self.kwargs.get('processors', 6)
-
-        # Deal with nucmer presets
-        if self.kwargs.get('n_preset', None) != None:
-            self.kwargs['n_c'], self.kwargs['n_maxgap'], self.kwargs['n_noextend'], self.kwargs['n_method'] \
-                = drep.d_cluster.utils._nucmer_preset(self.kwargs['n_PRESET'])
+        self.deal_with_nucmer_presets()
 
         # Wipe any old secondary clusters
         self.wd._wipe_secondary_clusters()
@@ -129,7 +126,6 @@ class GenomeClusterController(object):
             if cached:
                 logging.info('3. Loading cached secondary clustering')
                 Ndb = self.wd.get_db('Ndb')
-
                 # Get rid of broken ones
                 Ndb = Ndb.dropna(subset=['reference'])
 
@@ -138,13 +134,10 @@ class GenomeClusterController(object):
             # Run comparisons, make Ndb
             else:
                 drep.d_cluster.utils._print_time_estimate(self.Bdb, self.MCdb, algorithm, p)
-                Ndb = drep.d_cluster.compare_utils.secondary_clustering(self.Bdb, self.MCdb, algorithm, self.wd.get_dir('data'), wd=self.wd, **self.kwargs)
+                Ndb, Cdb, c2ret = drep.d_cluster.compare_utils.secondary_clustering(self.Bdb, self.MCdb, algorithm, self.wd.get_dir('data'), wd=self.wd, **self.kwargs)
                 if self.debug:
                     logging.debug("Debug mode on - saving Ndb ASAP")
                     self.wd.store_db(Ndb, 'Ndb')
-
-            # Run clustering on Ndb
-            Cdb, c2ret = drep.d_cluster.utils._cluster_Ndb(Ndb, comp_method=algorithm, **self.kwargs)
 
             # Store the secondary clustering results
             self.wd.store_special('secondary_linkages', c2ret)
@@ -170,6 +163,11 @@ class GenomeClusterController(object):
 
         # Log arguments
         self.wd.store_special('cluster_log', self.kwargs)
+
+    def deal_with_nucmer_presets(self):
+        if self.kwargs.get('n_preset', None) != None:
+            self.kwargs['n_c'], self.kwargs['n_maxgap'], self.kwargs['n_noextend'], self.kwargs['n_method'] \
+                = drep.d_cluster.external._nucmer_preset(self.kwargs['n_PRESET'])
 
 def d_cluster_wrapper(workDirectory, **kwargs):
     GenomeClusterController(workDirectory, **kwargs).main()

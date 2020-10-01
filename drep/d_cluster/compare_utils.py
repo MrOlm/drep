@@ -7,7 +7,9 @@ import pandas as pd
 
 import drep
 import drep.d_cluster.cluster_utils
+import drep.d_cluster.external
 import drep.d_cluster.utils
+import drep.d_cluster.greedy_clustering
 
 class genomeChunk():
     """
@@ -271,24 +273,30 @@ def cluster_mash_database(db, **kwargs):
     return Cdb, cluster_ret
 
 def secondary_clustering(Bdb, Cdb, algorithm, data_folder, **kwargs):
-    Ndb = pd.DataFrame()
-
-    for bdb, name in iteratre_clusters(Bdb, Cdb, id='primary_cluster'):
-        logging.debug('running cluster {0}'.format(name))
-        # logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
-        ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
-
-        if len(ndb) == 0:
-            logging.error("CRITICAL ERROR WITH PRIMARY CLUSTER {0}; TRYING AGAIN".format(name))
+    if kwargs.get('clusterAlg') != 'greedy':
+        Ndb = pd.DataFrame()
+        for bdb, name in iteratre_clusters(Bdb, Cdb, id='primary_cluster'):
+            logging.debug('running cluster {0}'.format(name))
+            # logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
             ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
 
-        if len(ndb) > 0:
-            ndb['primary_cluster'] = name
-            Ndb = Ndb.append(ndb)
-        else:
-            logging.error("DOUBLE CRITICAL ERROR AGAIN WITH PRIMARY CLUSTER {0}; SKIPPING".format(name))
+            if len(ndb) == 0:
+                logging.error("CRITICAL ERROR WITH PRIMARY CLUSTER {0}; TRYING AGAIN".format(name))
+                ndb = compare_genomes(bdb, algorithm, data_folder, **kwargs)
 
-    return Ndb
+            if len(ndb) > 0:
+                ndb['primary_cluster'] = name
+                Ndb = Ndb.append(ndb)
+            else:
+                logging.error("DOUBLE CRITICAL ERROR AGAIN WITH PRIMARY CLUSTER {0}; SKIPPING".format(name))
+
+        # Run clustering on Ndb
+        Cdb, c2ret = drep.d_cluster.utils._cluster_Ndb(Ndb, comp_method=algorithm, **kwargs)
+
+        return Ndb, Cdb, c2ret
+
+    else:
+        return drep.d_cluster.greedy_clustering.greedy_secondary_clustering(Bdb, Cdb, algorithm, data_folder, **kwargs)
 
 
 def iteratre_clusters(Bdb, Cdb, id='MASH_cluster'):
@@ -323,54 +331,58 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
     if isinstance(data_folder, drep.WorkDirectory.WorkDirectory):
         data_folder = data_folder.get_dir('data')
 
-    if algorithm == 'ANImf':
-        genome_list = bdb['location'].tolist()
-        working_data_folder = os.path.join(data_folder, 'ANImf_files/')
-        df = drep.d_cluster.utils.run_pairwise_ANImf(genome_list, working_data_folder, **kwargs)
-        return df
+    if kwargs.get('clusterAlg') != 'greedy':
+        if algorithm == 'ANImf':
+            genome_list = bdb['location'].tolist()
+            working_data_folder = os.path.join(data_folder, 'ANImf_files/')
+            df = drep.d_cluster.external.run_pairwise_ANImf(genome_list, working_data_folder, **kwargs)
+            return df
 
-    elif algorithm == 'ANIn':
-        genome_list = bdb['location'].tolist()
-        working_data_folder = os.path.join(data_folder, 'ANIn_files/')
-        df = drep.d_cluster.utils.run_pairwise_ANIn(genome_list, working_data_folder, **kwargs)
-        return df
+        elif algorithm == 'ANIn':
+            genome_list = bdb['location'].tolist()
+            working_data_folder = os.path.join(data_folder, 'ANIn_files/')
+            df = drep.d_cluster.utils.run_pairwise_ANIn(genome_list, working_data_folder, **kwargs)
+            return df
 
-    elif algorithm == 'fastANI':
-        genome_list = bdb['location'].tolist()
-        working_data_folder = os.path.join(data_folder, 'fastANI_files/')
-        df = drep.d_cluster.utils.run_pairwise_fastANI(genome_list, working_data_folder, **kwargs)
-        return df
+        elif algorithm == 'fastANI':
+            genome_list = bdb['location'].tolist()
+            working_data_folder = os.path.join(data_folder, 'fastANI_files/')
+            df = drep.d_cluster.external.run_pairwise_fastANI(genome_list, working_data_folder, **kwargs)
+            return df
 
-    elif algorithm == 'gANI':
-        # Figure out prodigal folder
-        wd = kwargs.get('wd', False)
-        if not wd:
-            prod_folder = kwargs.pop('prod_folder', False)
-            assert prod_folder != False
+        elif algorithm == 'gANI':
+            # Figure out prodigal folder
+            wd = kwargs.get('wd', False)
+            if not wd:
+                prod_folder = kwargs.pop('prod_folder', False)
+                assert prod_folder != False
+            else:
+                prod_folder = wd.get_dir('prodigal')
+
+            working_data_folder = os.path.join(data_folder, 'gANI_files/')
+            df = drep.d_cluster.external.run_pairwise_gANI(bdb, working_data_folder, \
+                                                           prod_folder=prod_folder, **kwargs)
+            return df
+
+        elif algorithm == 'goANI':
+            # Figure out prodigal folder
+            wd = kwargs.get('wd', False)
+            if not wd:
+                prod_folder = kwargs.pop('prod_folder', False)
+                assert prod_folder != False
+            else:
+                prod_folder = wd.get_dir('prodigal')
+
+            working_data_folder = os.path.join(data_folder, 'goANI_files/')
+            df = drep.d_cluster.external.run_pairwise_goANI(bdb, working_data_folder, \
+                                                            prod_folder=prod_folder, **kwargs)
+            return df
+
         else:
-            prod_folder = wd.get_dir('prodigal')
-
-        working_data_folder = os.path.join(data_folder, 'gANI_files/')
-        df = drep.d_cluster.utils.run_pairwise_gANI(bdb, working_data_folder, \
-                prod_folder=prod_folder, **kwargs)
-        return df
-
-    elif algorithm == 'goANI':
-        # Figure out prodigal folder
-        wd = kwargs.get('wd', False)
-        if not wd:
-            prod_folder = kwargs.pop('prod_folder', False)
-            assert prod_folder != False
-        else:
-            prod_folder = wd.get_dir('prodigal')
-
-        working_data_folder = os.path.join(data_folder, 'goANI_files/')
-        df = drep.d_cluster.utils.run_pairwise_goANI(bdb, working_data_folder, \
-                prod_folder=prod_folder, **kwargs)
-        return df
+            logging.error("{0} not supported".format(algorithm))
+            sys.exit()
 
     else:
-        logging.error("{0} not supportedd".format(algorithm))
-        sys.exit()
+        return drep.d_cluster.greedy_clustering.compare_genomes_greedy(bdb, algorithm, data_folder, **kwargs)
 
 
