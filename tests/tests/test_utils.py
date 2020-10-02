@@ -17,6 +17,9 @@ def load_test_wd_loc_2():
 def load_test_genomes():
     return glob.glob(os.path.join(str(os.getcwd()) + '/genomes/*'))
 
+def load_zipped_genomes():
+    return glob.glob(os.path.join(str(os.getcwd()),'../tests/test_backend/zipped/*.gz'))
+
 def load_broken_genome():
     return glob.glob(os.path.join(str(os.getcwd()),'../tests/test_backend/other/broken_genome.fasta'))[0]
 

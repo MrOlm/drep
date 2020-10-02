@@ -58,8 +58,9 @@ class genomeChunk():
         Mdb = drep.d_cluster.utils.parse_mash_table(self.dist_file)
 
         # Filter out those genomes that are in the MASH folder but shouldn't be in Mdb
-        Mdb = Mdb[Mdb['genome1'].isin(self.genome_names)]
-        Mdb = Mdb[Mdb['genome2'].isin(self.genome_names)]
+        gs = set(self.genome_names)
+        Mdb = Mdb[Mdb['genome1'].isin(gs)]
+        Mdb = Mdb[Mdb['genome2'].isin(gs)]
 
         # Reorder categories to be correct
         for g in ['genome1', 'genome2']:
@@ -70,7 +71,7 @@ class genomeChunk():
 
     def cluster_mash_table(self, **kwargs):
         if len(self.Mdb) > 1:
-            Cdb, cluster_ret = drep.d_cluster.compare_utils.cluster_mash_database(self.Mdb, **kwargs)
+            Cdb, cluster_ret = cluster_mash_database(self.Mdb, **kwargs)
             self.Cdb = Cdb
         else:
             self.Cdb = pd.DataFrame({'primary_cluster':[1], 'genome':[self.Mdb['genome1'].tolist()[0]]})
@@ -255,6 +256,8 @@ def cluster_mash_database(db, **kwargs):
 
     # Load key words
     P_Lmethod = kwargs.get('clusterAlg','single')
+    if P_Lmethod == 'greedy':
+        P_Lmethod = 'single'
     P_Lcutoff = 1 - kwargs.get('P_ani',.9)
 
     # Do the actual clustering

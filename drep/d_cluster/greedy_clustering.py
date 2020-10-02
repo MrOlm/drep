@@ -13,7 +13,7 @@ def greedy_secondary_clustering(Bdb, Cdb, algorithm, data_folder, **kwargs):
     cdbs = []
     c2ret = {}
     for bdb, name in drep.d_cluster.compare_utils.iteratre_clusters(Bdb, Cdb, id='primary_cluster'):
-        logging.debug('running cluster {0}'.format(name))
+        logging.debug('running cluster {0} with {1} genomes'.format(name, len(bdb)))
         # logging.debug('total memory - {0:.2f} Mbp'.format(int(process.memory_info().rss)/1000000))
         ndb, cdb, ret = drep.d_cluster.compare_utils.compare_genomes(bdb, algorithm, data_folder, **kwargs)
 
@@ -85,7 +85,19 @@ def compare_genomes_greedy(bdb, algorithm, data_folder, **kwargs):
             with open(genome_rep_file, "a") as myfile:
                 myfile.write(row['location'] + '\n')
 
-    Ndb = pd.concat(ndbs)
+    if len(ndbs) > 0:
+        Ndb = pd.concat(ndbs)
+
+    else:
+        # Add self-comparisons if there is only one genome
+        Table = {'querry': [], 'reference': [], 'ani': [], 'alignment_coverage': []}
+        for g in odb['location'].tolist():
+            Table['reference'].append(drep.d_cluster.utils._get_genome_name_from_fasta(g))
+            Table['querry'].append(drep.d_cluster.utils._get_genome_name_from_fasta(g))
+            Table['ani'].append(1)
+            Table['alignment_coverage'].append(1)
+        Ndb = pd.DataFrame(Table)
+
     Cdb, cluster_ret = generate_greedy_cdb(bdb, rep2cluster, genome2cluster, algorithm, ani_thresh, cov_thresh, **kwargs)
     return Ndb, Cdb, cluster_ret
 

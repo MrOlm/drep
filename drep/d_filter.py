@@ -7,6 +7,7 @@ Filter genomes based on genome length or quality. Also can run prodigal and chec
 
 import logging
 import glob
+import gzip
 import pandas as pd
 import os
 import sys
@@ -405,8 +406,18 @@ def calc_n50(loc):
         int: N50 of .fasta file.
     '''
     lengths = []
-    for seq_record in SeqIO.parse(loc, "fasta"):
-        lengths.append(len(seq_record))
+
+
+    if loc[-3:] == '.gz':
+        with gzip.open(loc, "rt") as handle:
+            for seq_record in SeqIO.parse(handle, "fasta"):
+                lengths.append(len(seq_record))
+    else:
+        for seq_record in SeqIO.parse(loc, "fasta"):
+            lengths.append(len(seq_record))
+
+    # for seq_record in SeqIO.parse(loc, "fasta"):
+    #     lengths.append(len(seq_record))
 
     half = sum(lengths)/2
     tally = 0
@@ -556,8 +567,15 @@ def calc_fasta_length(fasta_loc):
         int: total length of all .fasta files
     '''
     total = 0
-    for seq_record in SeqIO.parse(fasta_loc, "fasta"):
-        total += len(seq_record)
+
+    if fasta_loc[-3:] == '.gz':
+        with gzip.open(fasta_loc, "rt") as handle:
+            for seq_record in SeqIO.parse(handle, "fasta"):
+                total += len(seq_record)
+    else:
+        for seq_record in SeqIO.parse(fasta_loc, "fasta"):
+            total += len(seq_record)
+
     return total
 
 def chdb_to_genomeInfo(chdb):

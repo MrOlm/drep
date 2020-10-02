@@ -1,4 +1,4 @@
-from setuptools import setup
+from setuptools import setup, find_packages
 import os
 
 def version():
@@ -14,7 +14,7 @@ setup(name='drep',
       author_email='mattolm@berkeley.edu',
       license='MIT',
       package_data={'drep': ['VERSION']},
-      packages=['drep'],
+      packages=find_packages(),
       scripts=['bin/dRep', 'helper_scripts/parse_stb.py', 'helper_scripts/ScaffoldLevel_dRep.py'],
       install_requires=[
           'numpy',
