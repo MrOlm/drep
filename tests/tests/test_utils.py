@@ -35,7 +35,7 @@ def load_solutions_taxonomy_wd():
     return loc
 
 def load_large_genome_set():
-    loc = '/Users/mattolm/Programs/testing_house/test_genomes_Hadza/'
+    loc = '/Users/mattolm/Programs/testing_house/test_genomes/'
     genomes = glob.glob(loc + '*.fna')
     return genomes
 

@@ -386,6 +386,7 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
             sys.exit()
 
     else:
-        return drep.d_cluster.greedy_clustering.compare_genomes_greedy(bdb, algorithm, data_folder, **kwargs)
+        working_data_folder = os.path.join(data_folder, 'greedy_clustering/')
+        return drep.d_cluster.greedy_clustering.compare_genomes_greedy(bdb, algorithm, working_data_folder, **kwargs)
 
 

@@ -35,33 +35,33 @@ class test_dereplicate():
             shutil.rmtree(self.wd_loc2)
 
     def run(self):
-        # self.setUp()
-        # self.functional_test_1()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_2()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_3()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_4()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_5()
-        # self.tearDown()
-        #
-        # self.setUp()
-        # self.functional_test_6()
-        # self.tearDown()
+        self.setUp()
+        self.functional_test_1()
+        self.tearDown()
 
-        # self.setUp()
-        # self.functional_test_7()
-        # self.tearDown()
+        self.setUp()
+        self.functional_test_2()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_3()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_4()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_5()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_6()
+        self.tearDown()
+
+        self.setUp()
+        self.functional_test_7()
+        self.tearDown()
 
         self.setUp()
         self.functional_test_8()
@@ -273,13 +273,14 @@ class test_dereplicate():
         '''
         Test greedy clustering with some primary clusters only having a single member
         '''
+        if len(self.large_genome_set) == 0:
+            print("*** THIS TEST ONLY WORKS ON MO'S DEVELOPMENT MACHINE ***")
+            return
+
+
         genomes = [self.large_genome_set[0], self.large_genome_set[20]]
         wd_loc = self.wd_loc
         wd_loc2 = self.wd_loc2
-
-        if len(genomes) == 0:
-            print("*** THIS TEST ONLY WORKS ON MO'S DEVELOPMENT MACHINE ***")
-            return
 
         # Get greedy results
         args = argumentParser.parse_args(['compare', wd_loc2, '--S_algorithm',

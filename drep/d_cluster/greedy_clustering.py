@@ -53,6 +53,9 @@ def compare_genomes_greedy(bdb, algorithm, data_folder, **kwargs):
     genome2cluster = {}
     ndbs = []
 
+    if os.path.exists(genome_rep_file):
+        os.remove(genome_rep_file)
+
     # Prepare for greedy clustering
     kwargs = prepare_for_greedy(algorithm, data_folder, **kwargs)
 
