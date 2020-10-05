@@ -128,10 +128,15 @@ def _gen_cdb_from_fclust(fclust,names):
 
 
 def parse_mash_table(location):
-    iniCols = ['genome1', 'genome2', 'dist', 'p', 'kmers']
-    uCols = ['genome1', 'genome2', 'dist']
-    dTypes = {'genome1': 'category', 'genome2': 'category', 'dist': np.float32}
-    Mdb = pd.read_csv(location, names=iniCols, usecols=uCols, dtype=dTypes, sep='\t')
+    try:
+        iniCols = ['genome1', 'genome2', 'dist', 'p', 'kmers']
+        uCols = ['genome1', 'genome2', 'dist']
+        dTypes = {'genome1': 'category', 'genome2': 'category', 'dist': np.float32}
+        Mdb = pd.read_csv(location, names=iniCols, usecols=uCols, dtype=dTypes, sep='\t')
+    except ValueError:
+        logging.error("You're using an incompatible version of Mash! I'll try and fix it, but I recommend upgrading Mash to v2.2 or downgrading to v1 if problems occur")
+        Mdb = pd.read_csv(location, sep='\t')
+
     Mdb['genome1'] = Mdb['genome1'].apply(_get_genome_name_from_fasta).astype('category')
     Mdb['genome2'] = Mdb['genome2'].apply(_get_genome_name_from_fasta).astype('category')
     Mdb['similarity'] = 1 - Mdb['dist']

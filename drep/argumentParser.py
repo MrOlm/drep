@@ -47,18 +47,12 @@ def printHelp():
   
   Example: dRep dereplicate -h
 
-  Workflows:
-    compare         -> Perform rapid pair-wise comparison on a list of genomes
-    dereplicate     -> De-replicate a list of genomes
-
-  Single operations:
-    filter          -> Filter a genome list based on size, completeness, and/or contamination
-    cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
-    choose          -> Choose the best genome from each genome cluster
-    evaluate        -> Evaluate genome de-replication
-    bonus           -> Other random operations (determine taxonomy / check dependencies)
-    analyze         -> Make figures
+  Commands:
+    compare            -> Compare and cluster a set of genomes
+    dereplicate        -> De-replicate a set of genomes
+    check_dependencies -> Check which dependencies are properly installed
     ''')
+
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=SmartFormatter)
     subparsers = parser.add_subparsers(help='Desired operation',dest='operation')
@@ -166,21 +160,6 @@ def parse_args(args):
     Sflags.add_argument("-sizeW","--size_weight", default = 0, type= float,
                         help='weight of log(genome size)')
 
-
-    # Make a parent parser for taxonomy
-    tax_parent = argparse.ArgumentParser(add_help=False)
-    Tflags = tax_parent.add_argument_group('TAXONOMY')
-    Tflags.add_argument("--run_tax",help='generate taxonomy information (Tdb)', \
-                    action = "store_true")
-    Tflags.add_argument("--tax_method",help='R|Method of determining taxonomy\n' \
-                    + "percent = The most descriptive taxonimic level with at least (per) hits\n"\
-                    + "max     = The centrifuge taxonomic level with the most overall hits",\
-                    default='percent', choices=['percent','max'])
-    Tflags.add_argument("-per", "--percent", help='minimum percent for percent method', \
-                    default = "50")
-    Tflags.add_argument("--cent_index",help='path to centrifuge index (for example, ' + \
-                    "/home/mattolm/download/centrifuge/indices/b+h+v")
-
     # Make a parent parser for evaluate
     evaluate_parent = argparse.ArgumentParser(add_help=False)
     Fflags = evaluate_parent.add_argument_group('WARNINGS')
@@ -205,47 +184,46 @@ def parse_args(args):
                         to scipy.cluster.hierarchy.linkage)",default='average',choices=\
                         {'single','complete','average','weighted'})
 
-    # Make a parent for genome input
-
-    '''
-    ####### Arguments for filter operation ######
-    '''
-
-    filter_parser = subparsers.add_parser("filter",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, genome_parser, filtering_parent, quality_parent], add_help=False)
-
-    '''
-    ####### Arguments for clustering operation ######
-    '''
-
-    cluster_parser = subparsers.add_parser("cluster",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, genome_parser, cluster_parent], add_help=False)
-
-    '''
-    ####### Arguments for choose operation ######
-    '''
-
-    choose_parser = subparsers.add_parser("choose",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, scoring_parent, quality_parent], add_help=False)
-
-    '''
-    ####### Arguments for analyze operation ######
-    '''
-
-    analyze_parser = subparsers.add_parser("analyze",formatter_class=SmartFormatter,\
-                    parents = [parent_parser], add_help=False)
-
-    # Plotting
-    Caflags = analyze_parser.add_argument_group('PLOTTING')
-    Caflags.add_argument("-pl", "--plots", help= "R|Plots. "
-                        + "Input 'all' or 'a' to plot all\n"
-                        + "1) Primary clustering dendrogram\n"
-                        + "2) Secondary clustering dendrograms\n"
-                        + "3) Secondary clustering MDS\n"
-                        + "4) Comparison scatterplots\n"
-                        + "5) Cluster scoring plot\n"
-                        + "6) Winning genomes\n",
-                        nargs='*')
+    #
+    # '''
+    # ####### Arguments for filter operation ######
+    # '''
+    #
+    # filter_parser = subparsers.add_parser("filter",formatter_class=SmartFormatter,\
+    #                 parents = [parent_parser, genome_parser, filtering_parent, quality_parent], add_help=False)
+    #
+    # '''
+    # ####### Arguments for clustering operation ######
+    # '''
+    #
+    # cluster_parser = subparsers.add_parser("cluster",formatter_class=SmartFormatter,\
+    #                 parents = [parent_parser, genome_parser, cluster_parent], add_help=False)
+    #
+    # '''
+    # ####### Arguments for choose operation ######
+    # '''
+    #
+    # choose_parser = subparsers.add_parser("choose",formatter_class=SmartFormatter,\
+    #                 parents = [parent_parser, scoring_parent, quality_parent], add_help=False)
+    #
+    # '''
+    # ####### Arguments for analyze operation ######
+    # '''
+    #
+    # analyze_parser = subparsers.add_parser("analyze",formatter_class=SmartFormatter,\
+    #                 parents = [parent_parser], add_help=False)
+    #
+    # # Plotting
+    # Caflags = analyze_parser.add_argument_group('PLOTTING')
+    # Caflags.add_argument("-pl", "--plots", help= "R|Plots. "
+    #                     + "Input 'all' or 'a' to plot all\n"
+    #                     + "1) Primary clustering dendrogram\n"
+    #                     + "2) Secondary clustering dendrograms\n"
+    #                     + "3) Secondary clustering MDS\n"
+    #                     + "4) Comparison scatterplots\n"
+    #                     + "5) Cluster scoring plot\n"
+    #                     + "6) Winning genomes\n",
+    #                     nargs='*')
 
     '''
     ####### Arguments for adjust operation ######
@@ -264,46 +242,51 @@ def parse_args(args):
     '''
     ####### Arguments for bonus operation ######
     '''
-
-    bonus_parser = subparsers.add_parser("bonus",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, genome_parser, tax_parent], add_help=False)
-
-    # Check_dependencies
-    Cflags = bonus_parser.add_argument_group("DEBUGGING")
-    Cflags.add_argument('--check_dependencies', action='store_true',\
-                    help= "Check if program has access to all dependencies")
+    #
+    # bonus_parser = subparsers.add_parser("bonus",formatter_class=SmartFormatter,\
+    #                 parents = [parent_parser, genome_parser], add_help=False)
+    #
+    # # Check_dependencies
+    # Cflags = bonus_parser.add_argument_group("DEBUGGING")
+    # Cflags.add_argument('--check_dependencies', action='store_true',\
+    #                 help= "Check if program has access to all dependencies")
 
     '''
     ####### Arguments for evaluate operation ######
     '''
-
-    evaluate_parser = subparsers.add_parser("evaluate",formatter_class=SmartFormatter,\
-                    parents = [parent_parser, evaluate_parent], add_help=False)
-
-    # Evaluation
-    Fflags = evaluate_parser.add_argument_group("EVALUATIONS")
-    Fflags.add_argument("-e", "--evaluate", help= "R|Things to evaluate "
-                        + "Input 'all' or 'a' to evaluate all\n"
-                        + "1) Evaluate de-replicated genome similarity\n"
-                        + "2) Throw warnings for clusters that were almost different\n"
-                        + "3) Generate a database of information on winning genomes\n",
-                        nargs='*')
+    #
+    # evaluate_parser = subparsers.add_parser("evaluate",formatter_class=SmartFormatter,\
+    #                 parents = [parent_parser, evaluate_parent], add_help=False)
+    #
+    # # Evaluation
+    # Fflags = evaluate_parser.add_argument_group("EVALUATIONS")
+    # Fflags.add_argument("-e", "--evaluate", help= "R|Things to evaluate "
+    #                     + "Input 'all' or 'a' to evaluate all\n"
+    #                     + "1) Evaluate de-replicated genome similarity\n"
+    #                     + "2) Throw warnings for clusters that were almost different\n"
+    #                     + "3) Generate a database of information on winning genomes\n",
+    #                     nargs='*')
 
     '''
     ####### Arguments for dereplicate ######
     '''
     dereplicate_parser = subparsers.add_parser("dereplicate",formatter_class=SmartFormatter,\
                         parents=[parent_parser, genome_parser, filtering_parent, quality_parent, cluster_parent, scoring_parent,\
-                        tax_parent, evaluate_parent], add_help=False, epilog=\
+                        evaluate_parent], add_help=False, epilog=\
                         "Example: dRep dereplicate output_dir/ -g /path/to/genomes/*.fasta")
 
     '''
     ####### Arguments for compare ######
     '''
     dereplicate_parser = subparsers.add_parser("compare",formatter_class=SmartFormatter,\
-                        parents=[parent_parser, genome_parser, cluster_parent, tax_parent, evaluate_parent],\
+                        parents=[parent_parser, genome_parser, cluster_parent, evaluate_parent],\
                          add_help=False, epilog=\
                         "Example: dRep compare output_dir/ -g /path/to/genomes/*.fasta")
+
+    '''
+    ####### Arguments for check_dependencies ######
+    '''
+    dep_parser = subparsers.add_parser("check_dependencies", formatter_class=SmartFormatter)
 
     '''
     ####### PARSE THE ARGUMENTS ######

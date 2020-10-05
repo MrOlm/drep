@@ -35,9 +35,9 @@ class test_dereplicate():
             shutil.rmtree(self.wd_loc2)
 
     def run(self):
-        self.setUp()
-        self.functional_test_1()
-        self.tearDown()
+        # self.setUp()
+        # self.functional_test_1()
+        # self.tearDown()
 
         self.setUp()
         self.functional_test_2()

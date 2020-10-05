@@ -131,6 +131,9 @@ class Controller():
 
     def parseArguments(self, args):
         ''' Parse user options and call the correct pipeline'''
+        if args.operation == 'check_dependencies':
+            drep.d_bonus.check_dependencies(print_out=True)
+            return
 
         # Load the workDirectory
         wd_loc = str(os.path.abspath(args.work_directory))

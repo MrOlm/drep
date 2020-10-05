@@ -29,5 +29,4 @@ from drep.controller import Controller
 if __name__ == '__main__':
     args = drep.argumentParser.parse_args(sys.argv[1:])
     # do what you came here to do :)
-    controller = Controller()
-    controller.parseArguments(args)
+    Controller().parseArguments(args)

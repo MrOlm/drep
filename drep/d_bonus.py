@@ -19,7 +19,7 @@ def d_bonus_wrapper(wd,**kwargs):
 
     if kwargs.get('check_dependencies'):
         logging.info('Checking dependencies')
-        check_dependencies(wd, **kwargs)
+        check_dependencies()
 
     if kwargs.get('run_tax'):
         logging.info('Running tax')
@@ -93,7 +93,7 @@ def validate_arguments(wd, **kwargs):
 
     return Bdb, prod_dir, cent_dir
 
-def check_dependencies(wd, **kwargs):
+def check_dependencies(print_out=False):
     '''
     For all possible dependencies, see if you can find them
     '''
@@ -101,7 +101,11 @@ def check_dependencies(wd, **kwargs):
                 'nsimscan', 'fastANI']:
         loc, works = find_program(dep)
         works_message = {True:'all good', False:'!!! ERROR !!!'}[works]
-        logging.info('{0:.<40} {1:15} (location = {2})'.format(dep, works_message, loc))
+        message = '{0:.<40} {1:15} (location = {2})'.format(dep, works_message, loc)
+        if print_out:
+            print(message)
+        else:
+            logging.info(message)
 
 def find_program(dep):
     '''
