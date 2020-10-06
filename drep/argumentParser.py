@@ -59,7 +59,7 @@ def parse_args(args):
 
     # Make a parent parser for all of the subparsers
     parent_parser = argparse.ArgumentParser(add_help=False)
-    parent_parser.add_argument("work_directory",help="R|Directory where data and output\
+    parent_parser.add_argument("work_directory",help="R|Directory where data and output are stored\
     \n*** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***")
 
     Bflags = parent_parser.add_argument_group('SYSTEM PARAMETERS')
@@ -106,7 +106,6 @@ def parse_args(args):
     cluster_parent = argparse.ArgumentParser(add_help=False)
 
     Clustflags = cluster_parent.add_argument_group('GENOME COMPARISON OPTIONS')
-    Clustflags.add_argument("-ms","--MASH_sketch",help="MASH sketch size", default=1000)
     Clustflags.add_argument("--S_algorithm", help="R|Algorithm for secondary clustering comaprisons:\n" \
         + "fastANI = Kmer-based approach; very fast\n" \
         + "ANImf   = (DEFAULT) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
@@ -114,19 +113,21 @@ def parse_args(args):
         + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
         + "goANI   = Open source version of gANI; requires nsmimscan\n",
                         default='ANImf', choices={'ANIn','gANI','ANImf', 'goANI', 'fastANI'})
+    Clustflags.add_argument("-ms", "--MASH_sketch", help="MASH sketch size", default=1000)
+    Clustflags.add_argument("--SkipMash", help="Skip MASH clustering,\
+                            just do secondary clustering on all genomes", action='store_true')
+    Clustflags.add_argument("--SkipSecondary", help="Skip secondary clustering, just perform MASH\
+                            clustering", action='store_true')
     Clustflags.add_argument("--n_PRESET", help= "R|Presets to pass to nucmer\n" \
         + "tight   = only align highly conserved regions\n" \
         + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')
+
 
     Compflags = cluster_parent.add_argument_group('GENOME CLUSTERING OPTIONS')
     Compflags.add_argument("-pa","--P_ani",help="ANI threshold to form primary (MASH) clusters",
                         default=0.9, type = float)
     Compflags.add_argument("-sa", "--S_ani", help="ANI threshold to form secondary clusters",
                         default=0.99, type = float)
-    Compflags.add_argument("--SkipMash",help="Skip MASH clustering,\
-                        just do secondary clustering on all genomes",action='store_true')
-    Compflags.add_argument("--SkipSecondary", help="Skip secondary clustering, just perform MASH\
-                        clustering", action='store_true')
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
         genomes when doing secondary comparisons", default=0.1, type=float)
     Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \
@@ -136,10 +137,19 @@ def parse_args(args):
                         choices=['total', 'larger'], default='larger')
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage",default='average')
-    Compflags.add_argument("--primary_chunksize", help="If you have more than this many genomes, process them in chunks of this size",
-                           default=5000, type=int)
-    Compflags.add_argument("--multiround_primary_clustering", help='For each primary chunk, cluster seperately and merge. Will be done with single clustering',
+
+    Compflags.add_argument("--multiround_primary_clustering", help='Cluster each primary clunk separately and '
+                                                                   'merge at the end with single linkage. Decreases '
+                                                                   'RAM usage and increases speed; minor '
+                                                                   'loss in precision and will prevent '
+                                                                   'primary_clustering_dendrogram. Especially helpful '
+                                                                   'when clustering 5000+ genomes. Will be done with '
+                                                                   'single clustering',
                            action='store_true')
+    Compflags.add_argument("--primary_chunksize", help="If you have more than this many genomes, process them in "
+                                                       "chunks of this size. Impacts multiround_primary_clustering",
+                           default=5000, type=int)
+
 
     # Make a parent parser for scoring
     scoring_parent = argparse.ArgumentParser(add_help=False)
@@ -170,122 +180,17 @@ def parse_args(args):
     Fflags.add_argument("--warn_aln", default= 0.25, help= "Minimum aligned fraction for " +\
                         " warnings between dereplicated genomes (ANIn)")
 
-    # Make a parent parser for adjust
-    adjust_parent = argparse.ArgumentParser(add_help=False)
-    Nflags = adjust_parent.add_argument_group('RE-CLUSTER PRIMARY CLUSETERS')
-    Nflags.add_argument("-c","--cluster",help='primary cluster to be adjusted')
-    Nflags.add_argument("-t",'--threshold',help= 'clustering threshold to apply',default=\
-                        .99)
-    Nflags.add_argument("-m",'--clustering_method',help= 'Clustering method to apply',\
-                        choices = {'ANIn','gANI'}, default='ANIn')
-    Nflags.add_argument("-mc",'--minimum_coverage',help= 'Minimum coverage for ANIn',\
-                        default=0.1)
-    Nflags.add_argument("-a","--clusterAlg", help="Algorithm used to cluster genomes (passed\
-                        to scipy.cluster.hierarchy.linkage)",default='average',choices=\
-                        {'single','complete','average','weighted'})
 
-    #
-    # '''
-    # ####### Arguments for filter operation ######
-    # '''
-    #
-    # filter_parser = subparsers.add_parser("filter",formatter_class=SmartFormatter,\
-    #                 parents = [parent_parser, genome_parser, filtering_parent, quality_parent], add_help=False)
-    #
-    # '''
-    # ####### Arguments for clustering operation ######
-    # '''
-    #
-    # cluster_parser = subparsers.add_parser("cluster",formatter_class=SmartFormatter,\
-    #                 parents = [parent_parser, genome_parser, cluster_parent], add_help=False)
-    #
-    # '''
-    # ####### Arguments for choose operation ######
-    # '''
-    #
-    # choose_parser = subparsers.add_parser("choose",formatter_class=SmartFormatter,\
-    #                 parents = [parent_parser, scoring_parent, quality_parent], add_help=False)
-    #
-    # '''
-    # ####### Arguments for analyze operation ######
-    # '''
-    #
-    # analyze_parser = subparsers.add_parser("analyze",formatter_class=SmartFormatter,\
-    #                 parents = [parent_parser], add_help=False)
-    #
-    # # Plotting
-    # Caflags = analyze_parser.add_argument_group('PLOTTING')
-    # Caflags.add_argument("-pl", "--plots", help= "R|Plots. "
-    #                     + "Input 'all' or 'a' to plot all\n"
-    #                     + "1) Primary clustering dendrogram\n"
-    #                     + "2) Secondary clustering dendrograms\n"
-    #                     + "3) Secondary clustering MDS\n"
-    #                     + "4) Comparison scatterplots\n"
-    #                     + "5) Cluster scoring plot\n"
-    #                     + "6) Winning genomes\n",
-    #                     nargs='*')
-
-    '''
-    ####### Arguments for adjust operation ######
-    '''
-
-    # adjust_parser = subparsers.add_parser("adjust",formatter_class=SmartFormatter,\
-    #                 parents = [parent_parser, adjust_parent], add_help=False)
-    #
-    # # Remove clusters
-    # Rflags = adjust_parser.add_argument_group('CLUSTER REMOVAL')
-    # Rflags.add_argument("--rm_cluster",help='cluster(s) to be removed. Can be primary ' +\
-    #                     "or secondary cluster(s). Will delete cluster from " +\
-    #                     "Cdb, linkage (if primary cluster), Wdb, and ./dereplicated_genomes",
-    #                     nargs='*')
-
-    '''
-    ####### Arguments for bonus operation ######
-    '''
-    #
-    # bonus_parser = subparsers.add_parser("bonus",formatter_class=SmartFormatter,\
-    #                 parents = [parent_parser, genome_parser], add_help=False)
-    #
-    # # Check_dependencies
-    # Cflags = bonus_parser.add_argument_group("DEBUGGING")
-    # Cflags.add_argument('--check_dependencies', action='store_true',\
-    #                 help= "Check if program has access to all dependencies")
-
-    '''
-    ####### Arguments for evaluate operation ######
-    '''
-    #
-    # evaluate_parser = subparsers.add_parser("evaluate",formatter_class=SmartFormatter,\
-    #                 parents = [parent_parser, evaluate_parent], add_help=False)
-    #
-    # # Evaluation
-    # Fflags = evaluate_parser.add_argument_group("EVALUATIONS")
-    # Fflags.add_argument("-e", "--evaluate", help= "R|Things to evaluate "
-    #                     + "Input 'all' or 'a' to evaluate all\n"
-    #                     + "1) Evaluate de-replicated genome similarity\n"
-    #                     + "2) Throw warnings for clusters that were almost different\n"
-    #                     + "3) Generate a database of information on winning genomes\n",
-    #                     nargs='*')
-
-    '''
-    ####### Arguments for dereplicate ######
-    '''
     dereplicate_parser = subparsers.add_parser("dereplicate",formatter_class=SmartFormatter,\
                         parents=[parent_parser, genome_parser, filtering_parent, quality_parent, cluster_parent, scoring_parent,\
                         evaluate_parent], add_help=False, epilog=\
                         "Example: dRep dereplicate output_dir/ -g /path/to/genomes/*.fasta")
 
-    '''
-    ####### Arguments for compare ######
-    '''
     dereplicate_parser = subparsers.add_parser("compare",formatter_class=SmartFormatter,\
                         parents=[parent_parser, genome_parser, cluster_parent, evaluate_parent],\
                          add_help=False, epilog=\
                         "Example: dRep compare output_dir/ -g /path/to/genomes/*.fasta")
 
-    '''
-    ####### Arguments for check_dependencies ######
-    '''
     dep_parser = subparsers.add_parser("check_dependencies", formatter_class=SmartFormatter)
 
     '''
@@ -293,9 +198,7 @@ def parse_args(args):
     '''
 
     # Handle the situation where the user wants the raw help
-    #args = None
-    #if (len(sys.argv) == 1 or sys.argv[1] == '-h' or sys.argv == '--help'):
-    if (len(args) == 0 or args[0] == '-h' or args[0] == '--help'):
+    if len(args) == 0 or args[0] == '-h' or args[0] == '--help':
         printHelp()
         sys.exit(0)
     else:

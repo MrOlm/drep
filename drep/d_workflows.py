@@ -46,15 +46,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep dereplicate Step 4. Bonus ::..
-***************************************************
-    """
-    logging.info(message)
-    drep.d_bonus.d_bonus_wrapper(wd, **kwargs)
-
-    message = """\
-***************************************************
-    ..:: dRep dereplicate Step 5. Evaluate ::..
+    ..:: dRep dereplicate Step 4. Evaluate ::..
 ***************************************************
     """
     logging.info(message)
@@ -62,7 +54,7 @@ def dereplicate_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep dereplicate Step 6. Analyze ::..
+    ..:: dRep dereplicate Step 5. Analyze ::..
 ***************************************************
     """
     logging.info(message)
@@ -98,15 +90,7 @@ def compare_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep compare Step 2. Bonus ::..
-***************************************************
-    """
-    logging.info(message)
-    drep.d_bonus.d_bonus_wrapper(wd, **kwargs)
-
-    message = """\
-***************************************************
-    ..:: dRep compare Step 3. Evaluate ::..
+    ..:: dRep compare Step 2. Evaluate ::..
 ***************************************************
     """
     logging.info(message)
@@ -114,7 +98,7 @@ def compare_wrapper(wd,**kwargs):
 
     message = """\
 ***************************************************
-    ..:: dRep compare Step 4. Analyze ::..
+    ..:: dRep compare Step 3. Analyze ::..
 ***************************************************
     """
     logging.info(message)

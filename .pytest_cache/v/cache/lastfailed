@@ -2,6 +2,5 @@
   "tests/test_suite.py::test_long": true,
   "tests/test_suite.py::test_quick": true,
   "tests/test_suite.py::test_short": true,
-  "tests/test_suite.py::test_unit": true,
-  "tests/tests/test_choose.py::test_choose_1": true
+  "tests/test_suite.py::test_unit": true
 }

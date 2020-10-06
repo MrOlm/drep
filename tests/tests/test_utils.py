@@ -1,6 +1,9 @@
 import os
 import glob
+import importlib
 import pandas as pd
+import logging
+import shutil
 
 def load_solutions_wd():
     loc = os.path.join(str(os.getcwd()),'../tests/test_solutions/ecoli_wd')
@@ -114,3 +117,25 @@ def ensure_identicle(Swd, wd, skip = None):
 
     # Compare the graphs
     pass
+
+class TestingClass():
+    def teardown(self):
+        importlib.reload(logging)
+        if os.path.isdir(self.wd_loc):
+            shutil.rmtree(self.wd_loc)
+        os.mkdir(self.wd_loc)
+
+def load_common_self():
+    self = TestingClass()
+    self.genomes = load_test_genomes()
+    self.wd_loc = load_test_wd_loc()
+    self.s_wd_loc = load_solutions_wd()
+    self.zipped_genome = load_zipped_genome()
+
+    importlib.reload(logging)
+    if os.path.isdir(self.wd_loc):
+        shutil.rmtree(self.wd_loc)
+    os.mkdir(self.wd_loc)
+
+    return self
+

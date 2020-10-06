@@ -48,8 +48,6 @@ def test_choose_1(self):
     '''
     Ensure choose can handle when Chdb is not present, running checkM automatically
     '''
-    print(self)
-
     # Delete Chdb
     wd_loc = self.working_wd_loc
     os.remove(wd_loc + '/data_tables/Chdb.csv')
@@ -63,10 +61,11 @@ def test_choose_1(self):
     Bdb.to_csv(wd_loc + '/data_tables/Bdb.csv', index=False)
 
     # Run choose - this should re-run checkM and re-generate chdb
-    args = argumentParser.parse_args(['choose', wd_loc, '--checkM_method', \
-                                      'taxonomy_wf'])
-    controller = Controller()
-    controller.parseArguments(args)
+    drep.d_choose.d_choose_wrapper(wd_loc, checkM_method='taxonomy_wf')
+    # args = argumentParser.parse_args(['choose', wd_loc, '--checkM_method', \
+    #                                   'taxonomy_wf'])
+    # controller = Controller()
+    # controller.parseArguments(args)
 
     Swd = WorkDirectory(self.s_wd_loc)
     wd = WorkDirectory(self.working_wd_loc)
@@ -86,9 +85,13 @@ def test_choose_2(self):
     os.remove(wd_loc + '/data_tables/Wdb.csv')
 
     # Run choose with --skipCheckM
-    args = argumentParser.parse_args(['choose', wd_loc, '--ignoreGenomeQuality'])
-    controller = Controller()
-    controller.parseArguments(args)
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '--ignoreGenomeQuality'])
+    kwargs = vars(args)
+    del kwargs['genomes']
+    drep.d_choose.d_choose_wrapper(wd_loc, **kwargs)
+    #
+    # controller = Controller()
+    # controller.parseArguments(args)
 
     Swd  = WorkDirectory(self.s_wd_loc)
     wd   = WorkDirectory(self.working_wd_loc)
@@ -98,6 +101,9 @@ def test_choose_2(self):
         assert not test_utils.compare_dfs(db1, db2), "{0} is the same!".format(db)
 
     sdb = wd.get_db('Sdb')
+    print(sdb)
+    Swd.get_db(db)
+    print(sdb)
     for s in sdb['score'].tolist():
         assert (s > 0) & (s < 5)
 
