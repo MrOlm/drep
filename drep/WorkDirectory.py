@@ -227,8 +227,6 @@ class WorkDirectory(object):
                         'similarity':np.float32}
                     return pd.read_csv(self.data_tables[name], dtype=dTypes)
 
-                print('hioh')
-
             else:
                 return pd.read_csv(self.data_tables[name])
         else:

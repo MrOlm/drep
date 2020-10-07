@@ -205,6 +205,8 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
     kwargs_copy['multiround_primary_clustering'] = False
     kwargs_copy['v2'] = '_v2'
 
+    mdbs = []
+
     # Step 1) Create a merged Cdb file
     dbs = []
     for gc in genome_chunks:
@@ -212,6 +214,11 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
         cdb = gc.Cdb
         cdb['subcluster'] = ["{0}_{1}".format(gc.name, x) for x in cdb['primary_cluster']]
         dbs.append(cdb)
+
+        mdb = gc.Mdb
+        mdb['genome_chunk'] = gc.name
+        mdbs.append(mdb)
+
     Cdb = pd.concat(dbs)
 
     # Step 2) Pick winners
@@ -226,8 +233,13 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
 
     # Step 4) Get results
     assert len(genome_chunks) == 1
-    Mdb = genome_chunks[0].Mdb
-    Cdb2, cluster_ret = cluster_mash_database(Mdb, **kwargs)
+
+    mdb = genome_chunks[0].Mdb
+    mdb['genome_chunk'] = 'v2'
+    mdbs.append(mdb)
+    Mdb = pd.concat(mdbs).reset_index(drop=True)
+
+    Cdb2, cluster_ret = cluster_mash_database(mdb, **kwargs)
     Cdb2['primary_representitive'] = True
 
     # Step 5) Merge the new Cdb back in with the old
@@ -256,8 +268,6 @@ def cluster_mash_database(db, **kwargs):
 
     # Load key words
     P_Lmethod = kwargs.get('clusterAlg','single')
-    if P_Lmethod == 'greedy':
-        P_Lmethod = 'single'
     P_Lcutoff = 1 - kwargs.get('P_ani',.9)
 
     # Do the actual clustering
@@ -276,7 +286,7 @@ def cluster_mash_database(db, **kwargs):
     return Cdb, cluster_ret
 
 def secondary_clustering(Bdb, Cdb, algorithm, data_folder, **kwargs):
-    if kwargs.get('clusterAlg') != 'greedy':
+    if kwargs.get('greedy_secondary_clustering', False) != True:
         Ndb = pd.DataFrame()
         for bdb, name in iteratre_clusters(Bdb, Cdb, id='primary_cluster'):
             logging.debug('running cluster {0}'.format(name))
@@ -334,7 +344,7 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
     if isinstance(data_folder, drep.WorkDirectory.WorkDirectory):
         data_folder = data_folder.get_dir('data')
 
-    if kwargs.get('clusterAlg') != 'greedy':
+    if not kwargs.get('greedy_secondary_clustering', False):
         if algorithm == 'ANImf':
             genome_list = bdb['location'].tolist()
             working_data_folder = os.path.join(data_folder, 'ANImf_files/')
@@ -386,6 +396,13 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
             sys.exit()
 
     else:
+        SUPPORTED = ['fastANI']
+        if algorithm not in SUPPORTED:
+            message = f"{algorithm} is not supported for greedy secondary clustering!\nChoose one of the following supported S_algorithm options: {' '.join(SUPPORTED)}"
+            logging.error(message)
+            print(message)
+            raise NameError
+
         working_data_folder = os.path.join(data_folder, 'greedy_clustering/')
         return drep.d_cluster.greedy_clustering.compare_genomes_greedy(bdb, algorithm, working_data_folder, **kwargs)
 

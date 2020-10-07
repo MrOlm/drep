@@ -16,9 +16,11 @@ import sys
 import drep
 from drep.controller import Controller
 
+
 def version():
     versionFile = open(os.path.join(drep.__path__[0], 'VERSION'))
     return versionFile.read().strip()
+
 
 VERSION = version()
 
@@ -28,12 +30,14 @@ VERSION = version()
 ########################################
 """
 
+
 class SmartFormatter(argparse.ArgumentDefaultsHelpFormatter):
     def _split_lines(self, text, width):
         if text.startswith('R|'):
             return text[2:].splitlines()
         # this is the RawTextHelpFormatter._split_lines
         return argparse.HelpFormatter._split_lines(self, text, width)
+
 
 def printHelp():
     print('')
@@ -53,19 +57,20 @@ def printHelp():
     check_dependencies -> Check which dependencies are properly installed
     ''')
 
+
 def parse_args(args):
     parser = argparse.ArgumentParser(formatter_class=SmartFormatter)
-    subparsers = parser.add_subparsers(help='Desired operation',dest='operation')
+    subparsers = parser.add_subparsers(help='Desired operation', dest='operation')
 
     # Make a parent parser for all of the subparsers
     parent_parser = argparse.ArgumentParser(add_help=False)
-    parent_parser.add_argument("work_directory",help="R|Directory where data and output are stored\
+    parent_parser.add_argument("work_directory", help="R|Directory where data and output are stored\
     \n*** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***")
 
     Bflags = parent_parser.add_argument_group('SYSTEM PARAMETERS')
-    Bflags.add_argument('-p','--processors',help='threads',default=6,type=int)
-    Bflags.add_argument('-d','--debug',help='make extra debugging output',default=False,
-                        action= "store_true")
+    Bflags.add_argument('-p', '--processors', help='threads', default=6, type=int)
+    Bflags.add_argument('-d', '--debug', help='make extra debugging output', default=False,
+                        action="store_true")
     Bflags.add_argument("-h", "--help", action="help", help="show this help message and exit")
 
     # Make a parent parser for genome input
@@ -77,12 +82,12 @@ def parse_args(args):
     # Make a parent parser for filter operation
     filtering_parent = argparse.ArgumentParser(add_help=False)
     fiflags = filtering_parent.add_argument_group('GENOME FILTERING OPTIONS')
-    fiflags.add_argument("-l","--length", help= "Minimum genome length",default=50000,
-                            type = float)
-    fiflags.add_argument("-comp","--completeness", help="Minumum genome completeness",
-                            default = 75, type = float)
-    fiflags.add_argument("-con","--contamination", help="Maximum genome contamination",
-                            default = 25, type = float)
+    fiflags.add_argument("-l", "--length", help="Minimum genome length", default=50000,
+                         type=float)
+    fiflags.add_argument("-comp", "--completeness", help="Minumum genome completeness",
+                         default=75, type=float)
+    fiflags.add_argument("-con", "--contamination", help="Maximum genome contamination",
+                         default=25, type=float)
 
     quality_parent = argparse.ArgumentParser(add_help=False)
     Iflags = quality_parent.add_argument_group('GENOME QUALITY ASSESSMENT OPTIONS')
@@ -107,89 +112,99 @@ def parse_args(args):
 
     Clustflags = cluster_parent.add_argument_group('GENOME COMPARISON OPTIONS')
     Clustflags.add_argument("--S_algorithm", help="R|Algorithm for secondary clustering comaprisons:\n" \
-        + "fastANI = Kmer-based approach; very fast\n" \
-        + "ANImf   = (DEFAULT) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
-        + "ANIn    = Align whole genomes with nucmer; compare aligned regions\n" \
-        + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
-        + "goANI   = Open source version of gANI; requires nsmimscan\n",
-                        default='ANImf', choices={'ANIn','gANI','ANImf', 'goANI', 'fastANI'})
+                                                  + "fastANI = Kmer-based approach; very fast\n" \
+                                                  + "ANImf   = (DEFAULT) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
+                                                  + "ANIn    = Align whole genomes with nucmer; compare aligned regions\n" \
+                                                  + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
+                                                  + "goANI   = Open source version of gANI; requires nsmimscan\n",
+                            default='ANImf', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI'})
     Clustflags.add_argument("-ms", "--MASH_sketch", help="MASH sketch size", default=1000)
     Clustflags.add_argument("--SkipMash", help="Skip MASH clustering,\
                             just do secondary clustering on all genomes", action='store_true')
     Clustflags.add_argument("--SkipSecondary", help="Skip secondary clustering, just perform MASH\
                             clustering", action='store_true')
-    Clustflags.add_argument("--n_PRESET", help= "R|Presets to pass to nucmer\n" \
-        + "tight   = only align highly conserved regions\n" \
-        + "normal  = default ANIn parameters", choices=['normal','tight'],default='normal')
-
+    Clustflags.add_argument("--n_PRESET", help="R|Presets to pass to nucmer\n" \
+                                               + "tight   = only align highly conserved regions\n" \
+                                               + "normal  = default ANIn parameters", choices=['normal', 'tight'],
+                            default='normal')
 
     Compflags = cluster_parent.add_argument_group('GENOME CLUSTERING OPTIONS')
-    Compflags.add_argument("-pa","--P_ani",help="ANI threshold to form primary (MASH) clusters",
-                        default=0.9, type = float)
+    Compflags.add_argument("-pa", "--P_ani", help="ANI threshold to form primary (MASH) clusters",
+                           default=0.9, type=float)
     Compflags.add_argument("-sa", "--S_ani", help="ANI threshold to form secondary clusters",
-                        default=0.99, type = float)
+                           default=0.99, type=float)
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
         genomes when doing secondary comparisons", default=0.1, type=float)
     Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \
-        + "(for ANIn/ANImf only; gANI and fastANI can only do larger method)\n"
-        + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
-        + "larger  = max((aligned length / genome 1), (aligned_length / genome2))\n",
-                        choices=['total', 'larger'], default='larger')
+                                                            + "(for ANIn/ANImf only; gANI and fastANI can only do larger method)\n"
+                                                            + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
+                                                            + "larger  = max((aligned length / genome 1), (aligned_length / genome2))\n",
+                           choices=['total', 'larger'], default='larger')
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
-                        to scipy.cluster.hierarchy.linkage",default='average')
+                        to scipy.cluster.hierarchy.linkage", default='average',
+                           choices={'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'})
 
-    Compflags.add_argument("--multiround_primary_clustering", help='Cluster each primary clunk separately and '
-                                                                   'merge at the end with single linkage. Decreases '
-                                                                   'RAM usage and increases speed; minor '
-                                                                   'loss in precision and will prevent '
-                                                                   'primary_clustering_dendrogram. Especially helpful '
-                                                                   'when clustering 5000+ genomes. Will be done with '
-                                                                   'single clustering',
-                           action='store_true')
-    Compflags.add_argument("--primary_chunksize", help="If you have more than this many genomes, process them in "
-                                                       "chunks of this size. Impacts multiround_primary_clustering",
-                           default=5000, type=int)
-
+    GRflags = cluster_parent.add_argument_group('GREEDY CLUSTERING OPTIONS\n'
+                                                'These decrease RAM use and runtime at the expense of a minor loss in '
+                                                'accuracy.\nRecommended when clustering 5000+ genomes')
+    GRflags.add_argument("--multiround_primary_clustering",
+                         help='Cluster each primary clunk separately and '
+                              'merge at the end with single linkage. Decreases '
+                              'RAM usage and increases speed, and the cost of a minor '
+                              'loss in precision and the inability to plot '
+                              'primary_clustering_dendrograms. Especially helpful '
+                              'when clustering 5000+ genomes. Will be done with '
+                              'single linkage clustering',
+                         action='store_true')
+    GRflags.add_argument("--primary_chunksize",
+                         help="Impacts multiround_primary_clustering. If you have more than this many genomes, "
+                              "process them in chunks of this size.",
+                         default=5000, type=int)
+    GRflags.add_argument("--greedy_secondary_clustering",
+                         help="Use a heuristic to avoid pair-wise comparisons when doing secondary clustering. Will "
+                              "be done with single linkage clustering. Only works for fastANI S_algorithm option at "
+                              "the moment",
+                         action='store_true')
 
     # Make a parent parser for scoring
     scoring_parent = argparse.ArgumentParser(add_help=False)
-    Sflags = scoring_parent.add_argument_group('SCORING CRITERIA\n'+
-              "Based off of the formula: \nA*Completeness - B*Contamination + C*(Contamination * (strain_heterogeneity/100)) " + \
-              "+ D*log(N50) + E*log(size)\n\n" + \
-              "A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weight; " + \
-              "D = N50_weight; E = size_weight")
+    Sflags = scoring_parent.add_argument_group('SCORING CRITERIA\n' +
+                                               "Based off of the formula: \nA*Completeness - B*Contamination + C*(Contamination * (strain_heterogeneity/100)) " + \
+                                               "+ D*log(N50) + E*log(size)\n\n" + \
+                                               "A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weight; " + \
+                                               "D = N50_weight; E = size_weight")
 
-    Sflags.add_argument("-comW","--completeness_weight" , default = 1, type= float,
+    Sflags.add_argument("-comW", "--completeness_weight", default=1, type=float,
                         help='completeness weight')
-    Sflags.add_argument("-conW","--contamination_weight", default = 5, type= float,
+    Sflags.add_argument("-conW", "--contamination_weight", default=5, type=float,
                         help='contamination weight')
-    Sflags.add_argument("-strW","--strain_heterogeneity_weight", default = 1, type= float,
+    Sflags.add_argument("-strW", "--strain_heterogeneity_weight", default=1, type=float,
                         help='strain heterogeneity weight')
-    Sflags.add_argument("-N50W","--N50_weight", default = 0.5, type= float,
+    Sflags.add_argument("-N50W", "--N50_weight", default=0.5, type=float,
                         help='weight of log(genome N50)')
-    Sflags.add_argument("-sizeW","--size_weight", default = 0, type= float,
+    Sflags.add_argument("-sizeW", "--size_weight", default=0, type=float,
                         help='weight of log(genome size)')
 
     # Make a parent parser for evaluate
     evaluate_parent = argparse.ArgumentParser(add_help=False)
     Fflags = evaluate_parent.add_argument_group('WARNINGS')
-    Fflags.add_argument("--warn_dist", default= 0.25, help= "How far from the threshold " +\
-                        " to throw cluster warnings")
-    Fflags.add_argument("--warn_sim", default= 0.98, help= "Similarity threshold for " +\
-                        " warnings between dereplicated genomes")
-    Fflags.add_argument("--warn_aln", default= 0.25, help= "Minimum aligned fraction for " +\
-                        " warnings between dereplicated genomes (ANIn)")
+    Fflags.add_argument("--warn_dist", default=0.25, help="How far from the threshold " + \
+                                                          " to throw cluster warnings")
+    Fflags.add_argument("--warn_sim", default=0.98, help="Similarity threshold for " + \
+                                                         " warnings between dereplicated genomes")
+    Fflags.add_argument("--warn_aln", default=0.25, help="Minimum aligned fraction for " + \
+                                                         " warnings between dereplicated genomes (ANIn)")
 
+    dereplicate_parser = subparsers.add_parser("dereplicate", formatter_class=SmartFormatter, \
+                                               parents=[parent_parser, genome_parser, filtering_parent, quality_parent,
+                                                        cluster_parent, scoring_parent, \
+                                                        evaluate_parent], add_help=False, epilog= \
+                                                   "Example: dRep dereplicate output_dir/ -g /path/to/genomes/*.fasta")
 
-    dereplicate_parser = subparsers.add_parser("dereplicate",formatter_class=SmartFormatter,\
-                        parents=[parent_parser, genome_parser, filtering_parent, quality_parent, cluster_parent, scoring_parent,\
-                        evaluate_parent], add_help=False, epilog=\
-                        "Example: dRep dereplicate output_dir/ -g /path/to/genomes/*.fasta")
-
-    dereplicate_parser = subparsers.add_parser("compare",formatter_class=SmartFormatter,\
-                        parents=[parent_parser, genome_parser, cluster_parent, evaluate_parent],\
-                         add_help=False, epilog=\
-                        "Example: dRep compare output_dir/ -g /path/to/genomes/*.fasta")
+    dereplicate_parser = subparsers.add_parser("compare", formatter_class=SmartFormatter, \
+                                               parents=[parent_parser, genome_parser, cluster_parent, evaluate_parent], \
+                                               add_help=False, epilog= \
+                                                   "Example: dRep compare output_dir/ -g /path/to/genomes/*.fasta")
 
     dep_parser = subparsers.add_parser("check_dependencies", formatter_class=SmartFormatter)
 

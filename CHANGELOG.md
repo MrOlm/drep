@@ -9,9 +9,13 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 - Adding help to the -g option
 - Bare-bones support for gzipped genomes (lots of dependencies dont handle them)
 - Give a warning when it has errors loading the Mash table
+- Completely refactor the test suite to use pytest
+- Make plotting only give tracebacks when run in debug mode
+- Remove most of the options (just `dereplicate` and `compare` remain)
+- Add greedy clustering support! Both `multiround_primary_clustering` and `greedy_secondary_clustering`
 
 ## [2.6.2] - 2020-05-28
-- Log information about GenomeInformation when l oading it
+- Log information about GenomeInformation when loading it
 
 ## [2.6.1] - 2020-05-22
 - Numerous improvements to ScaffoldLevel_dRep.py, including ability to process in chunks

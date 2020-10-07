@@ -219,7 +219,7 @@ def test_dereplicate_5(self):
     # Get greedy results
     args = argumentParser.parse_args(['compare', wd_loc2, '--S_algorithm',
                                       'fastANI', '--SkipMash',
-                                      '--clusterAlg', 'greedy', '-sa', '0.95', '-g'] + genomes)
+                                      '--greedy_secondary_clustering', '-sa', '0.95', '-g'] + genomes)
     Controller().parseArguments(args)
     wd = WorkDirectory(wd_loc2)
     CSdb = wd.get_db('Cdb')
@@ -278,7 +278,7 @@ def test_dereplicate_7(self):
     # Get greedy results
     args = argumentParser.parse_args(['compare', wd_loc2, '--S_algorithm',
                                       'fastANI', '--multiround_primary_clustering', '--primary_chunksize', '50',
-                                      '--clusterAlg', 'greedy', '-sa', '0.95', '-g'] + genomes)
+                                      '--greedy_secondary_clustering', '-sa', '0.95', '-g'] + genomes)
     Controller().parseArguments(args)
     wd = WorkDirectory(wd_loc2)
     CSdb = wd.get_db('Cdb')
@@ -317,7 +317,7 @@ def test_dereplicate_8(self):
     # Get greedy results
     args = argumentParser.parse_args(['compare', wd_loc2, '--S_algorithm',
                                       'fastANI', '--multiround_primary_clustering', '--primary_chunksize', '50',
-                                      '--clusterAlg', 'greedy', '-sa', '0.95', '-pa', '0.99', '-g'] + genomes)
+                                      '--greedy_secondary_clustering', '-sa', '0.95', '-pa', '0.99', '-g'] + genomes)
     Controller().parseArguments(args)
     wd = WorkDirectory(wd_loc2)
     CSdb = wd.get_db('Cdb')

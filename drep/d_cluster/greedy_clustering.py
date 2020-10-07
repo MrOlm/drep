@@ -149,7 +149,7 @@ def generate_greedy_cdb(bdb, rep2cluster, genome2cluster, algorithm, ani_thresh,
 
     cdb = bdb[['genome']]
     cdb['secondary_cluster'] = cdb['genome'].map(genome2cluster)
-    cdb['threshold'] = ani_thresh
+    cdb['threshold'] = 1 - ani_thresh
     cdb['cluster_method'] = 'greedy'
     cdb['comparison_algorithm'] = algorithm
     cdb['greedy_representative'] = [g in reps for g in cdb['genome']]

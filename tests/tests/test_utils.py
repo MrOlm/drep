@@ -125,9 +125,14 @@ class TestingClass():
             shutil.rmtree(self.wd_loc)
         os.mkdir(self.wd_loc)
 
+        if os.path.isdir(self.test_dir):
+            shutil.rmtree(self.test_dir)
+        os.mkdir(self.test_dir)
+
 def load_common_self():
     self = TestingClass()
     self.genomes = load_test_genomes()
+    self.test_dir = load_random_test_dir()
     self.wd_loc = load_test_wd_loc()
     self.s_wd_loc = load_solutions_wd()
     self.zipped_genome = load_zipped_genome()
@@ -136,6 +141,10 @@ def load_common_self():
     if os.path.isdir(self.wd_loc):
         shutil.rmtree(self.wd_loc)
     os.mkdir(self.wd_loc)
+
+    if os.path.isdir(self.test_dir):
+        shutil.rmtree(self.test_dir)
+    os.mkdir(self.test_dir)
 
     return self
 

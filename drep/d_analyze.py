@@ -33,7 +33,8 @@ import drep.d_filter
 
 import traceback
 
-#warnings.filterwarnings("ignore", category=MatplotlibDeprecationWarning)
+import warnings
+warnings.filterwarnings("ignore")#, category='all')
 
 def d_analyze_wrapper(wd, **kwargs):
     '''
@@ -52,6 +53,7 @@ def d_analyze_wrapper(wd, **kwargs):
 
     # Load the workDirectory
     wd = drep.WorkDirectory.WorkDirectory(wd)
+    debug = kwargs.get('debug', False)
 
     # Figure out what plots to make
     options = ['1','2','3','4','5','6']
@@ -67,7 +69,8 @@ def d_analyze_wrapper(wd, **kwargs):
             mash_dendrogram_from_wd(wd, plot_dir=plot_dir)
         except BaseException as e:
             logging.info('Failed to make plot #1: ' + str(e))
-            traceback.print_exc()
+            if debug:
+                traceback.print_exc()
 
     # 2) Secondary clustering dendrogram
     if '2' in to_plot:
@@ -75,7 +78,8 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #2: ' + str(e))
-            traceback.print_exc()
+            if debug:
+                traceback.print_exc()
 
     # 3) Secondary clusters MDS
     if '3' in to_plot:
@@ -83,7 +87,8 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_secondary_mds_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #3: ' + str(e))
-            traceback.print_exc()
+            if debug:
+                traceback.print_exc()
 
     # 4) Comparison scatterplots
     if '4' in to_plot:
@@ -91,7 +96,8 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_scatterplots_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #4: ' + str(e))
-            traceback.print_exc()
+            if debug:
+                traceback.print_exc()
 
     # 5) Complex bin scorring
     if '5' in to_plot:
@@ -99,7 +105,8 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_binscoring_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #5: ' + str(e))
-            traceback.print_exc()
+            if debug:
+                traceback.print_exc()
 
     # 6) Winning plot
     if '6' in to_plot:
@@ -107,7 +114,8 @@ def d_analyze_wrapper(wd, **kwargs):
             plot_winners_from_wd(wd, plot_dir, **kwargs)
         except BaseException as e:
             logging.info('Failed to make plot #6: ' + str(e))
-            traceback.print_exc()
+            if debug:
+                traceback.print_exc()
 
 
 def mash_dendrogram_from_wd(wd, plot_dir=False):
@@ -135,6 +143,10 @@ def mash_dendrogram_from_wd(wd, plot_dir=False):
         logging.error("Skipping plot 1 - you don't have all required dataframes")
         return
 
+    if 'genome_chunk' in list(Mdb.columns):
+        logging.error("Skipping plot 1 - cannot generate with multiround_primary_clustering enabled")
+        return
+
     # Make the plot
     logging.info("Plotting primary dendrogram")
     plot_MASH_dendrogram(Mdb, Cdb, Plinkage, threshold = PL_thresh,\
@@ -152,13 +164,6 @@ def plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs):
         Makes plot
     '''
 
-    # Initialize a .pdf
-    if plot_dir != False:
-        pp = PdfPages(plot_dir + 'Secondary_clustering_dendrograms.pdf')
-        save = True
-    else:
-        save = False
-
     # Load required databases
     try:
         Ndb = wd.get_db('Ndb', return_none=False)
@@ -166,6 +171,18 @@ def plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs):
     except:
         logging.error("Skipping plot 2 - you don't have all required dataframes")
         return
+
+    if len(Cdb['cluster_method'] == 'greedy') > 0:
+        logging.error("Skipping plot 2 - cannot generate with greedy_secondary_clustering enabled")
+        return
+
+    # Initialize a .pdf
+    if plot_dir != False:
+        pp = PdfPages(plot_dir + 'Secondary_clustering_dendrograms.pdf')
+        save = True
+    else:
+        save = False
+
     logging.info("Plotting secondary dendrograms")
 
     # Load winner database if it exists

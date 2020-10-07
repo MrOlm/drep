@@ -66,7 +66,7 @@ class GenomeClusterController(object):
                             between 0-1, not 1-100".format(v, self.kwargs.get(v)))
 
         # Load length and N50 if you need it
-        if self.kwargs.get('multiround_primary_clustering', False) | (self.kwargs.get('clusterAlg', False)  == 'greedy'):
+        if self.kwargs.get('multiround_primary_clustering', False) | (self.kwargs.get('greedy_secondary_clustering', False)):
             Bdb = drep.d_filter._add_lengthN50(Bdb, Bdb)
 
         # Store the genomes

@@ -357,7 +357,7 @@ def test_all_vs_all_mash(self):
     # Run it under reduced chuck size
     Mdb, Cdb, cluster_ret = drep.d_cluster.compare_utils.all_vs_all_MASH(bdb, data_folder, primary_chunksize=2, multiround_primary_clustering=True)
 
-    assert len(Mdb) == 25
+    assert len(Mdb) != 25
     db = Mdb[(Mdb['genome1'] == 'Enterococcus_faecalis_YI6-1.fna') & \
         (Mdb['genome2'] == 'Enterococcus_faecalis_TX0104.fa')]
     d = float(db['dist'].tolist()[0])
