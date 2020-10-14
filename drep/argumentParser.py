@@ -168,11 +168,10 @@ def parse_args(args):
 
     # Make a parent parser for scoring
     scoring_parent = argparse.ArgumentParser(add_help=False)
-    Sflags = scoring_parent.add_argument_group('SCORING CRITERIA\n' +
-                                               "Based off of the formula: \nA*Completeness - B*Contamination + C*(Contamination * (strain_heterogeneity/100)) " + \
-                                               "+ D*log(N50) + E*log(size)\n\n" + \
-                                               "A = completeness_weight; B = contamination_weight; C = strain_heterogeneity_weight; " + \
-                                               "D = N50_weight; E = size_weight")
+    Sflags = scoring_parent.add_argument_group(
+        "SCORING CRITERIA\nBased off of the formula: \nA*Completeness - B*Contamination + C*(Contamination * ("
+        "strain_heterogeneity/100)) + D*log(N50) + E*log(size) + F*(centrality - S_ani)\n\nA = completeness_weight; B = "
+        "contamination_weight; C = strain_heterogeneity_weight; D = N50_weight; E = size_weight; F = cent_weight")
 
     Sflags.add_argument("-comW", "--completeness_weight", default=1, type=float,
                         help='completeness weight')
@@ -184,6 +183,8 @@ def parse_args(args):
                         help='weight of log(genome N50)')
     Sflags.add_argument("-sizeW", "--size_weight", default=0, type=float,
                         help='weight of log(genome size)')
+    Sflags.add_argument("-centW", "--centrality_weight", default=1, type=float,
+                        help='Weight of (centrality - S_ani)')
 
     # Make a parent parser for evaluate
     evaluate_parent = argparse.ArgumentParser(add_help=False)

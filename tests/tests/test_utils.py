@@ -129,13 +129,20 @@ class TestingClass():
             shutil.rmtree(self.test_dir)
         os.mkdir(self.test_dir)
 
+        if os.path.isdir(self.working_wd_loc):
+            shutil.rmtree(self.working_wd_loc)
+
 def load_common_self():
+    # Set up
     self = TestingClass()
+
     self.genomes = load_test_genomes()
+    self.zipped_genome = load_zipped_genome()
     self.test_dir = load_random_test_dir()
+
     self.wd_loc = load_test_wd_loc()
     self.s_wd_loc = load_solutions_wd()
-    self.zipped_genome = load_zipped_genome()
+    self.working_wd_loc = load_test_wd_loc_2()
 
     importlib.reload(logging)
     if os.path.isdir(self.wd_loc):
@@ -145,6 +152,19 @@ def load_common_self():
     if os.path.isdir(self.test_dir):
         shutil.rmtree(self.test_dir)
     os.mkdir(self.test_dir)
+
+    if os.path.isdir(self.working_wd_loc):
+        shutil.rmtree(self.working_wd_loc)
+
+    # copy over the data from solutions directory
+    os.mkdir(self.working_wd_loc)
+    shutil.copytree(os.path.join(self.s_wd_loc, 'data'), \
+                    os.path.join(self.working_wd_loc, 'data'))
+    shutil.copytree(os.path.join(self.s_wd_loc, 'data_tables'), \
+                    os.path.join(self.working_wd_loc, 'data_tables'))
+    shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
+                    os.path.join(self.working_wd_loc, 'log'))
+    importlib.reload(logging)
 
     return self
 

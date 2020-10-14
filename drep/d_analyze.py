@@ -15,6 +15,7 @@ matplotlib.use('Agg')
 import logging
 import math
 import os
+import sys
 
 import pandas as pd
 import seaborn as sns
@@ -172,7 +173,7 @@ def plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs):
         logging.error("Skipping plot 2 - you don't have all required dataframes")
         return
 
-    if len(Cdb['cluster_method'] == 'greedy') > 0:
+    if len(Cdb[Cdb['cluster_method'] == 'greedy']) > 0:
         logging.error("Skipping plot 2 - cannot generate with greedy_secondary_clustering enabled")
         return
 

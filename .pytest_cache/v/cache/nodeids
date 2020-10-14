@@ -60,5 +60,9 @@
   "tests/tests/test_unit.py::test_scoring",
   "tests/tests/test_unit.py::test_n50",
   "tests/tests/test_greedy.py::test_multiround_primary_clustering_1",
-  "tests/tests/test_greedy.py::test_greedy_secondary_clustering_1"
+  "tests/tests/test_greedy.py::test_greedy_secondary_clustering_1",
+  "tests/tests/test_choose.py::test_centrality_1",
+  "tests/tests/test_greedy.py::test_multiround_primary_clustering_2",
+  "tests/tests/test_greedy.py::test_greedy_secondary_clustering_2",
+  "tests/tests/test_choose.py::test_centrality_2"
 ]

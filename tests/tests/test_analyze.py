@@ -13,47 +13,54 @@ from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
 
-class Empty():
-    pass
+# class Empty():
+#     pass
+#
+# @pytest.fixture()
+# def self():
+#     # Set up
+#     self = Empty()
+#     self.s_wd_loc = test_utils.load_solutions_wd()
+#     self.working_wd_loc = test_utils.load_test_wd_loc()
+#     self.test_dir = test_utils.load_random_test_dir()
+#
+#     logging.shutdown()
+#     if os.path.isdir(self.working_wd_loc):
+#         shutil.rmtree(self.working_wd_loc)
+#     if os.path.isdir(self.test_dir):
+#         shutil.rmtree(self.test_dir)
+#
+#     # copy over the data from solutions directory
+#     os.mkdir(self.working_wd_loc)
+#     os.mkdir(self.test_dir)
+#     shutil.copytree(os.path.join(self.s_wd_loc, 'data'), \
+#                     os.path.join(self.working_wd_loc, 'data'))
+#     shutil.copytree(os.path.join(self.s_wd_loc, 'data_tables'), \
+#                     os.path.join(self.working_wd_loc, 'data_tables'))
+#     shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
+#                     os.path.join(self.working_wd_loc, 'log'))
+#
+#     # edit Bbd to point to the right genomes
+#     bdb = drep.d_cluster.utils.load_genomes(test_utils.load_test_genomes())
+#     bdb.to_csv(os.path.join(self.working_wd_loc, 'data_tables', 'Bdb.csv'), \
+#                index=False)
+#
+#     importlib.reload(logging)
+#
+#     yield self
+#
+#     logging.shutdown()
+#     if os.path.isdir(self.working_wd_loc):
+#         shutil.rmtree(self.working_wd_loc)
+#     if os.path.isdir(self.test_dir):
+#         shutil.rmtree(self.test_dir)
 
 @pytest.fixture()
 def self():
-    # Set up
-    self = Empty()
-    self.s_wd_loc = test_utils.load_solutions_wd()
-    self.working_wd_loc = test_utils.load_test_wd_loc()
-    self.test_dir = test_utils.load_random_test_dir()
-
-    logging.shutdown()
-    if os.path.isdir(self.working_wd_loc):
-        shutil.rmtree(self.working_wd_loc)
-    if os.path.isdir(self.test_dir):
-        shutil.rmtree(self.test_dir)
-
-    # copy over the data from solutions directory
-    os.mkdir(self.working_wd_loc)
-    os.mkdir(self.test_dir)
-    shutil.copytree(os.path.join(self.s_wd_loc, 'data'), \
-                    os.path.join(self.working_wd_loc, 'data'))
-    shutil.copytree(os.path.join(self.s_wd_loc, 'data_tables'), \
-                    os.path.join(self.working_wd_loc, 'data_tables'))
-    shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
-                    os.path.join(self.working_wd_loc, 'log'))
-
-    # edit Bbd to point to the right genomes
-    bdb = drep.d_cluster.utils.load_genomes(test_utils.load_test_genomes())
-    bdb.to_csv(os.path.join(self.working_wd_loc, 'data_tables', 'Bdb.csv'), \
-               index=False)
-
-    importlib.reload(logging)
-
+    self = test_utils.load_common_self()
     yield self
+    self.teardown()
 
-    logging.shutdown()
-    if os.path.isdir(self.working_wd_loc):
-        shutil.rmtree(self.working_wd_loc)
-    if os.path.isdir(self.test_dir):
-        shutil.rmtree(self.test_dir)
 
 # class test_analyze():
 #     def __init__(self):
@@ -214,7 +221,7 @@ def test_plotting_functional_1(self):
     #     ['a'])
     # controller = Controller()
     # controller.parseArguments(args)
-    drep.d_analyze.d_analyze_wrapper(self.working_wd_loc, plots=['a'])
+    drep.d_analyze.d_analyze_wrapper(self.working_wd_loc, plots=['a'], debug=True)
 
     FIGS = ['Cluster_scoring.pdf', 'Clustering_scatterplots.pdf', \
         'Primary_clustering_dendrogram.pdf', 'Secondary_clustering_dendrograms.pdf', \

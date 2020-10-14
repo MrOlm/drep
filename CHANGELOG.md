@@ -13,6 +13,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 - Make plotting only give tracebacks when run in debug mode
 - Remove most of the options (just `dereplicate` and `compare` remain)
 - Add greedy clustering support! Both `multiround_primary_clustering` and `greedy_secondary_clustering`
+- Add centrality support; also handle centrality with greedy_secondary_clustering
 
 ## [2.6.2] - 2020-05-28
 - Log information about GenomeInformation when loading it

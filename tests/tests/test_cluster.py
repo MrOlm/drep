@@ -310,6 +310,7 @@ def test_fastANI(self):
 
     assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
 
+@pytest.mark.skip(reason="You don't need to run this")
 def test_time_compare_genomes(self):
     '''
     Time d_cluster.compare_genomes

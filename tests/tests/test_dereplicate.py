@@ -115,7 +115,7 @@ def test_dereplicate_1(self):
     # Verify
     s_wd = WorkDirectory(s_wd_loc)
     wd   = WorkDirectory(wd_loc)
-    test_utils.ensure_identicle(s_wd, wd, skip=['Bdb', 'Mdb'])
+    test_utils.ensure_identicle(s_wd, wd, skip=['Bdb', 'Mdb', 'Sdb', 'Wdb', 'genomeInformation', 'Widb'])
 
     # Perform sanity check to make sure solutions directiory isn't
     # being overwritten

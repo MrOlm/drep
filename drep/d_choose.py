@@ -67,6 +67,10 @@ def d_choose_wrapper(wd, **kwargs):
         Gdb = drep.d_filter.calc_genome_info(bdb['location'].tolist())
     else:
         Gdb = drep.d_filter._get_run_genomeInfo(wd, bdb, **kwargs)
+
+    if kwargs.get('centrality_weight', 0) > 0:
+        Gdb = add_centrality(wd, Gdb, **kwargs)
+
     wd.store_db(Gdb, 'genomeInformation', overwrite=True)
 
     # Call a method with Cdb and Chdb, returning Sdb (scored db) and Wdb (winner db)
@@ -180,18 +184,24 @@ def score_row(row, **kwargs):
     n50W =  kwargs.get('N50_weight',1)
     sizeW = kwargs.get('size_weight',1)
     strW =  kwargs.get('strain_heterogeneity_weight',1)
+    centW = kwargs.get('centrality_weight', 0)
+
+    # For centrality calculations
+    S_ani = kwargs.get('S_ani', 0.99)
+    if centW > 0:
+        cent = row['centrality'].tolist()[0]
+    else:
+        cent = 0
+
+    n50 = float(row['N50'].tolist()[0])
+    size = float(row['length'].tolist()[0])
 
     if kwargs.get('ignoreGenomeQuality', False):
-        n50 = float(row['N50'].tolist()[0])
-        size = float(row['length'].tolist()[0])
-
-        score = (np.log10(n50) * n50W) + (np.log10(size) * sizeW)
+        score = (np.log10(n50) * n50W) + (np.log10(size) * sizeW) + ((cent - S_ani) * centW)
         return score
 
     com = float(row['completeness'].tolist()[0])
     con = float(row['contamination'].tolist()[0])
-    n50 = float(row['N50'].tolist()[0])
-    size = float(row['length'].tolist()[0])
 
     if 'strain_heterogeneity' in row:
         strh = float(row['strain_heterogeneity'].tolist()[0])
@@ -199,7 +209,7 @@ def score_row(row, **kwargs):
         strh = 0
 
     score = (com * comW) - (con * conW) + (strW * (con * (strh/100))) \
-        + (np.log10(n50) * n50W) + (np.log10(size) * sizeW)
+        + (np.log10(n50) * n50W) + (np.log10(size) * sizeW) + ((cent - S_ani) * centW)
     return score
 
 def _validate_choose_arguments(wd, **kwargs):
@@ -219,3 +229,56 @@ def _validate_choose_arguments(wd, **kwargs):
         sys.exit()
 
     return wd.get_db('Cdb')
+
+def add_centrality(wd, Gdb, **kwargs):
+    """
+    Add a columns named "centrality" to genome info
+    """
+    Ndb = wd.get_db('Ndb')
+    Cdb = wd.get_db('Cdb')
+
+    if Cdb['cluster_method'].iloc[0] == 'greedy':
+        Ndb = calc_centrality_from_scratch(wd.get_db('Bdb'), Cdb, os.path.join(wd.get_dir('MASH'), 'centrality_calculations/'))
+
+    g2c = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+    c2s = Cdb['secondary_cluster'].value_counts().to_dict()
+
+    Ndb['cluster_1'] = Ndb['reference'].map(g2c)
+    Ndb['cluster_2'] = Ndb['querry'].map(g2c)
+    Ndb = Ndb[Ndb['cluster_1'] == Ndb['cluster_2']]
+    Ndb = Ndb[Ndb['reference'] != Ndb['querry']]
+
+    genome2centrality = {}
+    for cluster, ndb in Ndb.groupby('cluster_1'):
+        #print(f"Cluster {cluster} has {c2s[cluster]} members and {len(ndb)} comps")
+
+        mlen = c2s[cluster]
+        assert len(ndb) == (mlen * mlen) - mlen
+        for genome, db in ndb.groupby('reference'):
+            genome2centrality[genome] = db['ani'].mean()
+
+    Gdb['centrality'] = Gdb['genome'].map(genome2centrality).fillna(0)
+    return Gdb
+
+def calc_centrality_from_scratch(Bdb, Cdb, data_folder):
+    """
+    Calculate centrality from scratch using Mash
+    """
+    logging.info("Calculating centrality using Mash")
+
+    # 1) Run calculations
+    dbs = []
+    Xdb = pd.merge(Cdb, Bdb, on='genome', how='left')
+    for cluster, bdb in Xdb.groupby('secondary_cluster'):
+        if len(bdb) <= 1:
+            continue
+
+        df = os.path.join(data_folder, cluster + '/')
+        mdb, cdb, cluster_ret = drep.d_cluster.compare_utils.all_vs_all_MASH(bdb, df, MASH_sketch=10000)
+        mdb['ani'] = 1 - mdb['dist']
+        mdb['cluster'] = cluster
+        mdb = mdb.rename(columns={'genome1':'reference', 'genome2':'querry'})
+        dbs.append(mdb[['reference', 'querry', 'ani', 'cluster']])
+
+    Mdb = pd.concat(dbs).reset_index(drop=True)
+    return Mdb
