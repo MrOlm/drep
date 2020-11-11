@@ -165,6 +165,11 @@ def parse_args(args):
                               "be done with single linkage clustering. Only works for fastANI S_algorithm option at "
                               "the moment",
                          action='store_true')
+    GRflags.add_argument("--run_tertiary_clustering",
+                            help="Run an additional round of clustering on the final genome set. This is especially "
+                                 "useful when greedy clustering is performed and/or to handle cases where similar genomes "
+                                 "end up in different primary clusters. Only works with dereplicate, not compare.",
+                            action='store_true')
 
     # Make a parent parser for scoring
     scoring_parent = argparse.ArgumentParser(add_help=False)

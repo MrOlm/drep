@@ -64,5 +64,7 @@
   "tests/tests/test_choose.py::test_centrality_1",
   "tests/tests/test_greedy.py::test_multiround_primary_clustering_2",
   "tests/tests/test_greedy.py::test_greedy_secondary_clustering_2",
-  "tests/tests/test_choose.py::test_centrality_2"
+  "tests/tests/test_choose.py::test_centrality_2",
+  "tests/tests/test_evaluate.py::test_tertiary_clustering_1",
+  "tests/tests/test_evaluate.py::test_tertiary_clustering_2"
 ]

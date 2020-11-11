@@ -19,6 +19,11 @@ def d_evaluate_wrapper(wd,**kwargs):
     wd = drep.WorkDirectory.WorkDirectory(wd)
     logging.debug(str(wd))
 
+    # Run tertiary clustering if that's what you're here to do
+    if kwargs.get('run_tertiary_clustering', False):
+        logging.info("Running tertiary clustering on genome representatives")
+        run_tertiary_clustering(wd, **kwargs)
+
     # Determine what to evaluate
     evs = kwargs.get('evaluate')
     options = ['1','2','3']
@@ -270,8 +275,60 @@ def evaluate_winners(wd, **kwrags):
     Widb = pd.DataFrame(Table)
     return Widb
 
-def test_evaluate():
-    print("Write this you lazy bum")
+def run_tertiary_clustering(wd, **kwargs):
+    # Create a new workdir inside data
+    new_wd_loc = wd.get_dir('data') + 'tertiary_clustering'
+    nWd = drep.WorkDirectory.WorkDirectory(new_wd_loc)
 
-if __name__ == '__main__':
-	test_evaluate()
+    # Make a copy of the kwargs
+    kwargs_copy = kwargs.copy()
+    if 'genomes' in kwargs_copy:
+        del kwargs_copy['genomes']
+    kwargs_copy['P_ani'] = kwargs_copy['P_ani'] - 0.05
+    kwargs_copy['multiround_primary_clustering'] = False
+    kwargs_copy['greedy_secondary_clustering'] = False
+
+    # Figure out what genomes you're going to compare and make a new Bdb
+    Bdb = wd.get_db('Bdb')
+    Cdb = wd.get_db('Cdb')
+    Wdb = wd.get_db('Wdb')
+    BBdb = Bdb[Bdb['genome'].isin(Wdb['genome'].tolist())]
+    nWd.store_db(BBdb, 'Bdb')
+
+    # Copy over genome info for choose
+    for name in ['genomeInfo', 'Chdb']:
+        if wd.hasDb(name):
+            nWd.store_db(wd.get_db(name), name)
+
+    # Run the comparison
+    drep.d_cluster.controller.d_cluster_wrapper(new_wd_loc, **kwargs_copy)
+
+    # Reconsile results for Cdb
+    nWd = drep.WorkDirectory.WorkDirectory(new_wd_loc)
+    nCdb = nWd.get_db('Cdb')
+
+    Cdb['original_secondary_cluster'] = Cdb['secondary_cluster']
+    del Cdb['secondary_cluster']
+    Cdb = pd.merge(Cdb, nCdb[['genome', 'secondary_cluster']], on='genome', how='left')
+
+    rep_cdb = Cdb.dropna()
+    old2new = rep_cdb.set_index('original_secondary_cluster')['secondary_cluster'].to_dict()
+    Cdb['secondary_cluster'] = Cdb['original_secondary_cluster'].map(old2new)
+
+    # Rename clusters
+    old2new_names = {}
+    for clust, db in Cdb.groupby('secondary_cluster'):
+        if len(db['original_secondary_cluster'].unique()) == 1:
+            old2new_names[clust] = db['original_secondary_cluster'].iloc[0]
+        else:
+            new_name =  f"{'.'.join(sorted(list(set([x.split('_')[0] for x in list(db['original_secondary_cluster'].unique())]))))}" + \
+                        f"_{'.'.join(sorted(list(set([x.split('_')[1] for x in list(db['original_secondary_cluster'].unique())]))))}"
+            old2new_names[clust] = new_name
+            logging.debug(f"Clusters {list(db['original_secondary_cluster'].unique())} were merged into {new_name}")
+    Cdb['secondary_cluster'] = Cdb['secondary_cluster'].map(old2new_names)
+
+    # Store new Cdb
+    wd.store_db(Cdb, 'Cdb')
+
+    # Re-run choose
+    drep.d_choose.d_choose_wrapper(wd.location, **kwargs_copy)

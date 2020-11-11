@@ -19,7 +19,7 @@ class GenomeClusterController(object):
         # Handle special kwargs
         self.debug = kwargs.get('debug', False)
 
-    def main(self):
+    def main(self, store_output=True):
         """
         Main entrypoint for the dRep cluster operation
 
@@ -35,7 +35,10 @@ class GenomeClusterController(object):
         self.run_secondary_clustering()
 
         # Save the output
-        self.store_output()
+        if store_output:
+            self.store_output()
+        else:
+            self.return_output()
 
     def parse_cluster_arguments(self):
         """
@@ -163,6 +166,9 @@ class GenomeClusterController(object):
 
         # Log arguments
         self.wd.store_special('cluster_log', self.kwargs)
+
+    def return_output(self):
+        return self.Cdb, self.Mdb, self.Ndb
 
     def deal_with_nucmer_presets(self):
         if self.kwargs.get('n_preset', None) != None:

@@ -89,6 +89,11 @@ class Controller():
         self.setup_logger(wd.get_loc('log'))
         logging.debug(str(args))
 
+        # Do some testing
+        if args.run_tertiary_clustering:
+            assert args.operation == "dereplicate", "Can only run tertiary clustering with dereplicate"
+
+
         # Call the appropriate workflow
         if args.operation == "dereplicate":
             self.dereplicate_operation(**vars(args))
