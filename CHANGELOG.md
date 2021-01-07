@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [3.0.0] - UNCOMITTED
+## [3.0.0] - 2021-01-07
 - Refactoring the test suite and the d_cluster module
 - Adding help to the -g option
 - Bare-bones support for gzipped genomes (lots of dependencies dont handle them)
@@ -13,7 +13,7 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 - Make plotting only give tracebacks when run in debug mode
 - Remove most of the options (just `dereplicate` and `compare` remain)
 - Add greedy clustering support! Both `multiround_primary_clustering` and `greedy_secondary_clustering`
-- Add centrality support; also handle centrality with greedy_secondary_clustering
+- Add centrality support; also handle centrality with greedy_secondary_clustering (will be calculated with Mash)
 - Add --run_tertiary_clustering. This feature runs a final dRep job within the original dRep folder,
   and adjusts Cdb and Wdb accordingly (see `run_tertiary_clustering` in `d_evaluate.py`)
 
