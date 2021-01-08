@@ -111,9 +111,7 @@ For example, say you've already run the dereplicate_wf using gANI and want to ru
 API
 ---
 
-See :doc:`source/drep` for the API to dRep.
-
-For example::
+See :doc:`source/drep` for the API to dRep. For example::
 
   from drep.WorkDirectory import WorkDirectory
 
@@ -122,4 +120,6 @@ For example::
   Cdb = wd.get_db('Cdb')
   ...
 
-This will work for all datatables
+This will work for all datatables.
+
+Be warned that the API is not very well maintained or documented, and you'll likely have to do a bit of digging into the source code if you want to use it extensively.
