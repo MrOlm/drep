@@ -1,34 +1,30 @@
 Quick Start
 ===========
 
-The functionality of dRep is broken up into modules. The modules can be run separately (see :doc:`module_descriptions`), or together in workflows. To see a list of the available modules, check the help::
+The functionality of dRep is broken up into modules. To see a list of the available modules, check the help::
 
- $ dRep -h
+    $ dRep -h
+                    ...::: dRep v3.0.0 :::...
 
-                 ...::: dRep v2.4.0 :::...
+      Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2020)
 
-  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017
+      See https://drep.readthedocs.io/en/latest/index.html for documentation
+      Choose one of the operations below for more detailed help.
 
-  Choose one of the operations below for more detailed help. See https://drep.readthedocs.io/en/latest/index.html for documentation
-  Example: dRep dereplicate -h
+      Example: dRep dereplicate -h
 
-  Workflows:
-  compare         -> Perform rapid pair-wise comparison on a list of genomes
-  dereplicate     -> De-replicate a list of genomes
+      Commands:
+        compare            -> Compare and cluster a set of genomes
+        dereplicate        -> De-replicate a set of genomes
+        check_dependencies -> Check which dependencies are properly installed
 
-  Single operations:
-  filter          -> Filter a genome list based on size, completeness, and/or contamination
-  cluster         -> Compare and cluster a genome list based on MASH and ANIn/gANI
-  choose          -> Choose the best genome from each genome cluster
-  evaluate        -> Evaluate genome de-replication
-  bonus           -> Other random operations (determine taxonomy / check dependencies)
 
-De-replication
+Dereplication
 ---------------
 
-De-replication is the process of identifying groups of genomes that are the "same" in a genome set, and removing all but the "best" genome from each redundant set. How similar genomes need to be to be considered "same", how the "best" genome is chosen,  and other options can be adjusted (see :doc:`choosing_parameters`)
+Dereplication is the process of identifying groups of genomes that are the "same" in a genome set and identifying the "best" genome from each set. How similar genomes need to be to be considered "same" and how the "best" genome is chosen are study-specific decisions that can be adjusted (see :doc:`choosing_parameters`)
 
-To de-replicate a set of genomes, run the following command::
+To dereplicate a set of genomes, run the following command::
 
  $ dRep dereplicate outout_directory -g path/to/genomes/*.fasta
 

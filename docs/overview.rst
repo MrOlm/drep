@@ -39,3 +39,25 @@ The steps to this process are:
 * Bin each assembly (and co-assembly) separately using your favorite binner
 * Pull the bins from all assemblies together and run dRep on them
 * Perform downstream analysis on the de-replicated genome list
+
+.. note::
+
+  See the publication `To Dereplicate or Not To Dereplicate? <https://msphere.asm.org/content/5/3/e00971-19>`_ for an outside perspective on the pro's and con's of dereplication
+
+A dRep based metagenomic workflow
+----------------------------------
+
+One method of genome-resolved metagenomic analysis that I am fond of involves the following steps:
+
+1) Assemble and bin all metagenomic samples to generate a large database of metagenome-assembled genomes (MAGs)
+
+2) Dereplicate all of these genomes into a set of species-level representative genomes (SRGs). This is done with dRep using a 95% ANI threshold.
+
+3) Create a mapping database from all SRGs, and map all metagenomes to this database. Each sample will now be represented by a `.bam` file mapped against the same database.
+
+4) Profile all .bam files using `inStrain <https://github.com/MrOlm/instrain>`_. This provides a huge number of metrics about the species-level composition of each metagenomes.
+
+5) Preform strain-level comparisons between metagenomes using `inStrain <https://github.com/MrOlm/instrain>`_
+
+Some example publications in which this workflow is used are `here <https://doi.org/10.1101/2020.01.22.915579>`_ and `there <https://advances.sciencemag.org/content/5/12/eaax5727>`_.
+
