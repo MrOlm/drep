@@ -30,7 +30,7 @@ $ dRep dereplicate outout_directory -g path/to/genomes/*.fasta
 
 ### Make sure dependencies are properly installed:
 ```
-$ drep bonus output_directory --check_dependencies
+$ drep check_dependencies
 ```
 
 ## Dependencies
