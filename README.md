@@ -45,3 +45,16 @@ $ drep check_dependencies
 
 ### Accessory
 * [Centrifuge](https://omictools.com/centrifuge-tool) can be used to perform rough taxonomic assignment of bins
+
+## Dependencies
+### Near Essential
+* [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>) - Makes primary clusters (v1.1.1 confirmed works)
+* [MUMmer](http://mummer.sourceforge.net/) - Performs default ANIm comparison method (v3.23 confirmed works)
+
+### Optional
+
+* [fastANI](https://github.com/ParBLiSS/FastANI) - A fast secondary clustering algorithm
+* [CheckM](http://ecogenomics.github.io/CheckM/)_ - Determines contamination and completeness of genomes (v1.0.7 confirmed works)
+* [gANI (aka ANIcalculator)](https://ani.jgi-psf.org/html/download.php?) - Performs gANI comparison method (v1.0 confirmed works)
+* [Prodigal](http://prodigal.ornl.gov/) - Used be both checkM and gANI (v2.6.3 confirmed works)
+* [NSimScan](https://pubmed.ncbi.nlm.nih.gov/27153714/) - Only needed for goANI algorithm (open source version of gANI)

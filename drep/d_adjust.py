@@ -7,6 +7,7 @@ import os
 import shutil
 import numpy as np
 import pickle
+import sys
 
 import drep.WorkDirectory
 import drep as dm
@@ -86,12 +87,14 @@ def remove_primary_cluster(Rcluster, wd, **kwargs):
     Wdb['pclust'] = [x.split('_')[0] for x in Wdb['cluster'].tolist()]
     Rgenomes = Wdb['genome'][Wdb['pclust'] == Rcluster].tolist()
     for Rgenome in Rgenomes:
-        assert os.path.isfile('{0}/dereplicated_genomes/{1}'.format(wd.location, Rgenome))
+        if not os.path.isfile('{0}/dereplicated_genomes/{1}'.format(wd.location, Rgenome)):
+            raise ValueError()
 
     # Find the pickle to remove
     Rpickle = "{0}/data/Clustering_files/secondary_linkage_cluster_{1}.pickle".format(\
             wd.location, Rcluster)
-    assert os.path.isfile(Rpickle)
+    if not os.path.isfile(Rpickle):
+        raise ValueError()
 
     logging.info("will remove cluster {0}, genomes {1}, and pickle {2}".format(Rcluster, \
             ' '.join(Rgenomes), os.path.basename(Rpickle)))
@@ -124,7 +127,8 @@ def remove_secondary_cluster(Rcluster, wd, **kwargs):
 
     # Find the genome to remove
     Rgenome = Wdb['genome'][Wdb['cluster'] == Rcluster].tolist()[0]
-    assert os.path.isfile('{0}/dereplicated_genomes/{1}'.format(wd.location, Rgenome))
+    if not os.path.isfile('{0}/dereplicated_genomes/{1}'.format(wd.location, Rgenome)):
+        raise ValueError('Bug')
 
     logging.info("will remove {0} and genome {1}".format(Rcluster, Rgenome))
 

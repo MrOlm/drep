@@ -67,8 +67,8 @@ def make_dir(outdirname,dry=False,overwrite=False):
             #shutil.rmtree(outdirname, ignore_errors=True)
             #os.makedirs(outdirname)
         else:
-            assert False, "{0} already exsists! Will not overwrite with current settings".\
-                            format(outdirname)
+            raise ValueError("{0} already exsists! Will not overwrite with current settings".\
+                            format(outdirname))
     else:
         os.makedirs(outdirname)
 
@@ -80,8 +80,8 @@ def clobber_dir(outdirname,dry=False,overwrite=False):
             shutil.rmtree(outdirname, ignore_errors=True)
             os.makedirs(outdirname)
         else:
-            assert False, "{0} already exsists! Will not overwrite with current settings".\
-                            format(outdirname)
+            raise ValueError("{0} already exsists! Will not overwrite with current settings".\
+                            format(outdirname))
     else:
         os.makedirs(outdirname)
 
@@ -97,5 +97,5 @@ def get_exe(name):
     '''
     loc, works = drep.d_bonus.find_program(name)
     if works == False:
-        assert False, "{0} isn't working- make sure its installed".format(name)
+        raise ValueError("{0} isn't working- make sure its installed".format(name))
     return loc

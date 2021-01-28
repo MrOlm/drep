@@ -359,7 +359,8 @@ def add_taxonomy(Bdb,Tdb):
     g2t = {}
     for genome in Tdb['genome'].unique():
         d = Tdb[(Tdb['genome'] == genome) & (Tdb['best_hit'] == True)]
-        assert len(d) == 1
+        if len(d) != 1:
+            raise ValueError('Bug')
 
         tax = d['taxonomy'].tolist()[0]
         g2t[genome] = tax

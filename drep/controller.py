@@ -91,7 +91,8 @@ class Controller():
 
         # Do some testing
         if args.run_tertiary_clustering:
-            assert args.operation == "dereplicate", "Can only run tertiary clustering with dereplicate"
+            if args.operation != "dereplicate":
+                raise ValueError("Can only run tertiary clustering with dereplicate")
 
 
         # Call the appropriate workflow

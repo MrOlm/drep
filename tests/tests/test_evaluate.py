@@ -31,7 +31,7 @@ def test_tertiary_clustering_1(self):
     try:
         drep.controller.Controller().parseArguments(args)
         assert False
-    except AssertionError:
+    except ValueError:
         pass
 
     args = drep.argumentParser.parse_args(

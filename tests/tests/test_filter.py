@@ -35,7 +35,7 @@ def self():
     # Teardown
     logging.shutdown()
     if os.path.isdir(self.wd_loc):
-        shutil.rmtree(self.wd_loc)
+       shutil.rmtree(self.wd_loc)
 
 # class test_filter():
 #     def __init__(self):
@@ -190,7 +190,7 @@ def test_filer_functional_1(self):
     genome = genome[0]
 
     args = argumentParser.parse_args(['dereplicate',wd_loc,'-g',genome] \
-        + ['--checkM_method', 'taxonomy_wf'])
+        + ['--checkM_method', 'taxonomy_wf', '--debug'])
     # controller = Controller()
     # controller.parseArguments(args)
 

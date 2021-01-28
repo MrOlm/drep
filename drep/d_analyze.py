@@ -1504,7 +1504,8 @@ def cluster_test_wrapper(wd, **kwargs):
     # Validate arguments
     cluster = kwargs.get('cluster')
     comp_method = kwargs.get('clustering_method','ANIn')
-    assert comp_method in ['ANIn','gANI']
+    if comp_method not in ['ANIn','gANI']:
+        raise ValueError()
     clust_method = kwargs.get('clusterAlg')
     threshold = kwargs.pop('threshold',None)
     cov_thresh = float(kwargs.get('minimum_coverage'))

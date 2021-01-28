@@ -167,7 +167,8 @@ def _validate_genomeInfo(Idb, bdb):
 
     # Make sure it has required columns
     for r in ['completeness', 'contamination', 'genome']:
-        assert r in Idb.columns, "{0} missing from GenomeInfo".format(r)
+        if r not in Idb.columns:
+            raise ValueError("{0} missing from GenomeInfo".format(r))
 
     # Make sure correct datatypes
     for r in ['completeness', 'contamination', 'strain_heterogeneity']:
@@ -186,7 +187,7 @@ def _validate_genomeInfo(Idb, bdb):
     # Make sure it matchs up with bdb
     for genome in list(bdb['genome'].unique()):
         if genome not in Idb['genome'].tolist():
-            assert genome in Idb['genome'].tolist(), "{0} missing from GenomeInfo".format(genome)
+            raise ValueError("{0} missing from GenomeInfo".format(genome))
 
     # Throw warnings if you think this is weird
     for r in ['completeness', 'contamination', 'strain_heterogeneity']:
@@ -261,7 +262,8 @@ def filter_bdb(bdb, Gdb, **kwargs):
 
     # log the number of staring genomes
     start_genomes = list(bdb['genome'].unique())
-    assert len(start_genomes) > 0
+    if len(start_genomes) <= 0:
+        raise ValueError('No genomes')
 
     # Filter Gdb based on the required metrics
     db = Gdb.copy()

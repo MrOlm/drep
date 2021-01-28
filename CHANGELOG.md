@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.0.1] - 2021-01-27
+- Remove some assert statements
+- Really just a version bump to update bioconda requirements
+
 ## [3.0.0] - 2021-01-07
 - Refactoring the test suite and the d_cluster module
 - Adding help to the -g option
