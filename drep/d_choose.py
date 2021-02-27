@@ -101,9 +101,16 @@ def choose_winners(Cdb, Gdb, **kwargs):
     Returns:
         List: [Sdb (scoring database), Wdb (winner database)]
     '''
+    # If you have extra genome weights, load them
+    ew_loc = kwargs.get('extra_weight_table', None)
+    if ew_loc is not None:
+        Edb = load_extra_weight_table(ew_loc, list(Cdb['genome'].unique()), **kwargs)
+    else:
+        Edb = None
+
     # Generate Sdb
     genomes = list(Cdb['genome'].unique())
-    Sdb = score_genomes(genomes, Gdb, **kwargs)
+    Sdb = score_genomes(genomes, Gdb, Edb=Edb, **kwargs)
     logging.debug("Sdb finished")
 
     # Generate Wdb
@@ -111,6 +118,48 @@ def choose_winners(Cdb, Gdb, **kwargs):
     logging.debug("Wdb finished")
 
     return Sdb, Wdb
+
+def load_extra_weight_table(loc, genomes, **kwargs):
+    """
+
+    Args:
+        loc: location of extra weight table
+        genomes: list of genomes you have in Cdb
+        **kwargs: nothing realld
+
+    Returns:
+        dataframe with columns "genome" and "extra_weight"
+
+    """
+    if not os.path.join(loc):
+        logging.error(f"COULD NOT FIND FILE {loc}; WILL NOT PROCESS EXTRA WEIGHTS")
+        return None
+    else:
+        try:
+            db = pd.read_csv(loc, sep='\t', names=['genome', 'extra_weight'])
+            db['extra_weight'] = db['extra_weight'].astype(float)
+        except:
+            f = ''
+            with open(loc, 'r') as o:
+                x = 0
+                for line in o.readlines():
+                    f += line + '\n'
+                    x += 1
+
+                    if x > 10:
+                        break
+
+            logging.error(f"COULD NOT LOAD FILE {loc}; WILL NOT PROCESS EXTRA WEIGHTS. FILE LOOKS LIKE:\n{f}")
+            return None
+
+        wg = set(db['genome'].tolist())
+        gg = set(genomes)
+
+        missing = "\n".join(list(wg-gg)[:10])
+
+        logging.info(f'Loaded {len(db)} extra weights. {len(gg.intersection(wg))} of {len(gg)} genomes have an extra weight. {len(wg - gg)} genomes have a weight but ARE NOT KNOWN BY DREP; here are some examples:\n{missing}')
+
+        return db[db['genome'].isin(gg)]
 
 def pick_winners(Sdb, Cdb):
     '''
@@ -135,7 +184,7 @@ def pick_winners(Sdb, Cdb):
     Wdb = pd.DataFrame(Table)
     return Wdb
 
-def score_genomes(genomes, Gdb, **kwargs):
+def score_genomes(genomes, Gdb, Edb=None, **kwargs):
     '''
     Calculate the scores for a list of genomes
 
@@ -150,17 +199,27 @@ def score_genomes(genomes, Gdb, **kwargs):
         DataFrame: Sdb (scoring database)
     '''
 
+    if Edb is not None:
+        g2e = Edb.set_index('genome')['extra_weight'].to_dict()
+    else:
+        g2e = {}
+
     Table = {'genome':[],'score':[]}
     for genome in genomes:
+        if genome in g2e:
+            extra = g2e[genome]
+        else:
+            extra = 0
         row = Gdb[Gdb['genome'] == genome]
-        score = score_row(row, **kwargs)
+
+        score = score_row(row, extra=extra, **kwargs)
         Table['genome'].append(genome)
         Table['score'].append(score)
 
     Sdb = pd.DataFrame(Table)
     return Sdb
 
-def score_row(row, **kwargs):
+def score_row(row, extra=0, **kwargs):
     '''
     Perform the scoring of a row based on kwargs
 
@@ -175,6 +234,7 @@ def score_row(row, **kwargs):
         strain_heterogeneity_weight: see formula
         N50_weight: see formula
         size_weight: see formula
+        extra = extra weight to apply
 
     Returns:
         float: score
@@ -197,7 +257,7 @@ def score_row(row, **kwargs):
     size = float(row['length'].tolist()[0])
 
     if kwargs.get('ignoreGenomeQuality', False):
-        score = (np.log10(n50) * n50W) + (np.log10(size) * sizeW) + ((cent - S_ani) * centW)
+        score = (np.log10(n50) * n50W) + (np.log10(size) * sizeW) + ((cent - S_ani) * centW) + float(extra)
         return score
 
     com = float(row['completeness'].tolist()[0])
@@ -209,7 +269,7 @@ def score_row(row, **kwargs):
         strh = 0
 
     score = (com * comW) - (con * conW) + (strW * (con * (strh/100))) \
-        + (np.log10(n50) * n50W) + (np.log10(size) * sizeW) + ((cent - S_ani) * centW)
+        + (np.log10(n50) * n50W) + (np.log10(size) * sizeW) + ((cent - S_ani) * centW) + float(extra)
     return score
 
 def _validate_choose_arguments(wd, **kwargs):

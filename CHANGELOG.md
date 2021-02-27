@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.1.0] - 2021-02-25
+- Add the "extra_weight_table" flag to allow uses to add custom extra scores to their genomes
+- Do some automatic checking of genome input (List number of genomes, throw warning if same base name is used twice, throw warning if over 5000 genomes and no —multiround_primary_clustering)
+- Make a section in the docs for troubleshooting checkM and reference it when checkM fails
+
 ## [3.0.1] - 2021-01-27
 - Remove some assert statements
 - Really just a version bump to update bioconda requirements

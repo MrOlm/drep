@@ -123,3 +123,58 @@ See :doc:`source/drep` for the API to dRep. For example::
 This will work for all datatables.
 
 Be warned that the API is not very well maintained or documented, and you'll likely have to do a bit of digging into the source code if you want to use it extensively.
+
+Troubleshooting checkM
+------------------------
+
+One of the most common problems users have when running dRep are failures related to the program checkM. These errors can show up as either of the following::
+
+  New checkM db needs to be made
+
+  !!! checkM failed !!!
+
+These errors can be caused by checkM crashing a variety of ways; here are some tips to figure out what's wrong.
+
+.. note::
+
+  Sometimes the easier thing to do is just run checkM (or whatever genome assessment tool you prefer) yourself and provide the results to dRep, instead of making dRep run checkM. See the above section "Using external genome quality information" for more info.
+
+1) Ensure that you have checkM installed. You can do this with the `check_dependencies option`::
+
+    With dRep version 3+
+
+    $ dRep check_dependencies
+    mash.................................... all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/mash)
+    nucmer.................................. all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/nucmer)
+    checkm.................................. all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/checkm)
+    ANIcalculator........................... !!! ERROR !!!   (location = None)
+    prodigal................................ all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/prodigal)
+    centrifuge.............................. all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/centrifuge)
+    nsimscan................................ !!! ERROR !!!   (location = None)
+    fastANI................................. all good        (location = /home/mattolm/bin/fastANI)`
+
+    With dRep version 2+
+
+    $ dRep bonus test --check_dependencies
+    mash.................................... all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/mash)
+    nucmer.................................. all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/nucmer)
+    checkm.................................. all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/checkm)
+    ANIcalculator........................... !!! ERROR !!!   (location = None)
+    prodigal................................ all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/prodigal)
+    centrifuge.............................. all good        (location = /home/mattolm/miniconda3/envs/drep_testing/bin/centrifuge)
+    nsimscan................................ !!! ERROR !!!   (location = None)
+    fastANI................................. all good        (location = /home/mattolm/bin/fastANI)`
+
+If checkM reports ``!! ERROR !!``, try and re-install it.
+
+2) Make sure you have have the checkM data installed and accessible, as described here: https://github.com/Ecogenomics/CheckM/wiki/Installation#how-to-install-checkm
+
+3) To see the specific error that checkM is throwing, re-run dRep with the ``-d`` flag. This will produce a number of files in the ``log/cmd_logs/`` folder. Looking through these will be the commands that dRep gave to checkM, and the STDERR and STDOUT that checkM produced. Looking at the actual error code checkM is giving can be really helpful in figuring out what's wrong
+
+4) If you're running lots of genomes, sometimes python will hit a recursion limit while running checkM and stall out. To fix this you can increase the recursion limit by setting the flag ``--set_recursion`` to some really big number.
+
+5) A newer problem is the error ``New checkM db needs to be made``. This usually means that checkM worked on some, but not all of your genomes. Check ``log/logger.log`` to see which ones failed. I haven't quite figured out this problem yet. If you encounter it I would encourage you to just run checkM outside of dRep. If you think you know how to fix it, please send me an email.
+
+6) If all else fails, please post a GitHub issue. I'm happy to help troubleshoot.
+
+

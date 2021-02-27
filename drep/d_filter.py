@@ -65,6 +65,9 @@ def d_filter_wrapper(wd, **kwargs):
         logging.info("Will filter the genome list")
         bdb = drep.d_cluster.utils.load_genomes(kwargs['genomes'])
 
+    # Quick sanity check
+    sanity_check(bdb)
+
     # Calculate the length and N50 of all genomes
     logging.info("Calculating genome info of genomes")
     Gdb = calc_genome_info(bdb['location'].tolist())
@@ -92,6 +95,34 @@ def d_filter_wrapper(wd, **kwargs):
     workDirectory.store_db(bdb, 'Bdb')
     if not kwargs.get('ignoreGenomeQuality', False):
         workDirectory.store_db(Gdb, 'genomeInfo')
+
+def sanity_check(bdb, **kwargs):
+    """
+    Make sure there are no duplicate names or anything
+
+    Args:
+        bdb:
+
+    Returns:
+
+    """
+    # Check for duplicated genome names
+    dupped = [g for g, c in bdb['genome'].value_counts().to_dict().items() if c > 1]
+    if len(dupped) > 0:
+        logging.error("You have duplicate genome basenames! This doesn't work for dRep; each basename needs to be unique. Here are you problem genomes:")
+        logging.error(bdb[bdb['genome'].isin(dupped)].sort_values('genome'))
+        raise Exception
+
+    # Report number of input genomes
+    logging.info(f"{len(bdb):,} genomes were input to dRep")
+
+    # Make a suggestion about greedy?
+    pc =  kwargs.get('primary_chunksize', None)
+    if pc is not None:
+        mc = kwargs.get('multiround_primary_clustering', False)
+        if (len(bdb) > pc) & (mc == False):
+            logging.info(f"Hey! You have {len(bdb)} genomes and arent using greedy algorithms. See https://drep.readthedocs.io/en/latest/choosing_parameters.html#using-greedy-algorithms for info on how to make your run faster")
+
 
 def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
     '''
@@ -320,7 +351,7 @@ def validate_chdb(Chdb, bdb):
             logging.error("{0} is not in checkM db".format(genome))
             quit = True
     if quit:
-        logging.error("New checkM db needs to be made")
+        logging.error("New checkM db needs to be made\nSee https://drep.readthedocs.io/en/latest/advanced_use.html#troubleshooting-checkm for help troubleshooting")
         sys.exit()
     return
 
@@ -552,7 +583,7 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
     try:
         chdb = pd.read_table(desired_file,sep='\t')
     except:
-        logging.error("!!! checkM failed !!!\nYou can run again with the --debug option to see what went wrong (command logs will be created in the log folder)")
+        logging.error("!!! checkM failed !!!\nSee https://drep.readthedocs.io/en/latest/advanced_use.html#troubleshooting-checkm for help troubleshooting")
         sys.exit()
 
     # Return table

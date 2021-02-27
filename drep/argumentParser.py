@@ -190,6 +190,8 @@ def parse_args(args):
                         help='weight of log(genome size)')
     Sflags.add_argument("-centW", "--centrality_weight", default=1, type=float,
                         help='Weight of (centrality - S_ani)')
+    Sflags.add_argument("-extraW", "--extra_weight_table", default=None, type=str,
+                        help='Path to a tab-separated file with two-columns, no headers, listing genome and extra score to apply to that genome')
 
     # Make a parent parser for evaluate
     evaluate_parent = argparse.ArgumentParser(add_help=False)

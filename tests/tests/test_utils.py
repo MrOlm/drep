@@ -42,6 +42,10 @@ def load_large_genome_set():
     genomes = glob.glob(loc + '*.fna')
     return genomes
 
+def load_test_backend():
+    loc = os.path.join(str(os.getcwd()), '../tests/test_backend/')
+    return loc
+
 def compare_dfs(db1, db2, round=3, verbose=False):
     '''
     Return True if dataframes are equal (order of dataframes doesn't matter)
@@ -143,6 +147,9 @@ def load_common_self():
     self.wd_loc = load_test_wd_loc()
     self.s_wd_loc = load_solutions_wd()
     self.working_wd_loc = load_test_wd_loc_2()
+
+    self.extra_weights_loc = os.path.join(load_test_backend(), 'extra_weights.tsv')
+    self.stinker_genome = os.path.join(load_test_backend(), 'other/Enterococcus_faecalis_TX0104.fa')
 
     importlib.reload(logging)
     if os.path.isdir(self.wd_loc):

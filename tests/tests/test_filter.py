@@ -18,13 +18,16 @@ class Empty():
     pass
 
 @pytest.fixture()
-def self():
+def self(caplog):
+
     # Set up
     self = Empty()
+    self._caplog = caplog
     self.genomes = test_utils.load_test_genomes()
     self.wd_loc = test_utils.load_test_wd_loc()
     self.s_wd_loc = test_utils.load_solutions_wd()
     self.testdir = test_utils.load_random_test_dir()
+    self.stinker_genome = os.path.join(test_utils.load_test_backend(), 'other/Enterococcus_faecalis_TX0104.fa')
 
     importlib.reload(logging)
     if os.path.isdir(self.wd_loc):
@@ -250,3 +253,100 @@ def test_filer_functional_2(self):
     # Confirm genome is in Bdb.csv
     Gdb = wd.get_db('genomeInfo')
     assert Gdb['completeness'].tolist()[0] == 10
+
+def test_filer_functional_3(self):
+    '''
+    Test the sanity check to make sure there are no duplicate genome names or things like that
+    '''
+    # Capture all logging
+    self._caplog.set_level(0)
+
+    wd_loc = self.wd_loc
+
+    # Make a genome info
+    genomes = self.genomes
+    table = {}
+    atts = ['completeness', 'contamination', 'strain_heterogeneity']
+    for a in atts:
+        table[a] = []
+    table['genome'] = []
+    table['location'] = []
+    for g in genomes:
+        table['genome'].append(os.path.basename(g))
+        table['location'].append(g)
+        for a in atts:
+            table[a].append(10)
+    Idb = pd.DataFrame(table)
+
+    if not os.path.isdir(self.testdir):
+        os.mkdir(self.testdir)
+    GI_loc = os.path.join(self.testdir, 'genomeInfo.csv')
+    Idb.to_csv(GI_loc, index=False)
+
+    # Add a genome with the same name at a different location
+    sgenomes = genomes + [self.stinker_genome]
+
+    args = argumentParser.parse_args(['dereplicate',wd_loc,'-g'] + sgenomes \
+        + ['--genomeInfo', GI_loc])
+    kwargs = vars(args)
+
+    # Make sure it fails
+    failed = True
+    try:
+        drep.d_filter.d_filter_wrapper(wd_loc, **kwargs)
+        failed = False
+    except:
+        pass
+    assert failed
+
+    # Verify logs
+    got = False
+    for logger_name, log_level, message in self._caplog.record_tuples:
+        if 'You have duplicate genome basenames!' in message:
+            got = True
+    assert got
+
+def test_filer_functional_4(self):
+    """
+    Test some logging things
+    """
+    # Capture all logging
+    self._caplog.set_level(0)
+
+    args = argumentParser.parse_args(['dereplicate', self.wd_loc, '-g'] + self.genomes)
+    kwargs = vars(args)
+
+    # Run the "verify" thing
+    bdb = drep.d_cluster.utils.load_genomes(kwargs['genomes'])
+    drep.d_filter.sanity_check(bdb, **kwargs)
+
+    for logger_name, log_level, message in self._caplog.record_tuples:
+        assert message == '5 genomes were input to dRep'
+
+    # Make sure it warns correctly
+    self._caplog.clear()
+    args = argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '4', '-g'] + self.genomes)
+    kwargs = vars(args)
+    bdb = drep.d_cluster.utils.load_genomes(kwargs['genomes'])
+    drep.d_filter.sanity_check(bdb, **kwargs)
+
+    got = False
+    for logger_name, log_level, message in self._caplog.record_tuples:
+        if 'genomes and arent using greedy algorithms' in message:
+            got = True
+    assert got
+
+    # Make sure it doesnt warn incorrectly
+    self._caplog.clear()
+    args = argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '4', '--multiround_primary_clustering', '-g'] + self.genomes)
+    kwargs = vars(args)
+    bdb = drep.d_cluster.utils.load_genomes(kwargs['genomes'])
+    drep.d_filter.sanity_check(bdb, **kwargs)
+
+    got = False
+    for logger_name, log_level, message in self._caplog.record_tuples:
+        if 'genomes and arent using greedy algorithms' in message:
+            got = True
+    assert not got
+
+

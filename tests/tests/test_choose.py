@@ -48,7 +48,7 @@ from drep.WorkDirectory import WorkDirectory
 def self():
     self = test_utils.load_common_self()
     yield self
-    self.teardown()
+    #self.teardown()
 
 def test_choose_1(self):
     '''
@@ -110,6 +110,45 @@ def test_choose_2(self):
     Swd.get_db(db)
     for s in sdb['score'].tolist():
         assert (s > 0) & (s < 5)
+
+    gdb = wd.get_db('genomeInformation')
+    assert 'centrality' in gdb.columns
+
+def test_choose_3(self):
+    '''
+    Try out the --extra_weight_table argument for choose
+    '''
+    # Delete Chdb
+    wd_loc = self.working_wd_loc
+    os.remove(wd_loc + '/data_tables/Chdb.csv')
+    os.remove(wd_loc + '/data_tables/Sdb.csv')
+    os.remove(wd_loc + '/data_tables/Wdb.csv')
+
+    # Run choose with --skipCheckM
+    print(wd_loc)
+
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '--extra_weight_table', self.extra_weights_loc, '--ignoreGenomeQuality'])
+    kwargs = vars(args)
+    del kwargs['genomes']
+    drep.d_choose.d_choose_wrapper(wd_loc, **kwargs)
+
+    # controller = Controller()
+    # controller.parseArguments(args)
+
+    Swd  = WorkDirectory(self.s_wd_loc)
+    wd   = WorkDirectory(self.working_wd_loc)
+    for db in ['Sdb', 'Wdb', 'genomeInformation']:
+        db1 = Swd.get_db(db)
+        db2 =  wd.get_db(db)
+        assert not test_utils.compare_dfs(db1, db2), "{0} is the same!".format(db)
+
+    sdb = wd.get_db('Sdb')
+    Swd.get_db(db)
+    got = 0
+    for s in sdb['score'].tolist():
+        if s > 5:
+            got += 1
+    assert got == 1
 
     gdb = wd.get_db('genomeInformation')
     assert 'centrality' in gdb.columns
