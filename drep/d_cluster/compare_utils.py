@@ -117,7 +117,7 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
 
     # If there's multiple chunks, run a second round
     logging.info("  Final step: comparing between all groups")
-    return run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs)
+    return run_second_round_clustering(Bdb, genome_chunks, data_folder, verbose=True, **kwargs)
 
 def prepare_mash(data_folder, **kwargs):
     """
@@ -200,6 +200,8 @@ def run_mash_on_genome_chunks(genome_chunks, mash_exe, sketch_folder, MASH_folde
     return genome_chunks
 
 def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
+    verbose = kwargs.get('verbose', False)
+
     kwargs_copy = kwargs.copy()
     kwargs_copy['clusterAlg'] = 'single'
     kwargs_copy['multiround_primary_clustering'] = False
@@ -225,6 +227,9 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
     g2l = Bdb.set_index('genome')['length'].to_dict()
     Cdb['length'] = Cdb['genome'].map(g2l)
     second_round_genomes = Cdb.sort_values('length').drop_duplicates(subset=['subcluster'], keep='last')['genome'].tolist()
+
+    if verbose:
+        logging.info(f"Comparing {len(second_round_genomes):,} genomes")
 
     # Step 3) Run a second round
     logdir, MASH_folder, sketch_folder, mash_exe = prepare_mash(data_folder, **kwargs_copy)

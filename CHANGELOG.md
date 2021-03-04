@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.1.1] - 2021-03-04
+- Update parse_stb.py to "append" instead of open, which lets it handle way bigger numbers of genomes
+- Report how many genomes are being compared in last step of multi-round primary clustering
+
 ## [3.1.0] - 2021-02-25
 - Add the "extra_weight_table" flag to allow uses to add custom extra scores to their genomes
 - Do some automatic checking of genome input (List number of genomes, throw warning if same base name is used twice, throw warning if over 5000 genomes and no —multiround_primary_clustering)

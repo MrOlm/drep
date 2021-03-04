@@ -9,7 +9,7 @@ import argparse
 from Bio import SeqIO
 
 def extract_bins(fasta, stb_file, out_base):
-    if out_base != '':
+    if (out_base != '') & (out_base[-1] != '/'):
         out_base += '_'
 
     # Make scaffold to bin dictionary
@@ -25,30 +25,27 @@ def extract_bins(fasta, stb_file, out_base):
         bin = line.split('\t')[1].strip()
         stb[scaffold] = bin
 
-    # Make a bunch of fasta files
-    opened = {}
+    # Do it with append
     if fasta[-3:] == '.gz':
-        with gzip.open(fasta, "rt") as handle:
-            for seq_record in SeqIO.parse(handle, "fasta"):
-                id = str(seq_record.id).strip()
-                if id not in stb:
-                    #print("{0} not in stb".format(id))
-                    continue
-                fasta = stb[id]
-                if fasta not in opened:
-                    opened[fasta] = open("{0}{1}.fa".format(out_base, fasta), 'w')
-                opened[fasta].write('\n'.join([">{0}".format(id), str(seq_record.seq), '']))
-                
+        handle = gzip.open(fasta, "rt")
+        seqs = SeqIO.parse(handle, "fasta")
+
     else:
-        for seq_record in SeqIO.parse(fasta, "fasta"):
-            id = str(seq_record.id).strip()
-            if id not in stb:
-                #print("{0} not in stb".format(id))
-                continue
-            fasta = stb[id]
-            if fasta not in opened:
-                opened[fasta] = open("{0}{1}.fa".format(out_base, fasta), 'w')
-            opened[fasta].write('\n'.join([">{0}".format(id), str(seq_record.seq), '']))
+        seqs = SeqIO.parse(fasta, "fasta")
+
+    for seq_record in seqs:
+        id = str(seq_record.id).strip()
+        if id not in stb:
+            # print("{0} not in stb".format(id))
+            continue
+        fasta = stb[id]
+
+        nw = open("{0}{1}.fa".format(out_base, fasta), 'a')
+        nw.write('\n'.join([">{0}".format(id), str(seq_record.seq), '']))
+        nw.close()
+
+    if fasta[-3:] == '.gz':
+        handle.close()
 
 def gen_stb(fastas):
     stb = {}

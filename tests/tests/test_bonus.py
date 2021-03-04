@@ -174,6 +174,7 @@ def test_parse_stb(self):
     subprocess.call(cmd, shell=True)
 
     out_genomes = glob.glob(new_out + '*')
+    print(out_genomes)
     assert len(out_genomes) == 1
 
 def test_parse_stb_2(self):
