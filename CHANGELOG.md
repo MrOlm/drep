@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.2.0] - 2021-03-09
+- checkM can now be run in groups (added argument variable "checkm_group_size")
+- other slight internal restructuring around how checkM works
+- a little more info added to the "troubleshooting dRep" section
+
 ## [3.1.1] - 2021-03-04
 - Update parse_stb.py to "append" instead of open, which lets it handle way bigger numbers of genomes
 - Report how many genomes are being compared in last step of multi-round primary clustering

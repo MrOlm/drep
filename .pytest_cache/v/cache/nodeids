@@ -47,6 +47,8 @@
   "tests/tests/test_filter.py::test_filer_functional_2",
   "tests/tests/test_filter.py::test_filer_functional_3",
   "tests/tests/test_filter.py::test_filer_functional_4",
+  "tests/tests/test_filter.py::test_run_checkm",
+  "tests/tests/test_filter.py::test_run_checkm2",
   "tests/tests/test_filter.py::test_validate_genomeInfo",
   "tests/tests/test_greedy.py::test_greedy_secondary_clustering_1",
   "tests/tests/test_greedy.py::test_greedy_secondary_clustering_2",

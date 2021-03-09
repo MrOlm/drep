@@ -175,6 +175,10 @@ If checkM reports ``!! ERROR !!``, try and re-install it.
 
 5) A newer problem is the error ``New checkM db needs to be made``. This usually means that checkM worked on some, but not all of your genomes. Check ``log/logger.log`` to see which ones failed. I haven't quite figured out this problem yet. If you encounter it I would encourage you to just run checkM outside of dRep. If you think you know how to fix it, please send me an email.
 
-6) If all else fails, please post a GitHub issue. I'm happy to help troubleshoot.
+6) You can check checkM's run log at ''data/checkM/checkM_outdir/''. Sometimes there's helpful info there as to what's going wrong.
+
+7) Check dRep's log file for lines with the words ``Running CheckM with command``. This will tell you the exact checkM command dRep tried to run. Trying to run these commands yourself can be another way of seeing what the actual error is and troubleshooting.
+
+8) If all else fails, please post a GitHub issue. I'm happy to help troubleshoot.
 
 

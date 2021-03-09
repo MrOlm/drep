@@ -11,6 +11,7 @@ import drep
 from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
+import subprocess
 
 import pytest
 
@@ -29,6 +30,9 @@ def self(caplog):
     self.testdir = test_utils.load_random_test_dir()
     self.stinker_genome = os.path.join(test_utils.load_test_backend(), 'other/Enterococcus_faecalis_TX0104.fa')
 
+    self.prodigal_loc = os.path.join(test_utils.load_solutions_wd(), 'data/prodigal/')
+
+    # Teardown
     importlib.reload(logging)
     if os.path.isdir(self.wd_loc):
         shutil.rmtree(self.wd_loc)
@@ -36,49 +40,25 @@ def self(caplog):
     yield self
 
     # Teardown
-    logging.shutdown()
-    if os.path.isdir(self.wd_loc):
-       shutil.rmtree(self.wd_loc)
+    # logging.shutdown()
+    # if os.path.isdir(self.wd_loc):
+    #    shutil.rmtree(self.wd_loc)
 
-# class test_filter():
-#     def __init__(self):
-#         pass
-#
-#     def setUp(self):
-#         self.genomes = test_utils.load_test_genomes()
-#         self.wd_loc = test_utils.load_test_wd_loc()
-#         self.s_wd_loc = test_utils.load_solutions_wd()
-#         self.testdir = test_utils.load_random_test_dir()
-#
-#         importlib.reload(logging)
-#         if os.path.isdir(self.wd_loc):
-#             shutil.rmtree(self.wd_loc)
-#
-#     def tearDown(self):
-#         logging.shutdown()
-#         if os.path.isdir(self.wd_loc):
-#             shutil.rmtree(self.wd_loc)
-#
-#     def run(self):
-#         self.setUp()
-#         self.test_calc_genome_info()
-#         self.tearDown()
-#
-#         self.setUp()
-#         self.test_validate_genomeInfo()
-#         self.tearDown()
-#
-#         self.setUp()
-#         self.test_chdb_to_genomeInfo()
-#         self.tearDown()
-#
-#         self.setUp()
-#         self.functional_test_1()
-#         self.tearDown()
-#
-#         self.setUp()
-#         self.functional_test_2()
-#         self.tearDown()
+
+def test_run_checkm(self):
+    """
+    Test the method "run_checkM"
+    """
+    chdb = drep.d_filter.run_checkM(self.prodigal_loc, self.wd_loc + '/', checkM_method='taxonomy_wf')
+    assert len(chdb) == 5
+
+def test_run_checkm2(self):
+    """
+    Test the method "run_checkM" when going over the group size limit
+    """
+    self._caplog.set_level(0)
+    chdb = drep.d_filter.run_checkM(self.prodigal_loc, self.wd_loc + '/', checkM_method='taxonomy_wf', checkm_group_size=3)
+    assert len(chdb) == 5
 
 def test_chdb_to_genomeInfo(self):
     '''
@@ -184,16 +164,17 @@ def test_filer_functional_1(self):
 
     Should call both prodigal and checkM
     '''
+    self._caplog.set_level(0)
+
     genomes = self.genomes
     wd_loc  = self.wd_loc
 
     # make sure calling it on the right genome
-    genome = [g for g in genomes if g.endswith('Enterococcus_faecalis_T2.fna')]
-    assert len(genome) == 1
-    genome = genome[0]
+    genome = [g for g in genomes if (g.endswith('Enterococcus_faecalis_T2.fna') or g.endswith('Enterococcus_casseliflavus_EC20.fasta'))]
+    assert len(genome) == 2
 
-    args = argumentParser.parse_args(['dereplicate',wd_loc,'-g',genome] \
-        + ['--checkM_method', 'taxonomy_wf', '--debug'])
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '-g'] + genome \
+        + ['--checkM_method', 'taxonomy_wf', '--debug', '--checkm_group_size', '1'])
     # controller = Controller()
     # controller.parseArguments(args)
 
@@ -202,12 +183,19 @@ def test_filer_functional_1(self):
 
     # Confirm Chdb.csv is correct
     wd = drep.WorkDirectory.WorkDirectory(wd_loc)
-    chdb = wd.get_db('Chdb')
+    chdb = wd.get_db('Chdb').sort_values('Bin Id', ascending=False)
     assert chdb['Completeness'].tolist()[0] == 98.28
 
     # Confirm genome is in Bdb.csv
     Gdb = wd.get_db('genomeInfo')
     assert Gdb['completeness'].tolist()[0] == 98.28
+
+    # Verify logs
+    got = False
+    for logger_name, log_level, message in self._caplog.record_tuples:
+        if 'Running checkM in 2 chunks' in message:
+            got = True
+    assert got
 
 def test_filer_functional_2(self):
     '''

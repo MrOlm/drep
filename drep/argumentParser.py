@@ -106,6 +106,8 @@ def parse_args(args):
                                                 + "NOT RECOMMENDED unless checkM is crashing due to recursion issues. " \
                                                 + "Recommended to set to 2000 if needed, but setting this could crash python", \
                         default='0')
+    Iflags.add_argument("--checkm_group_size", help="The number of genomes passed to checkM at a time. Increasing this increases RAM but makes checkM faster", \
+                        default=2000, type=int)
 
     # Make a parent parser for the cluster operation
     cluster_parent = argparse.ArgumentParser(add_help=False)

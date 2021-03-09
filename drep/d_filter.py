@@ -506,11 +506,11 @@ def run_prodigal(genome_list, out_dir, **kwargs):
     else:
         logging.info("Past prodigal runs found- will not re-run")
 
-def run_checkM(genome_folder,checkm_outf,**kwargs):
+def run_checkM(genome_folder_whole, checkm_outf_whole, **kwargs):
     '''
     Run checkM
 
-    WARNING- this will result in wrong genome lenth and genome N50 estimate, due to
+    WARNING- this will result in wrong genome length and genome N50 estimate, due to
     it being run on prodigal output
 
     Args:
@@ -524,21 +524,11 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
         wd: if you want to log commands, you also need the wd
         set_recursion: if not 0, set the python recursion
     '''
-    # Find checkm exe
-    loc, works = drep.d_bonus.find_program('checkm')
-    if loc == None:
-        logging.error('Cannot locate the program {0}- make sure its in the system path'\
-            .format('checkm'))
-        sys.exit()
-    if works == False:
-        logging.error('Program {0} is not working!! Im going to crash now'\
-            .format('checkm'))
-        sys.exit()
-    check_exe = loc
-
     # Get set up
+    check_exe = _checkm_get_exe()
     t = str(kwargs.get('processors','6'))
-    checkm_method = kwargs.get('checkM_method','lineage_wf')
+    checkm_method = kwargs.get('checkM_method', 'lineage_wf')
+    checkm_group_size = kwargs.get('checkm_group_size', 1000)
 
     # Set recursion
     R = kwargs.get('set_recursion', '0')
@@ -546,48 +536,97 @@ def run_checkM(genome_folder,checkm_outf,**kwargs):
         logging.warning('Setting Maximum Recursion depth to {0}'.format(R))
         sys.setrecursionlimit(int(R))
 
-    # Run checkM initial
-    if checkm_method == 'taxonomy_wf':
-         cmd = [check_exe,checkm_method,'domain','Bacteria',genome_folder,checkm_outf,'-f',\
-            checkm_outf + '/results.tsv','--tab_table','-t',str(t),'-g','-x','faa']
-    else:
-         cmd = [check_exe,checkm_method,genome_folder,checkm_outf,'-f',\
-            checkm_outf + '/results.tsv','--tab_table','-t',str(t),'--pplacer_threads',\
-            str(t),'-g','-x','faa']
+    # Establish groups
+    dbs = []
+    for genome_folder, checkm_outf in _iterate_checkm_groups(genome_folder_whole, checkm_outf_whole, checkm_group_size):
 
-    logging.debug("Running CheckM with command: {0}".format(cmd))
+        # Run checkM initial
+        if checkm_method == 'taxonomy_wf':
+             cmd = [check_exe,checkm_method,'domain','Bacteria',genome_folder,checkm_outf,'-f',\
+                checkm_outf + '/results.tsv','--tab_table','-t',str(t),'-g','-x','faa']
+        else:
+             cmd = [check_exe,checkm_method,genome_folder,checkm_outf,'-f',\
+                checkm_outf + '/results.tsv','--tab_table','-t',str(t),'--pplacer_threads',\
+                str(t),'-g','-x','faa']
 
-    if ('wd' in kwargs) & (kwargs.get('debug', False) == True):
-        logdir = kwargs.get('wd').get_dir('cmd_logs')
-    else:
-        logdir = False
-    drep.run_cmd(cmd, shell=False, logdir=logdir)
+        logging.debug("Running CheckM with command: {0}".format(' '.join(cmd)))
 
-    # Run checkM again for the better table
-    if checkm_method == 'taxonomy_wf':
-        lineage = checkm_outf + 'Bacteria.ms'
-    else:
-        lineage = checkm_outf + 'lineage.ms'
-    desired_file = checkm_outf + 'Chdb.tsv'
-    cmd = [check_exe,'qa', lineage, checkm_outf, '-f', desired_file, '-t',\
-            str(t), '--tab_table','-o', '2']
-    logging.debug("Running CheckM with command: {0}".format(cmd))
+        if ('wd' in kwargs) & (kwargs.get('debug', False) == True):
+            logdir = kwargs.get('wd').get_dir('cmd_logs')
+        else:
+            logdir = False
+        drep.run_cmd(cmd, shell=False, logdir=logdir)
 
-    if ('wd' in kwargs) & (kwargs.get('debug', False) == True):
-        logdir = kwargs.get('wd').get_dir('cmd_logs')
-    else:
-        logdir = False
-    drep.run_cmd(cmd, shell=False, logdir=logdir)
+        # Run checkM again for the better table
+        if checkm_method == 'taxonomy_wf':
+            lineage = checkm_outf + 'Bacteria.ms'
+        else:
+            lineage = checkm_outf + 'lineage.ms'
+        desired_file = checkm_outf + 'Chdb.tsv'
+        cmd = [check_exe,'qa', lineage, checkm_outf, '-f', desired_file, '-t',\
+                str(t), '--tab_table','-o', '2']
+        logging.debug("Running CheckM with command: {0}".format(' '.join(cmd)))
 
-    # Load table
-    try:
-        chdb = pd.read_table(desired_file,sep='\t')
-    except:
-        logging.error("!!! checkM failed !!!\nSee https://drep.readthedocs.io/en/latest/advanced_use.html#troubleshooting-checkm for help troubleshooting")
+        if ('wd' in kwargs) & (kwargs.get('debug', False) == True):
+            logdir = kwargs.get('wd').get_dir('cmd_logs')
+        else:
+            logdir = False
+        drep.run_cmd(cmd, shell=False, logdir=logdir)
+
+        # Load table
+        try:
+            chdb = pd.read_table(desired_file,sep='\t')
+        except:
+            logging.error("!!! checkM failed !!!\nSee https://drep.readthedocs.io/en/latest/advanced_use.html#troubleshooting-checkm for help troubleshooting")
+            sys.exit()
+
+        # Return table
+        dbs.append(chdb)
+
+    return pd.concat(dbs).reset_index(drop=True)
+
+def _checkm_get_exe():
+    loc, works = drep.d_bonus.find_program('checkm')
+    if loc == None:
+        logging.error('Cannot locate the program {0}- make sure its in the system path' \
+                      .format('checkm'))
         sys.exit()
+    if works == False:
+        logging.error('Program {0} is not working!! Im going to crash now' \
+                      .format('checkm'))
+        sys.exit()
+    return loc
 
-    # Return table
-    return chdb
+def _iterate_checkm_groups(genome_folder_whole, checkm_outf_whole, checkm_group_size):
+    """
+    Break up the checkM input into groups of checkm_group_size
+    """
+    # Get the number of prodigal files you have
+    total_genes = glob.glob(os.path.join(genome_folder_whole, '*faa'))
+    chunks = [total_genes[x:x + checkm_group_size] for x in range(0, len(total_genes), checkm_group_size)]
+
+    if len(chunks) == 1:
+        yield genome_folder_whole, checkm_outf_whole
+
+    else:
+        logging.info(f"Running checkM in {len(chunks)} chunks")
+
+        if not os.path.isdir(checkm_outf_whole):
+            os.mkdir(checkm_outf_whole)
+
+        for i, chunk in enumerate(chunks):
+            logging.info(f"Running checkM chunk {i}")
+
+            new_checkm_out = os.path.join(checkm_outf_whole, f"genome_chunk_{i}_out/")
+            new_checkm_prods = os.path.join(checkm_outf_whole, f"genome_chunk_{i}_genes")
+
+            os.mkdir(new_checkm_out)
+            os.mkdir(new_checkm_prods)
+
+            for faa in chunk:
+                os.symlink(faa, os.path.join(new_checkm_prods, os.path.basename(faa)))
+
+            yield new_checkm_prods, new_checkm_out
 
 def calc_fasta_length(fasta_loc):
     '''
