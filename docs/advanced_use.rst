@@ -108,6 +108,22 @@ For example, say you've already run the dereplicate_wf using gANI and want to ru
 
   Be warned, this is somewhat buggy and can easily get out of hand. While it does save time, sometimes it's just best to re-run the whole thing again with a clean start
 
+Restarting a clustering job with already completed primary clustering
+++++++
+
+There are (rare) circumstances where you may way to run primary clustering on one machine and secondary clustering on another. Primary cluster needs more RAM, and secondary clustering needs more cores, so doing this could let you choose the optimal machine for each specific step. There's not a formal way of making dRep do this, but there is an hacky way. If you run dRep in debug mode (with ``-d``), it'll make a file named "CdbF.csv" in the data_tables folder. This file contains the primary clustering information, and has a very simple format that looks like this::
+
+    genome,primary_cluster
+    Enterococcus_casseliflavus_EC20.fasta,0
+    Enterococcus_faecalis_T2.fna,0
+    Enterococcus_faecalis_TX0104.fa,0
+    Enterococcus_faecalis_YI6-1.fna,0
+    Escherichia_coli_Sakai.fna,1
+
+If you run a dRep job on a work directort that already has this file in the ``data_tables`` folder, as well as a file named ``Mdb.csv`` (it doesn't actually matter what's in that file), as well as in debug mode (``-d``), dRep will load this file instead of running primary clustering. You can also make the CdbF.csv file yourself using the format above.
+
+I know this is confusing- it's a hacky thing I threw together for my own research, but I figured I would let everyone else know about it as well. Feel free to shoot me an email if this is something you're interested in doing and can't get it to work.
+
 API
 ---
 
@@ -171,7 +187,7 @@ If checkM reports ``!! ERROR !!``, try and re-install it.
 
 3) To see the specific error that checkM is throwing, re-run dRep with the ``-d`` flag. This will produce a number of files in the ``log/cmd_logs/`` folder. Looking through these will be the commands that dRep gave to checkM, and the STDERR and STDOUT that checkM produced. Looking at the actual error code checkM is giving can be really helpful in figuring out what's wrong
 
-4) If you're running lots of genomes, sometimes python will hit a recursion limit while running checkM and stall out. To fix this you can increase the recursion limit by setting the flag ``--set_recursion`` to some really big number.
+4) If you're running lots of genomes, sometimes python will hit a recursion limit while running checkM and stall out. To fix this you can increase the recursion limit by setting the flag ``--set_recursion`` to some really big number. **Note: as of dRep version 3.2.0, dRep runs checkM in groups to prevent this problem. See ``checkm_group_size`` for more info.**
 
 5) A newer problem is the error ``New checkM db needs to be made``. This usually means that checkM worked on some, but not all of your genomes. Check ``log/logger.log`` to see which ones failed. I haven't quite figured out this problem yet. If you encounter it I would encourage you to just run checkM outside of dRep. If you think you know how to fix it, please send me an email.
 
