@@ -25,7 +25,7 @@ $ dRep compare output_directory -g path/to/genomes/*.fasta
 
 ### Genome de-replication:
 ```
-$ dRep dereplicate outout_directory -g path/to/genomes/*.fasta
+$ dRep dereplicate output_directory -g path/to/genomes/*.fasta
 ```
 
 ### Make sure dependencies are properly installed:
