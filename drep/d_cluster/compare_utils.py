@@ -203,7 +203,6 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
     verbose = kwargs.get('verbose', False)
 
     kwargs_copy = kwargs.copy()
-    kwargs_copy['clusterAlg'] = 'single'
     kwargs_copy['multiround_primary_clustering'] = False
     kwargs_copy['v2'] = '_v2'
 

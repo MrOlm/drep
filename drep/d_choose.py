@@ -57,7 +57,7 @@ def d_choose_wrapper(wd, **kwargs):
     wd = workDirectory
 
     # Make sure you have enough
-    _validate_choose_arguments(workDirectory, **kwargs)
+    kwargs = _validate_choose_arguments(workDirectory, kwargs)
     Cdb = wd.get_db('Cdb')
     bdb = wd.get_db('Bdb')
 
@@ -272,7 +272,7 @@ def score_row(row, extra=0, **kwargs):
         + (np.log10(n50) * n50W) + (np.log10(size) * sizeW) + ((cent - S_ani) * centW) + float(extra)
     return score
 
-def _validate_choose_arguments(wd, **kwargs):
+def _validate_choose_arguments(wd, kwargs):
     '''
     Validate choose arguments
 
@@ -288,7 +288,13 @@ def _validate_choose_arguments(wd, **kwargs):
                 + "can choose")
         sys.exit()
 
-    return wd.get_db('Cdb')
+    # Validate centrality arguments
+    if (kwargs.get('SkipSecondary', True)) & (kwargs.get('centrality_weight', 0) > 0):
+        logging.error(
+            "You skipped secondary clustering but have centrality weight above 0. You cant do that. I will now set the centrality weight to 0 to avoid a crash")
+        kwargs['centrality_weight'] = 0
+
+    return kwargs
 
 def add_centrality(wd, Gdb, **kwargs):
     """

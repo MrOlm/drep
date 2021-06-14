@@ -54,6 +54,8 @@
   "tests/tests/test_greedy.py::test_greedy_secondary_clustering_2",
   "tests/tests/test_greedy.py::test_multiround_primary_clustering_1",
   "tests/tests/test_greedy.py::test_multiround_primary_clustering_2",
+  "tests/tests/test_greedy.py::test_multiround_primary_clustering_3",
+  "tests/tests/test_greedy.py::test_multiround_primary_clustering_4",
   "tests/tests/test_rerun.py::test_unit_1",
   "tests/tests/test_rerun.py::test_unit_2",
   "tests/tests/test_rerun.py::test_unit_3",

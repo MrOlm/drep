@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.2.1] - 2021-06-14
+- clusterAlg is now used to cluster the initial groups when doing mutliround_primary_clustering (before it was always "single")
+- fixed a bug that happened when you ran skipSecondary with centW > 0 (https://github.com/MrOlm/drep/issues/120)
+
 ## [3.2.0] - 2021-03-09
 - checkM can now be run in groups (added argument variable "checkm_group_size")
 - other slight internal restructuring around how checkM works

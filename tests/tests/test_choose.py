@@ -45,8 +45,9 @@ from drep.WorkDirectory import WorkDirectory
 #         shutil.rmtree(self.working_wd_loc)
 
 @pytest.fixture()
-def self():
+def self(caplog):
     self = test_utils.load_common_self()
+    self._caplog = caplog
     yield self
     #self.teardown()
 
@@ -118,6 +119,8 @@ def test_choose_3(self):
     '''
     Try out the --extra_weight_table argument for choose
     '''
+    self._caplog.set_level(0)
+
     # Delete Chdb
     wd_loc = self.working_wd_loc
     os.remove(wd_loc + '/data_tables/Chdb.csv')
@@ -146,12 +149,15 @@ def test_choose_3(self):
     Swd.get_db(db)
     got = 0
     for s in sdb['score'].tolist():
-        if s > 5:
+        if s > 100:
             got += 1
     assert got == 1
 
     gdb = wd.get_db('genomeInformation')
     assert 'centrality' in gdb.columns
+
+    for logger_name, log_level, message in self._caplog.record_tuples:
+        print(message)
 
 def test_centrality_1(self):
     """
