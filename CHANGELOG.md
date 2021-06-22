@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.2.2] - 2021-06-22
+- Better timing prediction when using fastANI
+
 ## [3.2.1] - 2021-06-14
 - clusterAlg is now used to cluster the initial groups when doing mutliround_primary_clustering (before it was always "single")
 - fixed a bug that happened when you ran skipSecondary with centW > 0 (https://github.com/MrOlm/drep/issues/120)

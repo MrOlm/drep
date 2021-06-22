@@ -639,15 +639,44 @@ def _print_time_estimate(Bdb, Cdb, algorithm, cores):
         Cdb: Clustering DataFrame
         algorthm: algorithm to estimate time with
     '''
-    comps = 0
-    for bdb, name in drep.d_cluster.cluster_utils.iteratre_clusters(Bdb, Cdb):
-        g = len(bdb['genome'].unique())
-        comps += (g * g)
+    if algorithm != 'fastANI':
+        comps = 0
+        for bdb, name in drep.d_cluster.cluster_utils.iteratre_clusters(Bdb, Cdb):
+            g = len(bdb['genome'].unique())
+            comps += (g * g)
 
-    time = estimate_time(comps, algorithm)
-    time = time / int(cores)
+        time = estimate_time(comps, algorithm)
+        time = time / int(cores)
+
+    else:
+        time = 0
+        comps = 0
+        for bdb, name in drep.d_cluster.cluster_utils.iteratre_clusters(Bdb, Cdb):
+            g = len(bdb['genome'].unique())
+            time += predict_fastani_time(g, cores)
+            comps += (g * g)
+        # Convert to minutes
+        time = time / 60
+
     logging.info("Running {0} {1} comparisons- should take ~ {2:.1f} min".format(\
             comps, algorithm, time))
+
+
+def predict_fastani_time(genomes, cores=6):
+    '''
+    Forumula is f(x) = a*x**2 + b*x
+
+    http://localhost:8888/doc/tree/Other/OneOffs/dRep_performance_fastANI_timing_1.ipynb
+    '''
+    a = 0.018969442838018713
+    b = 14.604906958328073
+
+    genomes = int(genomes)
+    time_6cores = a * genomes ** 2 + b * genomes
+
+    time = time_6cores * (6 / cores)
+
+    return time
 
 def _randomString(stringLength=10):
     """Generate a random string of fixed length """
