@@ -34,19 +34,6 @@ $ dRep check_dependencies
 ```
 
 ## Dependencies
-### Required
-* [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x) is used to rapidly compare all genomes in a pair-wise manner
-* [MUMmer](http://mummer.sourceforge.net/) is used to perform more actuate comparisons between genomes which are shown to be similar with Mash
-
-### Optional
-* [CheckM](http://ecogenomics.github.io/CheckM/) is used to determine the contamination and completeness of genomes (used during de-replication)
-* [gANI (aka ANIcalculator)](https://ani.jgi-psf.org/html/download.php?) is an optional alternative to MUMmer
-* [Prodigal](http://prodigal.ornl.gov/) is a dependency of both checkM and gANI
-
-### Accessory
-* [Centrifuge](https://omictools.com/centrifuge-tool) can be used to perform rough taxonomic assignment of bins
-
-## Dependencies
 ### Near Essential
 * [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>) - Makes primary clusters (v1.1.1 confirmed works)
 * [MUMmer](http://mummer.sourceforge.net/) - Performs default ANIm comparison method (v3.23 confirmed works)
