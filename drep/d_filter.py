@@ -576,6 +576,7 @@ def run_checkM(genome_folder_whole, checkm_outf_whole, **kwargs):
         # Load table
         try:
             chdb = pd.read_table(desired_file,sep='\t')
+            chdb['Bin Id'] = chdb['Bin Id'].astype(str)
         except:
             logging.error("!!! checkM failed !!!\nSee https://drep.readthedocs.io/en/latest/advanced_use.html#troubleshooting-checkm for help troubleshooting")
             sys.exit()
