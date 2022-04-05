@@ -45,4 +45,4 @@ $ dRep check_dependencies
 * [gANI (aka ANIcalculator)](https://ani.jgi-psf.org/html/download.php?) - Performs gANI comparison method (v1.0 confirmed works)
 * [Prodigal](http://prodigal.ornl.gov/) - Used be both checkM and gANI (v2.6.3 confirmed works)
 * [NSimScan](https://pubmed.ncbi.nlm.nih.gov/27153714/) - Only needed for goANI algorithm (open source version of gANI)
-* [centrifuge] (https://ccb.jhu.edu/software/centrifuge/) - Classifying metagenome sequences
+* [centrifuge](https://ccb.jhu.edu/software/centrifuge/) - Classifying metagenome sequences
