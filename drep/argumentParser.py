@@ -44,7 +44,7 @@ def printHelp():
     print('                ...::: dRep v' + VERSION + ' :::...''')
     print('''\
 
-  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2020)
+  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2022)
 
   See https://drep.readthedocs.io/en/latest/index.html for documentation
   Choose one of the operations below for more detailed help. 
@@ -84,7 +84,7 @@ def parse_args(args):
     fiflags = filtering_parent.add_argument_group('GENOME FILTERING OPTIONS')
     fiflags.add_argument("-l", "--length", help="Minimum genome length", default=50000,
                          type=float)
-    fiflags.add_argument("-comp", "--completeness", help="Minumum genome completeness",
+    fiflags.add_argument("-comp", "--completeness", help="Minimum genome completeness",
                          default=75, type=float)
     fiflags.add_argument("-con", "--contamination", help="Maximum genome contamination",
                          default=25, type=float)
@@ -119,7 +119,7 @@ def parse_args(args):
                                                   + "ANIn    = Align whole genomes with nucmer; compare aligned regions\n" \
                                                   + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
                                                   + "goANI   = Open source version of gANI; requires nsmimscan\n",
-                            default='ANImf', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI'})
+                            default='fastANI', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI'})
     Clustflags.add_argument("-ms", "--MASH_sketch", help="MASH sketch size", default=1000)
     Clustflags.add_argument("--SkipMash", help="Skip MASH clustering,\
                             just do secondary clustering on all genomes", action='store_true')
@@ -134,7 +134,7 @@ def parse_args(args):
     Compflags.add_argument("-pa", "--P_ani", help="ANI threshold to form primary (MASH) clusters",
                            default=0.9, type=float)
     Compflags.add_argument("-sa", "--S_ani", help="ANI threshold to form secondary clusters",
-                           default=0.99, type=float)
+                           default=0.95, type=float)
     Compflags.add_argument("-nc", "--cov_thresh", help="Minmum level of overlap between\
         genomes when doing secondary comparisons", default=0.1, type=float)
     Compflags.add_argument("-cm", "--coverage_method", help="R|Method to calculate coverage of an alignment\n" \

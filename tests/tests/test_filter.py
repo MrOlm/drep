@@ -40,9 +40,9 @@ def self(caplog):
     yield self
 
     # Teardown
-    # logging.shutdown()
-    # if os.path.isdir(self.wd_loc):
-    #    shutil.rmtree(self.wd_loc)
+    logging.shutdown()
+    if os.path.isdir(self.wd_loc):
+       shutil.rmtree(self.wd_loc)
 
 
 def test_run_checkm(self):
@@ -50,6 +50,7 @@ def test_run_checkm(self):
     Test the method "run_checkM"
     """
     chdb = drep.d_filter.run_checkM(self.prodigal_loc, self.wd_loc + '/', checkM_method='taxonomy_wf')
+    print(chdb)
     assert len(chdb) == 5
 
 def test_run_checkm2(self):

@@ -158,7 +158,7 @@ def test_list_genome_load(self):
     #     'fastANI','-g',genome_loc])
     # controller = Controller()
     # controller.parseArguments(args)
-    args = argumentParser.parse_args(['dereplicate', wd_loc, '--S_algorithm', 'fastANI', '-g', genome_loc])
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '--S_algorithm', 'fastANI', '-g', genome_loc, '-sa', '0.99'])
     kwargs = vars(args)
     # del kwargs['genomes']
     # drep.d_cluster.d_cluster_wrapper(wd_loc, **kwargs)
@@ -394,7 +394,7 @@ def test_cluster_functional_1(self):
     wd_loc  = self.wd_loc
     s_wd_loc = self.s_wd_loc
 
-    args = argumentParser.parse_args(['dereplicate', wd_loc, '-g'] + genomes)
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '--S_algorithm', 'ANImf', '-sa', '0.99', '-g'] + genomes)
     kwargs = vars(args)
     drep.d_cluster.controller.d_cluster_wrapper(wd_loc, **kwargs)
 
@@ -457,7 +457,7 @@ def test_cluster_functional_3(self):
     # controller = Controller()
     # controller.parseArguments(args)
 
-    args = argumentParser.parse_args(['dereplicate',wd_loc,'--S_algorithm', 'ANImf','-g']+genomes)
+    args = argumentParser.parse_args(['dereplicate',wd_loc,'--S_algorithm', 'ANImf', '-sa', '0.99', '-g']+genomes)
     kwargs = vars(args)
     drep.d_cluster.controller.d_cluster_wrapper(wd_loc, **kwargs)
 
@@ -482,7 +482,7 @@ def test_cluster_functional_4(self):
     s_wd_loc = self.s_wd_loc
 
     args = argumentParser.parse_args(['dereplicate',wd_loc,'--S_algorithm',\
-        'fastANI','-g']+genomes)
+        'fastANI', '-sa', '0.99', '-g']+genomes)
     # controller = Controller()
     # controller.parseArguments(args)
     # args = argumentParser.parse_args(['dereplicate', wd_loc, '--S_algorithm', 'ANImf', '-g'] + genomes)

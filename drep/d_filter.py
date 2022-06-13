@@ -123,6 +123,12 @@ def sanity_check(bdb, **kwargs):
         if (len(bdb) > pc) & (mc == False):
             logging.info(f"Hey! You have {len(bdb)} genomes and arent using greedy algorithms. See https://drep.readthedocs.io/en/latest/choosing_parameters.html#using-greedy-algorithms for info on how to make your run faster")
 
+    # If you mc, try and tell them to turn on tc
+    mc = kwargs.get('multiround_primary_clustering', False)
+    tc = kwargs.get('run_tertiary_clustering', False)
+    if mc and not tc:
+        logging.info(f"Hey! You're running multiround_primary_clustering but not run_tertiary_clustering! You should add --run_tertiary_clustering when running with multiround_primary_clustering to avoid weird placement; see https://drep.readthedocs.io/en/latest/choosing_parameters.html#using-greedy-algorithms for more info")
+
 
 def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
     '''
@@ -147,7 +153,7 @@ def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
             Tdb = _validate_genomeInfo(Idb, bdb)
             Gdb = _add_lengthN50(Tdb, bdb)
         except:
-            Idb = pd.read_table(kwargs.get('genomeInfo'))
+            Idb = pd.read_csv(kwargs.get('genomeInfo'), sep='\t')
             Tdb = _validate_genomeInfo(Idb, bdb)
             Gdb = _add_lengthN50(Tdb, bdb)
 
@@ -491,7 +497,7 @@ def run_prodigal(genome_list, out_dir, **kwargs):
         if os.path.exists(fna) and os.path.exists(faa):
             pass
         else:
-            cmds.append(['prodigal','-i',genome,'-d',fna,'-a',faa,'-m','-p','meta'])
+            cmds.append(['prodigal','-i',genome,'-d',fna,'-a',faa,'-m','-p','single'])
 
     # Run commands
     if len(cmds) > 0:

@@ -105,7 +105,7 @@ def test_unit_1(self):
     Test a normal run of cluster
     '''
     # normal complete run
-    args = argumentParser.parse_args(['dereplicate', self.working_wd_loc, '--S_algorithm', 'ANImf', '-g'] + \
+    args = argumentParser.parse_args(['dereplicate', self.working_wd_loc, '--S_algorithm', 'ANImf', '-sa', '0.99', '-g'] + \
                                      self.genomes)
     kwargs = vars(args)
     drep.d_cluster.controller.d_cluster_wrapper(self.working_wd_loc, **kwargs)

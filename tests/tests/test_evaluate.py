@@ -70,7 +70,7 @@ def test_tertiary_clustering_2(self):
 
     # Run tertiary clustering
     args = drep.argumentParser.parse_args(
-        ['dereplicate', self.working_wd_loc, '--run_tertiary_clustering', '-g'] + self.genomes)
+        ['dereplicate', self.working_wd_loc, '--run_tertiary_clustering', '--S_algorithm', 'ANImf', '-sa', '0.99', '-g'] + self.genomes)
     drep.d_evaluate.d_evaluate_wrapper(args.work_directory, evaluate=['2'], **vars(args))
 
     wd = drep.WorkDirectory.WorkDirectory(self.working_wd_loc)

@@ -108,14 +108,14 @@ def test_dereplicate_1(self):
 
     args = argumentParser.parse_args(['dereplicate',wd_loc,'-g'] + genomes \
         + ['--checkM_method', 'taxonomy_wf', '--debug', '--S_algorithm',
-                    'ANImf'])
+                    'ANImf', '-sa', '0.99'])
     controller = Controller()
     controller.parseArguments(args)
 
     # Verify
     s_wd = WorkDirectory(s_wd_loc)
     wd   = WorkDirectory(wd_loc)
-    test_utils.ensure_identicle(s_wd, wd, skip=['Bdb', 'Mdb', 'Sdb', 'Wdb', 'genomeInformation', 'Widb'])
+    test_utils.ensure_identicle(s_wd, wd, skip=['Bdb', 'Mdb', 'Sdb', 'Wdb', 'genomeInformation', 'Chdb', 'Widb'])
 
     # Perform sanity check to make sure solutions directiory isn't
     # being overwritten
@@ -128,7 +128,7 @@ def test_dereplicate_2(self):
 
     test_utils.sanity_check(WorkDirectory(s_wd_loc))
 
-    args = argumentParser.parse_args(['compare',wd_loc,'-g'] + genomes)
+    args = argumentParser.parse_args(['compare', wd_loc, '--S_algorithm', 'ANImf', '-sa', '0.99', '-g'] + genomes)
     controller = Controller()
     controller.parseArguments(args)
 

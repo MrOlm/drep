@@ -22,7 +22,7 @@ def test_multiround_primary_clustering_1(self):
     test_dir = self.test_dir
 
     # Run it under normal conditions
-    args = drep.argumentParser.parse_args(['compare', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '-pa', '0.95', '-d', '-g'] + self.genomes)
+    args = drep.argumentParser.parse_args(['compare', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '--S_algorithm', 'ANImf', '-sa', '0.99', '-pa', '0.95', '-d', '-g'] + self.genomes)
     kwargs = vars(args)
     drep.d_cluster.controller.d_cluster_wrapper(self.wd_loc, **kwargs)
 
@@ -51,7 +51,7 @@ def test_greedy_secondary_clustering_1(self):
 
     # Crash gracefully if the algorithm isn't right
     args = drep.argumentParser.parse_args(
-        ['compare', self.wd_loc, '--greedy_secondary_clustering', '-sa', '0.99', '-d', '-g'] + self.genomes)
+        ['compare', self.wd_loc, '--greedy_secondary_clustering', '-sa', '0.99', '--S_algorithm', 'ANImf', '-d', '-g'] + self.genomes)
     kwargs = vars(args)
     try:
         drep.d_cluster.controller.d_cluster_wrapper(self.wd_loc, **kwargs)
@@ -99,7 +99,7 @@ def test_multiround_primary_clustering_2(self):
     test_dir = self.test_dir
 
     # Run it under normal conditions
-    args = drep.argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '--ignoreGenomeQuality', '-pa', '0.95', '-d', '-g'] + self.genomes)
+    args = drep.argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '--ignoreGenomeQuality', '-pa', '0.95', '--S_algorithm', 'ANImf', '-sa', '0.99', '-d', '-g'] + self.genomes)
     drep.controller.Controller().parseArguments(args)
 
     # Load test results
@@ -199,7 +199,7 @@ def test_greedy_secondary_clustering_2(self):
 
     # Crash gracefully if the algorithm isn't right
     args = drep.argumentParser.parse_args(
-        ['dereplicate', self.wd_loc, '--greedy_secondary_clustering', '-sa', '0.99', '--ignoreGenomeQuality', '-d', '-g'] + self.genomes)
+        ['dereplicate', self.wd_loc, '--greedy_secondary_clustering', '-sa', '0.99', '--ignoreGenomeQuality', '--S_algorithm', 'ANImf', '-d', '-g'] + self.genomes)
     try:
         drep.controller.Controller().parseArguments(args)
         assert False

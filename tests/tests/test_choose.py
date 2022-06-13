@@ -164,7 +164,7 @@ def test_centrality_1(self):
     Test the methods drep.d_choose.add_centrality and "choose_winners" on a small set of genomes
     """
     wd = drep.WorkDirectory.WorkDirectory(self.working_wd_loc)
-    kwargs = vars(argumentParser.parse_args(['dereplicate', self.working_wd_loc, '--ignoreGenomeQuality']))
+    kwargs = vars(argumentParser.parse_args(['dereplicate', self.working_wd_loc, '--ignoreGenomeQuality', '--S_algorithm', 'ANImf', '-sa', '0.99']))
     del kwargs['genomes']
 
     # Modify Cdb
