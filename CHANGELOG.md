@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [3.3.0] - UNPUSHED
+## [3.3.0] - 2022-06-13
 - Set default S_algorithm to fastANI and sa to 0.95
 - Run Prodigal in "single" mode
 - If using multiround_primary_clustering, yell if not also tertiary_clustering
