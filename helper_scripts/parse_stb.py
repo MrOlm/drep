@@ -1,6 +1,7 @@
 #!/usr/bin/env python
 
 import os
+import sys
 import gzip
 import logging
 import textwrap
@@ -48,6 +49,21 @@ def extract_bins(fasta, stb_file, out_base):
         handle.close()
 
 def gen_stb(fastas):
+    if ((len(fastas) == 1) & (not fastas[0].endswith('.gz'))):
+        # See if this is a text file, not a fasta file
+        text_list = True
+        genomes = []
+        with open(fastas[0], 'r') as o:
+            for line in o.readlines():
+                if line.startswith('>'):
+                    text_list = False
+                    break
+                else:
+                    genomes.append(line.strip())
+        if text_list:
+            print("Treating .fasta input as list")
+            fastas = genomes
+
     stb = {}
     for fasta in fastas:
         bin = os.path.basename(fasta)
@@ -97,7 +113,7 @@ if __name__ == '__main__':
          '''))
 
     parser.add_argument('-s','--stb',help='scaffold to bin file')
-    parser.add_argument('-f','--fasta',help='fasta file to extract scaffolds from. Will treat as compressed if ends in .gz',nargs='*')
+    parser.add_argument('-f','--fasta',help='fasta file to extract scaffolds from. Will treat as compressed if ends in .gz. This can also be a single text file with a genome on each line',nargs='*')
     parser.add_argument('-o','--output',help='output base name', default = '')
 
     parser.add_argument('--reverse',help='generate a stb from a list of genomes',\

@@ -12,6 +12,7 @@
   "tests/tests/test_bonus.py::test_drep_scaffold_level_5",
   "tests/tests/test_bonus.py::test_parse_stb",
   "tests/tests/test_bonus.py::test_parse_stb_2",
+  "tests/tests/test_bonus.py::test_parse_stb_3",
   "tests/tests/test_choose.py::test_centrality_1",
   "tests/tests/test_choose.py::test_centrality_2",
   "tests/tests/test_choose.py::test_choose_1",

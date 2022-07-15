@@ -200,3 +200,24 @@ def test_parse_stb_2(self):
 
     out_genomes = glob.glob(new_out + '*')
     assert len(out_genomes) == 1, out_genomes
+
+def test_parse_stb_3(self):
+    '''
+    test parse_stb.py on list of genomes
+    '''
+    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/parse_stb.py')
+    out_loc = self.wd_loc + '/test.stb'
+    list_loc = self.wd_loc + '/test_genomes.txt'
+
+    # Write the list
+    with open(list_loc, 'w') as o:
+        for genome in self.genomes:
+            o.write(genome + '\n')
+
+    cmd = f"{script_loc} --reverse -f {list_loc} -o {out_loc}"
+    print(cmd)
+    subprocess.call(cmd, shell=True)
+
+    db = pd.read_csv(out_loc, sep='\t', names=['scaffold', 'bin'])
+    assert len(db) == 124
+    assert len(db['bin'].unique()) == 5
