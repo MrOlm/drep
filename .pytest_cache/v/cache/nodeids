@@ -40,6 +40,7 @@
   "tests/tests/test_dereplicate.py::test_dereplicate_6",
   "tests/tests/test_dereplicate.py::test_dereplicate_7",
   "tests/tests/test_dereplicate.py::test_dereplicate_8",
+  "tests/tests/test_dereplicate.py::test_dereplicate_9",
   "tests/tests/test_evaluate.py::test_tertiary_clustering_1",
   "tests/tests/test_evaluate.py::test_tertiary_clustering_2",
   "tests/tests/test_filter.py::test_calc_genome_info",

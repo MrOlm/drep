@@ -198,6 +198,7 @@ def parse_args(args):
     # Make a parent parser for evaluate
     evaluate_parent = argparse.ArgumentParser(add_help=False)
     Fflags = evaluate_parent.add_argument_group('WARNINGS')
+    Fflags.add_argument("--gen_warnings", default=False, help="Generate warnings", action='store_true')
     Fflags.add_argument("--warn_dist", default=0.25, help="How far from the threshold " + \
                                                           " to throw cluster warnings")
     Fflags.add_argument("--warn_sim", default=0.98, help="Similarity threshold for " + \
@@ -205,10 +206,15 @@ def parse_args(args):
     Fflags.add_argument("--warn_aln", default=0.25, help="Minimum aligned fraction for " + \
                                                          " warnings between dereplicated genomes (ANIn)")
 
+    # Make a parent parser for analyze
+    analyze_parent = argparse.ArgumentParser(add_help=False)
+    Aflags = analyze_parent.add_argument_group('ANALYZE')
+    Aflags.add_argument("--skip_plots", default=False, help="Dont make plots", action='store_true')
+
     dereplicate_parser = subparsers.add_parser("dereplicate", formatter_class=SmartFormatter, \
                                                parents=[parent_parser, genome_parser, filtering_parent, quality_parent,
                                                         cluster_parent, scoring_parent, \
-                                                        evaluate_parent], add_help=False, epilog= \
+                                                        evaluate_parent, analyze_parent], add_help=False, epilog= \
                                                    "Example: dRep dereplicate output_dir/ -g /path/to/genomes/*.fasta")
 
     dereplicate_parser = subparsers.add_parser("compare", formatter_class=SmartFormatter, \

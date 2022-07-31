@@ -1,5 +1,6 @@
 import importlib
 import logging
+import glob
 import os
 import shutil
 import pytest
@@ -108,7 +109,7 @@ def test_dereplicate_1(self):
 
     args = argumentParser.parse_args(['dereplicate',wd_loc,'-g'] + genomes \
         + ['--checkM_method', 'taxonomy_wf', '--debug', '--S_algorithm',
-                    'ANImf', '-sa', '0.99'])
+                    'ANImf', '-sa', '0.99', "--gen_warnings"])
     controller = Controller()
     controller.parseArguments(args)
 
@@ -120,6 +121,14 @@ def test_dereplicate_1(self):
     # Perform sanity check to make sure solutions directiory isn't
     # being overwritten
     test_utils.sanity_check(s_wd)
+
+    # Find figures
+    figs = glob.glob(wd_loc + '/figures/*')
+    assert len(figs) == 6
+
+    # Find warnings
+    warn = glob.glob(wd_loc + '/log/warnings.txt')
+    assert len(warn) == 1
 
 def test_dereplicate_2(self):
     genomes  = self.genomes
@@ -137,6 +146,10 @@ def test_dereplicate_2(self):
     wd   = WorkDirectory(wd_loc)
     test_utils.ensure_identicle(s_wd, wd, skip=['Bdb', 'Chdb', 'Sdb', 'Wdb', 'Widb',\
         'genomeInformation', 'Mdb'])
+
+    # Find figures
+    figs = glob.glob(wd_loc + '/figures/*')
+    assert len(figs) == 4
 
     # Perform sanity check to make sure solutions directiory isn't
     # being overwritten
@@ -339,3 +352,36 @@ def test_dereplicate_8(self):
             assert set(CSdb[c].value_counts().to_dict().keys()) == set(Cdb[c].value_counts().to_dict().keys())#, [set(CSdb[c].value_counts().to_dict().keys()), set(Cdb[c].value_counts().to_dict().keys())]
     assert set(CSdb['genome'].tolist()) == set(Cdb['genome'].tolist())
     assert set(CSdb.columns) - set(Cdb.columns) == set(['greedy_representative'])
+
+def test_dereplicate_9(self):
+    """
+    Test --skip_analyze and --skip_evaluate
+    """
+    genomes  = self.genomes
+    wd_loc   = self.wd_loc
+    s_wd_loc = self.s_wd_loc
+
+    test_utils.sanity_check(WorkDirectory(s_wd_loc))
+
+    args = argumentParser.parse_args(['dereplicate',wd_loc,'-g'] + genomes \
+        + ['--checkM_method', 'taxonomy_wf', '--debug', '--S_algorithm',
+                    'ANImf', '-sa', '0.99', '--skip_plots'])
+    controller = Controller()
+    controller.parseArguments(args)
+
+    # Verify
+    s_wd = WorkDirectory(s_wd_loc)
+    wd   = WorkDirectory(wd_loc)
+    test_utils.ensure_identicle(s_wd, wd, skip=['Bdb', 'Mdb', 'Sdb', 'Wdb', 'genomeInformation', 'Chdb', 'Widb'])
+
+    # Find figures
+    figs = glob.glob(wd_loc + '/figures/*')
+    assert len(figs) == 0
+
+    # Find warnings
+    warn = glob.glob(wd_loc + '/log/warnings.txt')
+    assert len(warn) == 0
+
+    # Perform sanity check to make sure solutions directiory isn't
+    # being overwritten
+    test_utils.sanity_check(s_wd)

@@ -58,7 +58,9 @@ def d_analyze_wrapper(wd, **kwargs):
 
     # Figure out what plots to make
     options = ['1','2','3','4','5','6']
-    to_plot = _parse_plot_options(options, kwargs.get('plots', None))
+
+    to_plot = kwargs.get('plots', None)
+    to_plot = _parse_plot_options(options, to_plot)
     logging.info("making plots {0}".format(', '.join(to_plot)))
 
     # Get the plot directory
@@ -1193,6 +1195,9 @@ def _parse_plot_options(options, args):
         list: list of ints in the args
     '''
     to_plot = []
+
+    if args == []:
+        return []
 
     if args[0] in ['all','a']:
         to_plot += options

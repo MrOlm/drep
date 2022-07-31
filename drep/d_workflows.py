@@ -50,7 +50,11 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    drep.d_evaluate.d_evaluate_wrapper(wd, evaluate = '23', **kwargs)
+    if kwargs.get('gen_warnings', False):
+        evaluate='23'
+    else:
+        evaluate = '3'
+    drep.d_evaluate.d_evaluate_wrapper(wd, evaluate=evaluate, **kwargs)
 
     message = """\
 ***************************************************
@@ -58,7 +62,11 @@ def dereplicate_wrapper(wd,**kwargs):
 ***************************************************
     """
     logging.info(message)
-    drep.d_analyze.d_analyze_wrapper(wd, plots = 'a', **kwargs)
+    if kwargs.get('skip_plots', False):
+        to_plot = []
+    else:
+        to_plot = 'a'
+    drep.d_analyze.d_analyze_wrapper(wd, plots=to_plot, **kwargs)
 
     loc = drep.WorkDirectory.WorkDirectory(wd).location
     message = """\

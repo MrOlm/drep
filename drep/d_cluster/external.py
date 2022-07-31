@@ -92,7 +92,7 @@ def run_pairwise_fastANI(genome_list, outdir, **kwargs):
     # Gen command
     exe_loc = drep.get_exe('fastANI')
     out_base = os.path.join(outdir, 'fastANI_out_{0}'.format(code))
-    cmd = [exe_loc, '--ql', glist, '--rl', glist, '-o', out_base, '--matrix', '-t', str(p), '--minFraction', str(0)]
+    cmd = [exe_loc, '--ql', glist, '--rl', glist, '-o', out_base, '--matrix', '-t', str(p), "--minFraction", str(0)]
     logging.debug(' '.join(cmd) + ' ' + code)
 
     # Run command
@@ -125,7 +125,7 @@ def fastani_one_vs_many(one, many, genome_rep_file, outdir, **kwargs):
 
     # Gen command
     out_base = os.path.join(outdir, 'fastANI_out_{0}'.format(code))
-    cmd = [exe_loc, '-q', one, '--rl', genome_rep_file, '-o', out_base, '--matrix', '-t', str(p), '--minFraction', str(0)]
+    cmd = [exe_loc, '-q', one, '--rl', genome_rep_file, '-o', out_base, '--matrix', '-t', str(p), "--minFraction", str(0)]
     logging.debug(' '.join(cmd) + ' ' + code)
 
     # Run command
