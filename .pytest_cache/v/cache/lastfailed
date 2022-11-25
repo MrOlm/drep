@@ -1,6 +1,0 @@
-{
-  "tests/test_suite.py::test_long": true,
-  "tests/test_suite.py::test_quick": true,
-  "tests/test_suite.py::test_short": true,
-  "tests/test_suite.py::test_unit": true
-}

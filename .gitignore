@@ -21,3 +21,15 @@ dist/
 
 # documentation build
 docs/_build/
+
+# PyCharm files 
+.idea/* 
+
+# Python cache
+.cache/* 
+
+# Pytest cache
+.pytest_cache/*
+
+# Mac specifics 
+.DS_Store
