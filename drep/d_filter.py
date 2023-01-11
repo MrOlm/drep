@@ -150,12 +150,22 @@ def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
         logging.debug("Loading provided genome quality information")
         try:
             Idb = pd.read_csv(kwargs.get('genomeInfo'))
-            Tdb = _validate_genomeInfo(Idb, bdb)
-            Gdb = _add_lengthN50(Tdb, bdb)
         except:
             Idb = pd.read_csv(kwargs.get('genomeInfo'), sep='\t')
+        try:
             Tdb = _validate_genomeInfo(Idb, bdb)
-            Gdb = _add_lengthN50(Tdb, bdb)
+        except IndexError:
+            bdb_cleanup = bdb.loc[~(bdb['genome'].isin(Idb['genome']))]
+            missing_count = bdb_cleanup.shape[0]
+            logging.debug("Missing info on {0} genomes,"
+                          " running CheckM".format(missing_count))
+            Chdb_cleanup = _run_checkM_wrapper(bdb_cleanup,
+                                               workDirectory,
+                                               **kwargs)
+            Idb_cleanup = chdb_to_genomeInfo(Chdb_cleanup)
+            Idb_combined = pd.concat([Idb, Idb_cleanup])
+            Tdb = _validate_genomeInfo(Idb_combined, bdb)
+        Gdb = _add_lengthN50(Tdb, bdb)
 
     elif workDirectory.hasDb('genomeInfo'):
         logging.debug("Loading genomeInfo.csv from work directory")
@@ -205,7 +215,7 @@ def _validate_genomeInfo(Idb, bdb):
     # Make sure it has required columns
     for r in ['completeness', 'contamination', 'genome']:
         if r not in Idb.columns:
-            raise ValueError("{0} missing from GenomeInfo".format(r))
+            raise KeyError("{0} missing from GenomeInfo".format(r))
 
     # Make sure correct datatypes
     for r in ['completeness', 'contamination', 'strain_heterogeneity']:
@@ -224,7 +234,7 @@ def _validate_genomeInfo(Idb, bdb):
     # Make sure it matchs up with bdb
     for genome in list(bdb['genome'].unique()):
         if genome not in Idb['genome'].tolist():
-            raise ValueError("{0} missing from GenomeInfo".format(genome))
+            raise IndexError("{0} missing from GenomeInfo".format(genome))
 
     # Throw warnings if you think this is weird
     for r in ['completeness', 'contamination', 'strain_heterogeneity']:
