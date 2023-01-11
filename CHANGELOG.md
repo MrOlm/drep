@@ -4,6 +4,11 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.4.1] - 2023-01-11
+- Only run checkM on bugs not in the genomeInfo list
+- https://github.com/MrOlm/drep/pull/179
+- Thanks Jon Sanders!
+
 ## [3.4.0] - 2022-07-31
 - Add the options "--skip_evaluate" and "--skip_analyze" to dereplicate
 
