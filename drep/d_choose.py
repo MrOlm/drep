@@ -204,6 +204,18 @@ def score_genomes(genomes, Gdb, Edb=None, **kwargs):
     else:
         g2e = {}
 
+    # Test for NaNs in Gdb['strain_heterogeneity']
+    if 'strain_heterogeneity' in Gdb.columns:
+        if Gdb['strain_heterogeneity'].isnull().values.any():
+            kwargs['strain_heterogeneity_weight'] = 0
+            logging.warning ('NaNs found in Gdb strain_heterogeneity! '
+                             'This may have happened if CheckM results '
+                             'were imported for some but not all '
+                             'genomes. \n\n'
+                             'Setting strain_heterogeneity_weight to zero')
+            Gdb.drop('strain_heterogeneity',
+                     axis=1, inplace=True)
+
     Table = {'genome':[],'score':[]}
     for genome in genomes:
         if genome in g2e:
