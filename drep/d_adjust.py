@@ -180,7 +180,7 @@ def adjust_cluster_wrapper(wd, **kwargs):
     # Make it symmetrical
     Xdb['av_ani'] = Xdb.apply(lambda row: dClust.average_ani (row,Xdb),axis=1)
     Xdb['dist'] = 1 - Xdb['av_ani']
-    db = Xdb.pivot("reference","querry","dist")
+    db = Xdb.pivot(index="reference", columns="querry", values="dist")
 
     # Cluster it
     if threshold == None:

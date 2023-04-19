@@ -77,7 +77,7 @@ def make_linkage_Ndb(Ndb, **kwargs):
     # Make a linkagedb by averaging values and setting self-compare to 1
     drep.d_cluster.external.add_avani(d)
     d['dist'] = 1 - d['av_ani']
-    db = d.pivot("reference", "querry", "dist")
+    db = d.pivot(index="reference", columns="querry", values="dist")
 
     return db
 

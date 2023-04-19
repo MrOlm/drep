@@ -276,7 +276,7 @@ def cluster_mash_database(db, **kwargs):
 
     # Do the actual clustering
     db['dist'] = 1 - db['similarity']
-    linkage_db = db.pivot("genome1","genome2","dist")
+    linkage_db = db.pivot(index="genome1", columns="genome2", values="dist")
     Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(linkage_db, linkage_method= P_Lmethod, \
                                                                      linkage_cutoff= P_Lcutoff)
     Cdb = Cdb.rename(columns={'cluster':'primary_cluster'})
@@ -303,7 +303,8 @@ def secondary_clustering(Bdb, Cdb, algorithm, data_folder, **kwargs):
 
             if len(ndb) > 0:
                 ndb['primary_cluster'] = name
-                Ndb = Ndb.append(ndb)
+                Ndb = pd.concat([Ndb, ndb])
+                #Ndb = Ndb.append(ndb)
             else:
                 logging.error("DOUBLE CRITICAL ERROR AGAIN WITH PRIMARY CLUSTER {0}; SKIPPING".format(name))
 

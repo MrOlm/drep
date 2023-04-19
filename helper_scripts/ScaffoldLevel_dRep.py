@@ -552,7 +552,8 @@ def load_fastas(fastas):
         db['loc'] = fasta
         db['priority'] = i
         db['sort_name'] = os.path.basename(fasta)
-        Sdb = Sdb.append(db)
+        Sdb = pd.concat([Sdb, db])
+        #Sdb = Sdb.append(db)
 
     Sdb['loc'] = Sdb['loc'].astype('category')
     Sdb['sort_name'] = Sdb['sort_name'].astype('category')
@@ -601,7 +602,8 @@ def compare_scaffolds(scaffDb, output_folder, **kwargs):
         rmdb = reconsile(Sdb, current, new, newfile, temp_folder, **kwargs)
 
         # Keep track of what was removed
-        RMdb = RMdb.append(rmdb)
+        #RMdb = RMdb.append(rmdb)
+        RMdb = pd.concat([RMdb, rmdb])
 
         current = newfile
 

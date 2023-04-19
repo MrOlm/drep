@@ -150,7 +150,7 @@ def load_fastani(file):
 
 def _fix_fastani(odb):
     # Add back missing genomes
-    fdb = odb.pivot('reference', 'querry', 'ani')
+    fdb = odb.pivot(index="reference", columns="querry", values="ani")
     fdb.reset_index(level=0, inplace=True)
     fdb.fillna(0, inplace=True)
     fdb = fdb.melt(id_vars=['reference']).rename(

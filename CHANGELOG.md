@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.4.3] - 2023-04-18
+- Fix pandas pivot bug 
+
 ## [3.4.2] - 2023-02-06
 - Quick bugfix for last update 
 

@@ -633,7 +633,7 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
     if Mdb['genome1'].dtype.name == 'category':
         logging.error("WARNING: Primary dendrogram labels may be shuffled! Load as csv to prevent this")
 
-    db = Mdb.pivot("genome1","genome2","similarity")
+    db = Mdb.pivot(index="genome1", columns="genome2", values="similarity")
     names = list(db.columns)
     name2cluster = Cdb.set_index('genome')['primary_cluster'].to_dict()
     name2color = gen_color_dictionary(names, name2cluster)
@@ -851,7 +851,7 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         # Make a MASH linkage for the dendrogram
         db = Wmdb.copy()
         db['dist'] = 1 - db['similarity']
-        linkage_db = db.pivot("genome1","genome2","dist")
+        linkage_db = db.pivot(index="genome1", columns="genome2", values="dist")
         names = list(linkage_db.columns)
         Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(linkage_db, linkage_method='average', \
                                                                          linkage_cutoff= 0)
@@ -873,7 +873,7 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         drep.d_cluster.add_avani(d)
         #d['av_ani'] = d.apply(lambda row: drep.d_cluster.average_ani (row,d),axis=1)
         d['dist'] = 1 - d['av_ani']
-        db = d.pivot("reference", "querry", "dist")
+        db = d.pivot(index="reference", columns="querry", values="dist")
         names = list(db.columns)
         Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(db, linkage_method='average', \
                                                                          linkage_cutoff= 0)
@@ -895,7 +895,7 @@ def plot_winners(Wdb, Gdb, Wndb, Wmdb, Widb, plot_dir= False, **kwargs):
         drep.d_cluster.add_avani(d)
         #d['av_ani'] = d.apply(lambda row: drep.d_cluster.average_ani (row,d),axis=1)
         d['dist'] = 1 - d['av_ani']
-        db = d.pivot("reference", "querry", "dist")
+        db = d.pivot(index="reference", columns="querry", values="dist")
         names = list(db.columns)
         Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(db, linkage_method='average', \
                                                                          linkage_cutoff= 0)
@@ -1538,7 +1538,7 @@ def cluster_test_wrapper(wd, **kwargs):
     drep.d_cluster.add_avani(Xdb)
     #Xdb['av_ani'] = Xdb.apply(lambda row: drep.d_cluster.average_ani (row,Xdb),axis=1)
     Xdb['dist'] = 1 - Xdb['av_ani']
-    db = Xdb.pivot("reference","querry","dist")
+    db = Xdb.pivot(index="reference", columns="querry", values="dist")
 
     # Cluster it
     if threshold == None:
