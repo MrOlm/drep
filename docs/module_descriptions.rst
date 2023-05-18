@@ -97,7 +97,7 @@ This workflow compares a set of genomes. For a list of all parameters, check the
                             (default: 0.9)
       -sa S_ANI, --S_ani S_ANI
                             ANI threshold to form secondary clusters (default:
-                            0.99)
+                            0.95)
       -nc COV_THRESH, --cov_thresh COV_THRESH
                             Minmum level of overlap between genomes when doing
                             secondary comparisons (default: 0.1)
@@ -253,7 +253,7 @@ This workflow dereplicates a set of genomes. For a list of all parameters, check
                             (default: 0.9)
       -sa S_ANI, --S_ani S_ANI
                             ANI threshold to form secondary clusters (default:
-                            0.99)
+                            0.95)
       -nc COV_THRESH, --cov_thresh COV_THRESH
                             Minmum level of overlap between genomes when doing
                             secondary comparisons (default: 0.1)
