@@ -142,8 +142,8 @@ class GenomeClusterController(object):
                     logging.debug("Debug mode on - saving Ndb ASAP")
                     self.wd.store_db(Ndb, 'Ndb')
 
-            # Store the secondary clustering results
-            self.wd.store_special('secondary_linkages', c2ret)
+                # Store the secondary clustering results
+                self.wd.store_special('secondary_linkages', c2ret)
 
         else:
             logging.info("3. Nevermind! Skipping secondary clustering")
