@@ -118,7 +118,7 @@ class GenomeClusterController(object):
 
         # Get the arguments
         algorithm = self.kwargs.get('S_algorithm', 'ANImf')
-        cached = (self.debug and self.wd.hasDb('Ndb'))
+        cached = (self.debug and self.wd.hasDb('Ndb') and self.wd.hasDb('Cdb'))
         p = self.kwargs.get('processors', 6)
         self.deal_with_nucmer_presets()
 
@@ -129,8 +129,12 @@ class GenomeClusterController(object):
             if cached:
                 logging.info('3. Loading cached secondary clustering')
                 Ndb = self.wd.get_db('Ndb')
+                Cdb = self.wd.get_db('Cdb')
+
                 # Get rid of broken ones
+                base = len(Ndb)
                 Ndb = Ndb.dropna(subset=['reference'])
+                logging.info(f'!!! {len(Ndb) - base} lines from Ndb failed!')
 
                 logging.info('3. Secondary clustering cache loaded')
 
@@ -141,6 +145,7 @@ class GenomeClusterController(object):
                 if self.debug:
                     logging.debug("Debug mode on - saving Ndb ASAP")
                     self.wd.store_db(Ndb, 'Ndb')
+                    self.wd.store_db(Cdb, 'Cdb')
 
                 # Store the secondary clustering results
                 self.wd.store_special('secondary_linkages', c2ret)
