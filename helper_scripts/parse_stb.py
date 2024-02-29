@@ -3,11 +3,8 @@
 import os
 import sys
 import gzip
-import logging
 import textwrap
 import argparse
-
-from Bio import SeqIO
 
 def extract_bins(fasta, stb_file, out_base):
     if (out_base != '') & (out_base[-1] != '/'):
@@ -15,38 +12,46 @@ def extract_bins(fasta, stb_file, out_base):
 
     # Make scaffold to bin dictionary
     stb = {}
-    stb_reader = open(stb_file)
-    for line in stb_reader:
-        line = line.strip()
+    with open(stb_file) as stb_reader:
+        for line in stb_reader:
+            line = line.strip()
 
-        if line.startswith('#') or line.startswith('scaffold_name'):
-            continue
+            if line.startswith('#') or line.startswith('scaffold_name'):
+                continue
 
-        scaffold = line.split('\t')[0].strip()
-        bin = line.split('\t')[1].strip()
-        stb[scaffold] = bin
+            scaffold, bin = line.split('\t')[:2]
+            stb[scaffold.strip()] = bin.strip()
 
-    # Do it with append
-    if fasta[-3:] == '.gz':
-        handle = gzip.open(fasta, "rt")
-        seqs = SeqIO.parse(handle, "fasta")
-
+    # Parse the FASTA file and write to bins
+    if fasta.endswith('.gz'):
+        open_func = gzip.open
+        mode = 'rt'
     else:
-        seqs = SeqIO.parse(fasta, "fasta")
+        open_func = open
+        mode = 'r'
 
-    for seq_record in seqs:
-        id = str(seq_record.id).strip()
-        if id not in stb:
-            # print("{0} not in stb".format(id))
-            continue
-        fasta = stb[id]
+    with open_func(fasta, mode) as handle:
+        record_id = ''
+        record_seq = ''
+        for line in handle:
+            if line.startswith('>'):
+                if record_id and record_id in stb:
+                    bin = stb[record_id]
+                    with open(f"{out_base}{bin}.fa", 'a') as nw:
+                        nw.write(f">{record_id}\n{record_seq}\n")
+                record_id = line[1:].strip().split(' ')[0]
+                record_seq = ''
+            else:
+                record_seq += line.strip()
 
-        nw = open("{0}{1}.fa".format(out_base, fasta), 'a')
-        nw.write('\n'.join([">{0}".format(id), str(seq_record.seq), '']))
-        nw.close()
+        # Write the last record
+        if record_id and record_id in stb:
+            bin = stb[record_id]
+            with open(f"{out_base}{bin}.fa", 'a') as nw:
+                nw.write(f">{record_id}\n{record_seq}\n")
 
-    if fasta[-3:] == '.gz':
-        handle.close()
+import os
+import gzip
 
 def gen_stb(fastas):
     if ((len(fastas) == 1) & (not fastas[0].endswith('.gz'))):
@@ -67,17 +72,21 @@ def gen_stb(fastas):
     stb = {}
     for fasta in fastas:
         bin = os.path.basename(fasta)
-        if bin[-3:] == '.gz':
-            with gzip.open(fasta, "rt") as handle:
-                for seq_record in SeqIO.parse(handle, "fasta"):
-                    id = str(seq_record.id).strip()
-                    stb[id] = bin
+        if fasta.endswith('.gz'):
+            open_func = gzip.open
+            mode = 'rt'
         else:
-            iter = SeqIO.parse(fasta, "fasta")
-            for seq_record in iter:
-                id = str(seq_record.id).strip()
-                stb[id] = bin
+            open_func = open
+            mode = 'r'
+
+        with open_func(fasta, mode) as handle:
+            for line in handle:
+                if line.startswith('>'):
+                    id = line[1:].strip().split(' ')[0]
+                    stb[id] = bin
+
     return stb
+
 
 def print_stb(stb, output):
     file = open(output,'w')

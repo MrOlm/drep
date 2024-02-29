@@ -41,10 +41,10 @@ def self():
 
     # Teardown
     logging.shutdown()
-    if os.path.isdir(self.wd_loc):
-        shutil.rmtree(self.wd_loc)
-    if os.path.isdir(self.test_dir):
-        shutil.rmtree(self.test_dir)
+    # if os.path.isdir(self.wd_loc):
+    #     shutil.rmtree(self.wd_loc)
+    # if os.path.isdir(self.test_dir):
+    #     shutil.rmtree(self.test_dir)
 
 # class test_cluster():
 #     def __init__(self):
@@ -305,8 +305,37 @@ def test_fastANI(self):
     data_folder = self.test_dir
 
     Ndb = drep.d_cluster.compare_utils.compare_genomes(bdb, 'fastANI', data_folder)
+
+    pd.set_option('display.width', None)  # Do not wrap the display
+    print(Ndb)
+
     db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
         & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+
+    assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
+
+def test_skani(self):
+    '''
+    Test skani
+    '''
+    bdb = drep.d_cluster.utils.load_genomes(self.genomes)
+    data_folder = self.test_dir
+
+    # Run normal
+    Ndb = drep.d_cluster.compare_utils.compare_genomes(bdb, 'skani', data_folder)
+    pd.set_option('display.width', None)  # Do not wrap the display
+    print(Ndb)
+
+    db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna')\
+        & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
+
+    assert (db['ani'].tolist()[0] > 0.8) & (db['ani'].tolist()[0] < 0.9)
+
+    # Run with slow
+    Ndb = drep.d_cluster.compare_utils.compare_genomes(bdb, 'skani', data_folder, skani_extra='--slow')
+
+    db = Ndb[(Ndb['reference'] == 'Enterococcus_faecalis_T2.fna') \
+             & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
 
     assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
 
@@ -483,6 +512,35 @@ def test_cluster_functional_4(self):
 
     args = argumentParser.parse_args(['dereplicate',wd_loc,'--S_algorithm',\
         'fastANI', '-sa', '0.99', '-g']+genomes)
+    # controller = Controller()
+    # controller.parseArguments(args)
+    # args = argumentParser.parse_args(['dereplicate', wd_loc, '--S_algorithm', 'ANImf', '-g'] + genomes)
+
+    kwargs = vars(args)
+    drep.d_cluster.controller.d_cluster_wrapper(wd_loc, **kwargs)
+
+    # Verify
+    Swd = WorkDirectory(s_wd_loc)
+    wd   = WorkDirectory(wd_loc)
+
+    # Confirm Cdb.csv is correct
+    db1 = Swd.get_db('Cdb')
+    del db1['comparison_algorithm']
+    db2 =  wd.get_db('Cdb')
+    del db2['comparison_algorithm']
+    assert test_utils.compare_dfs(db1, db2), "{0} is not the same!".format('Cdb')
+
+def test_cluster_functional_5(self):
+    '''
+    Cluster the 5 genomes using skani
+    '''
+
+    genomes = self.genomes
+    wd_loc  = self.wd_loc
+    s_wd_loc = self.s_wd_loc
+
+    args = argumentParser.parse_args(['dereplicate',wd_loc,'--S_algorithm',\
+        'skani', '-sa', '0.99', '-g']+genomes)
     # controller = Controller()
     # controller.parseArguments(args)
     # args = argumentParser.parse_args(['dereplicate', wd_loc, '--S_algorithm', 'ANImf', '-g'] + genomes)

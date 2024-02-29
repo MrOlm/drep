@@ -98,7 +98,7 @@ def check_dependencies(print_out=False):
     For all possible dependencies, see if you can find them
     '''
     for dep in ['mash', 'nucmer', 'checkm', 'ANIcalculator', 'prodigal', 'centrifuge',
-                'nsimscan', 'fastANI']:
+                'nsimscan', 'fastANI', 'skani']:
         loc, works = find_program(dep)
         works_message = {True:'all good', False:'!!! ERROR !!!'}[works]
         message = '{0:.<40} {1:15} (location = {2})'.format(dep, works_message, loc)

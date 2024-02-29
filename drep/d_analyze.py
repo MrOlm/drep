@@ -728,11 +728,11 @@ def plot_winner_scoring_complex(Wdb, Sdb, Cdb, Gdb, plot_dir= False, **kwargs):
         for variable in x['variable'].unique():
             vals += [v for v in x['value'][x['variable'] == variable].tolist()]
 
-        # Add un-normalized values to barplots
-        i = 0
-        for p in g.patches:
-            g.annotate("{0:.1f}".format(vals[i]), (p.get_width(), p.get_y()+(p.get_height()/1.1) ), fontsize=8)
-            i += 1
+        # # Add un-normalized values to barplots
+        # i = 0
+        # for p in g.patches:
+        #     g.annotate("{0:.1f}".format(vals[i]), (p.get_width(), p.get_y()+(p.get_height()/1.1) ), fontsize=8)
+        #     i += 1
 
         plt.title('Scoring of cluster {0}'.format(cluster))
         plt.xlabel('Normalized Score')
@@ -1378,11 +1378,11 @@ def _make_scoring_plot(db, bars,**kwargs):
     for variable in x['variable'].unique():
         vals += [v for v in x['value'][x['variable'] == variable].tolist()]
 
-    # Add un-normalized values to barplots
-    i = 0
-    for p in g.patches:
-        g.annotate("{0:.1f}".format(vals[i]), (p.get_width(), p.get_y()+(p.get_height()/1.1) ), fontsize=8)
-        i += 1
+    # # Add un-normalized values to barplots
+    # i = 0
+    # for p in g.patches:
+    #     g.annotate("{0:.1f}".format(vals[i]), (p.get_width(), p.get_y()+(p.get_height()/1.1) ), fontsize=8)
+    #     i += 1
 
     # Add taxonomy if available
     axes = plt.gca()

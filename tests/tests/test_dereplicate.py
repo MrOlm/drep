@@ -385,3 +385,28 @@ def test_dereplicate_9(self):
     # Perform sanity check to make sure solutions directiory isn't
     # being overwritten
     test_utils.sanity_check(s_wd)
+
+def test_dereplicate_10(self):
+    '''
+    Use skani
+    '''
+    genomes  = self.genomes
+    wd_loc   = self.wd_loc
+    s_wd_loc = self.s_wd_loc
+
+    test_utils.sanity_check(WorkDirectory(s_wd_loc))
+
+    args = argumentParser.parse_args(['compare',wd_loc,'--S_algorithm',
+                'skani','-g'] + genomes)
+    controller = Controller()
+    controller.parseArguments(args)
+
+    # Verify
+    s_wd = WorkDirectory(s_wd_loc)
+    wd   = WorkDirectory(wd_loc)
+    Ndb = wd.get_db('Ndb')
+    assert len(Ndb) > 0
+
+    # Perform sanity check to make sure solutions directiory isn't
+    # being overwritten
+    test_utils.sanity_check(s_wd)

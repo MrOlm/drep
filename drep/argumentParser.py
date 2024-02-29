@@ -44,7 +44,7 @@ def printHelp():
     print('                ...::: dRep v' + VERSION + ' :::...''')
     print('''\
 
-  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2023)
+  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2024)
 
   See https://drep.readthedocs.io/en/latest/index.html for documentation
   Choose one of the operations below for more detailed help. 
@@ -115,16 +115,20 @@ def parse_args(args):
     Clustflags = cluster_parent.add_argument_group('GENOME COMPARISON OPTIONS')
     Clustflags.add_argument("--S_algorithm", help="R|Algorithm for secondary clustering comaprisons:\n" \
                                                   + "fastANI = Kmer-based approach; very fast\n" \
+                                                  + "skani = Even faster Kmer-based approacht\n" \
                                                   + "ANImf   = (DEFAULT) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
                                                   + "ANIn    = Align whole genomes with nucmer; compare aligned regions\n" \
                                                   + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
                                                   + "goANI   = Open source version of gANI; requires nsmimscan\n",
-                            default='fastANI', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI'})
+                            default='fastANI', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI', 'skani'})
     Clustflags.add_argument("-ms", "--MASH_sketch", help="MASH sketch size", default=1000)
     Clustflags.add_argument("--SkipMash", help="Skip MASH clustering,\
                             just do secondary clustering on all genomes", action='store_true')
     Clustflags.add_argument("--SkipSecondary", help="Skip secondary clustering, just perform MASH\
                             clustering", action='store_true')
+    Clustflags.add_argument("--skani_extra",
+                         help="Extra arguments to pass to skani triangle",
+                         default="", type=str)
     Clustflags.add_argument("--n_PRESET", help="R|Presets to pass to nucmer\n" \
                                                + "tight   = only align highly conserved regions\n" \
                                                + "normal  = default ANIn parameters", choices=['normal', 'tight'],

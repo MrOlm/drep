@@ -2,7 +2,7 @@
 
 from subprocess import call
 import os
-from Bio import SeqIO
+# from Bio import SeqIO
 import shutil
 import multiprocessing
 import multiprocessing.dummy

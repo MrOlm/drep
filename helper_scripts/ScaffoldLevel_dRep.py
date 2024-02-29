@@ -8,7 +8,6 @@
 
 
 import os
-import sys
 import gzip
 import glob
 import textwrap
@@ -18,15 +17,13 @@ import argparse
 import pandas as pd
 
 from shutil import copyfile
-import subprocess
 from subprocess import call
 from collections import defaultdict
 
 from tqdm import tqdm
 
-from Bio import SeqIO
-
 import drep
+import drep.d_filter
 
 def version():
     versionFile = open(os.path.join(drep.__path__[0], 'VERSION'))
@@ -128,8 +125,8 @@ class ANImCommand(abstractCommand):
 
         if method == 'simple':
             # Get the organism lengths
-            qlen = fasta_length(self.config['querry'])
-            rlen = fasta_length(self.config['reference'])
+            qlen = drep.d_filter.calc_fasta_length(self.config['querry'])
+            rlen = drep.d_filter.calc_fasta_length(self.config['reference'])
 
             # Parse the reults
             delta = get_delta_loc(self.config['prefix'])
@@ -156,7 +153,6 @@ class ANImCommand(abstractCommand):
 
     def __str__(self):
         ''' Show the command parameters '''
-        return pprint.pformat(self.config)
 
 def gen_mummer_cmd(**kwargs):
     '''
@@ -660,16 +656,27 @@ def load_scaffold2length(fasta):
     Return a database of scaffold to length
     '''
     table = defaultdict(list)
+    is_header = True
 
-    if fasta[-3:] == '.gz':
-        with gzip.open(fasta, "rt") as handle:
-            for seq_record in SeqIO.parse(handle, "fasta"):
-                table['scaffold'].append(seq_record.id)
-                table['length'].append(len(seq_record))
+    if fasta.endswith('.gz'):
+        open_func = gzip.open
+        mode = 'rt'
     else:
-        for seq_record in SeqIO.parse(str(fasta), "fasta"):
-            table['scaffold'].append(seq_record.id)
-            table['length'].append(len(seq_record))
+        open_func = open
+        mode = 'r'
+
+    with open_func(fasta, mode) as handle:
+        for line in handle:
+            if line.startswith('>'):
+                is_header = True
+                scaffold_id = line[1:].strip().split(' ')[0]
+            elif is_header:
+                table['scaffold'].append(scaffold_id)
+                table['length'].append(0)
+                is_header = False
+            else:
+                table['length'][-1] += len(line.strip())
+
     return pd.DataFrame(table)
 
 def add_cov_ani(Ddb, s2l):
@@ -712,27 +719,45 @@ def split_into_chunks(file, max_len, temp_folder):
     chunks = []
 
     chunk_number = 0
-    records = []
     chunk_len = 0
-    for r in SeqIO.parse(file, "fasta"):
-        records.append(r)
-        chunk_len += len(r)
+    chunk_records = []
+    record_id = ''
+    record_seq = ''
 
-        if chunk_len > max_len:
-            # Save this chunk
+    with open(file, 'r') as handle:
+        for line in handle:
+            if line.startswith('>'):
+                if chunk_len + len(record_seq) > max_len and len(chunk_records) > 0:
+                    # Save this chunk
+                    new_loc = newfile_base + '_CHUNK_{0}.fasta'.format(chunk_number)
+                    with open(new_loc, 'w') as chunk_file:
+                        chunk_file.write(''.join(chunk_records))
+                    chunks.append(new_loc)
+
+                    chunk_len = 0
+                    chunk_number += 1
+                    chunk_records = []
+
+                if record_id:
+                    chunk_records.append('>' + record_id + '\n' + record_seq + '\n')
+                    chunk_len += len(record_seq)
+
+                record_id = line[1:].strip().split(' ')[0]
+                record_seq = ''
+            else:
+                record_seq += line.strip()
+
+        # Add the last record
+        if record_id:
+            chunk_records.append('>' + record_id + '\n' + record_seq + '\n')
+            chunk_len += len(record_seq)
+
+        # Save the final chunk
+        if len(chunk_records) > 0:
             new_loc = newfile_base + '_CHUNK_{0}.fasta'.format(chunk_number)
-            SeqIO.write(records, new_loc, "fasta")
+            with open(new_loc, 'w') as chunk_file:
+                chunk_file.write(''.join(chunk_records))
             chunks.append(new_loc)
-
-            chunk_len = 0
-            chunk_number += 1
-            records = []
-
-    # Save the final chunk
-    if len(records) > 0:
-        new_loc = newfile_base + '_CHUNK_{0}.fasta'.format(chunk_number)
-        SeqIO.write(records, new_loc, "fasta")
-        chunks.append(new_loc)
 
     return chunks
 
@@ -875,23 +900,38 @@ def reconsile(Sdb, current, new, newFile, temp_folder, **kwargs):
 
     return Rdb
 
-
 def write_new(ori_loc, new_loc, to_rm, verbose=False):
     '''
     Write a new .fasta file removing certain scaffolds
     '''
-    records = []
-    if ori_loc[-3:] == '.gz':
-        with gzip.open(ori_loc, "rt") as handle:
-            for r in SeqIO.parse(handle, "fasta"):
-                records.append(r)
+    if ori_loc.endswith('.gz'):
+        open_func = gzip.open
+        mode = 'rt'
     else:
-        for r in SeqIO.parse(ori_loc, "fasta"):
-            records.append(r)
+        open_func = open
+        mode = 'r'
 
-    ori_len = len(records)
-    records = (r for r in records if r.id not in to_rm)
-    count = SeqIO.write(records, new_loc, "fasta")
+    ori_len = 0
+    count = 0
+    with open_func(ori_loc, mode) as handle, open(new_loc, 'w') as out_handle:
+        record_id = ''
+        record_seq = ''
+        for line in handle:
+            if line.startswith('>'):
+                ori_len += 1
+                if record_id and record_id not in to_rm:
+                    out_handle.write('>' + record_id + '\n' + record_seq + '\n')
+                    count += 1
+                record_id = line[1:].strip().split(' ')[0]
+                record_seq = ''
+            else:
+                record_seq += line.strip()
+
+        # Write the last record
+        if record_id and record_id not in to_rm:
+            out_handle.write('>' + record_id + '\n' + record_seq + '\n')
+            count += 1
+
     if verbose:
         print("Removed {0} scaffolds from {1}".format(ori_len - count, ori_loc))
 
@@ -957,9 +997,30 @@ class test_dRepScaffolds():
         to_rm = ['N5_271_010G1_scaffold_119']
         new_loc = self.test_dir + 'new_file.fasta'
 
-        ori_len = len([r for r in SeqIO.parse(self.fastas[0], "fasta")])
+        def count_fasta_records(fasta_loc):
+            count = 0
+            record_flag = False
+            if fasta_loc.endswith('.gz'):
+                open_func = gzip.open
+                mode = 'rt'
+            else:
+                open_func = open
+                mode = 'r'
+
+            with open_func(fasta_loc, mode) as handle:
+                for line in handle:
+                    if line.startswith('>'):
+                        count += 1
+                        record_flag = True
+                    elif not record_flag:
+                        # In case the file starts with sequences without headers
+                        count += 1
+                        record_flag = True
+            return count
+
+        ori_len = count_fasta_records(self.fastas[0])
         write_new(self.fastas[0], new_loc, to_rm, verbose=False)
-        new_len = len([r for r in SeqIO.parse(new_loc, "fasta")])
+        new_len = count_fasta_records(new_loc)
 
         assert new_len + 1 == ori_len
 

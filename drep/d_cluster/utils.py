@@ -103,6 +103,8 @@ def estimate_time(comps, alg):
         time = comps * .5
     elif alg == 'fastANI':
         time = comps * 0.00667
+    elif alg == 'skani':
+        time = comps * 0.00667
     return time
 
 
