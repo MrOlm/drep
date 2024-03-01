@@ -290,6 +290,7 @@ def cluster_mash_database(db, **kwargs):
     return Cdb, cluster_ret
 
 def secondary_clustering(Bdb, Cdb, algorithm, data_folder, **kwargs):
+
     if kwargs.get('greedy_secondary_clustering', False) != True:
         Ndb = pd.DataFrame()
         for bdb, name in iteratre_clusters(Bdb, Cdb, id='primary_cluster'):
@@ -366,6 +367,12 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
             genome_list = bdb['location'].tolist()
             working_data_folder = os.path.join(data_folder, 'fastANI_files/')
             df = drep.d_cluster.external.run_pairwise_fastANI(genome_list, working_data_folder, **kwargs)
+            return df
+
+        elif algorithm == 'skani':
+            genome_list = bdb['location'].tolist()
+            working_data_folder = os.path.join(data_folder, 'skani_files/')
+            df = drep.d_cluster.external.run_pairwise_skani(genome_list, working_data_folder, **kwargs)
             return df
 
         elif algorithm == 'gANI':

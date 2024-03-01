@@ -11,9 +11,6 @@ import gzip
 import pandas as pd
 import os
 import sys
-import shutil
-import multiprocessing
-from Bio import SeqIO
 
 import drep
 import drep.WorkDirectory
@@ -449,31 +446,42 @@ def calc_n50(loc):
     Calculate the N50 of a .fasta file
 
     Args:
-        fasta_loc: location of .fasta file.
+        loc: location of .fasta file.
 
     Returns:
         int: N50 of .fasta file.
     '''
     lengths = []
+    is_header = True
 
-
-    if loc[-3:] == '.gz':
-        with gzip.open(loc, "rt") as handle:
-            for seq_record in SeqIO.parse(handle, "fasta"):
-                lengths.append(len(seq_record))
+    if loc.endswith('.gz'):
+        open_func = gzip.open
+        mode = 'rt'
     else:
-        for seq_record in SeqIO.parse(loc, "fasta"):
-            lengths.append(len(seq_record))
+        open_func = open
+        mode = 'r'
 
-    # for seq_record in SeqIO.parse(loc, "fasta"):
-    #     lengths.append(len(seq_record))
+    with open_func(loc, mode) as handle:
+        seq_length = 0
+        for line in handle:
+            if line.startswith('>'):
+                if not is_header:
+                    lengths.append(seq_length)
+                    seq_length = 0
+                is_header = True
+            else:
+                seq_length += len(line.strip())
+                is_header = False
+        if not is_header:
+            lengths.append(seq_length)
 
-    half = sum(lengths)/2
+    half = sum(lengths) / 2
     tally = 0
     for l in sorted(lengths, reverse=True):
         tally += l
         if tally > half:
             return l
+
 
 def run_prodigal(genome_list, out_dir, **kwargs):
     '''
@@ -647,23 +655,29 @@ def _iterate_checkm_groups(genome_folder_whole, checkm_outf_whole, checkm_group_
 
 def calc_fasta_length(fasta_loc):
     '''
-    Calculate the length of the .fasta file and retun length
+    Calculate the length of the .fasta file and return length
 
     Args:
         fasta_loc: location of .fasta file
 
     Returns:
-        int: total length of all .fasta files
+        int: total length of all sequences in the .fasta file
     '''
     total = 0
 
-    if fasta_loc[-3:] == '.gz':
-        with gzip.open(fasta_loc, "rt") as handle:
-            for seq_record in SeqIO.parse(handle, "fasta"):
-                total += len(seq_record)
+    if fasta_loc.endswith('.gz'):
+        open_func = gzip.open
+        mode = 'rt'
     else:
-        for seq_record in SeqIO.parse(fasta_loc, "fasta"):
-            total += len(seq_record)
+        open_func = open
+        mode = 'r'
+
+    with open_func(fasta_loc, mode) as handle:
+        for line in handle:
+            if line.startswith('>'):
+                pass
+            else:
+                total += len(line.strip())
 
     return total
 

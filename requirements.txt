@@ -1,4 +1,4 @@
-biopython
+tqdm
 numpy
 pandas
 seaborn

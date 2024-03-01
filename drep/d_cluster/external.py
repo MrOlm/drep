@@ -115,6 +115,88 @@ def run_pairwise_fastANI(genome_list, outdir, **kwargs):
         logging.error("CRITICAL ERROR WITH SECONDARY CLUSTERING CODE {0}; SKIPPING".format(code))
         return pd.DataFrame()
 
+def run_pairwise_skani(genome_list, outdir, **kwargs):
+    code = drep.d_cluster.utils._randomString(stringLength=10)
+    extra_cmd = kwargs.get('skani_extra', "")
+
+    # Make folders
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    tmp_dir = os.path.join(outdir, 'tmp/')
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+
+    # Make genome list
+    glist = os.path.join(tmp_dir, 'genomeList')
+    glist = _make_glist(genome_list, glist)
+
+    # Gen command
+    exe_loc = drep.get_exe('skani')
+    out_base = os.path.join(outdir, 'skani_out_{0}'.format(code))
+    #cmd = [exe_loc, '--ql', glist, '--rl', glist, '-o', out_base, '--matrix', '-t', str(p), "--minFraction", str(0)]
+    cmd = [exe_loc, "triangle", "-t", "1", '-o', out_base, '--full-matrix', '-l', glist, '--detailed', '-s', "1", '--min-af', "0"]
+    if extra_cmd != "":
+        cmd += extra_cmd.split(' ')
+
+    logging.debug(' '.join(cmd) + ' ' + code)
+
+    # Run command
+    if ('wd' in kwargs) and (kwargs.get('debug', False)):
+        logdir = kwargs.get('wd').get_dir('cmd_logs')
+    else:
+        logdir = False
+    drep.thread_cmds([cmd], shell=False, logdir=logdir, t=1)
+
+    # Load results
+    fdb = load_skani(out_base)
+
+    return fdb
+
+def load_triangle_matrix(file_path):
+    with open(file_path, 'r') as f:
+        lines = f.readlines()
+
+    # Get the number of genomes
+    num_genomes = int(lines[0].strip())
+
+    # Initialize lists to store data
+    reference = []
+    query = []
+    ani = []
+
+    # Parse the matrix
+    for i in range(1, num_genomes + 1):
+        row = lines[i].strip().split('\t')
+        ref_genome = row[0]
+        for j in range(1, i + 1):
+            query_genome = lines[j].strip().split('\t')[0]
+            ani_value = float(row[j])
+            reference.append(ref_genome)
+            query.append(query_genome)
+            ani.append(ani_value)
+
+    # Create a DataFrame
+    df = pd.DataFrame({'reference': reference, 'querry': query, 'ani': ani})
+    return df
+
+def load_matrix_to_dataframe(file_path):
+    with open(file_path, 'r') as file:
+        lines = file.readlines()
+
+    num_genomes = int(lines[0].strip())
+    genomes = [line.split('\t')[0] for line in lines[1:num_genomes + 1]]
+
+    data = []
+    for i in range(num_genomes):
+        for j in range(num_genomes):
+            genome1 = genomes[i]
+            genome2 = genomes[j]
+            ani = float(lines[i + 1].split('\t')[j + 1])
+            data.append([genome1, genome2, ani])
+
+    df = pd.DataFrame(data, columns=['reference', 'querry', 'ani'])
+    return df
+
 def fastani_one_vs_many(one, many, genome_rep_file, outdir, **kwargs):
     p = kwargs.get('processors', 6)
     code = drep.d_cluster.utils._randomString(stringLength=10)
@@ -147,6 +229,28 @@ def load_fastani(file):
 
     return fdb
 
+def load_skani(file):
+    # Load the ani triangle
+    adb = load_triangle_matrix(file)
+    adb['ani'] = adb['ani'] / 100
+
+    # Make symnetrical
+    db = adb.rename(columns={'reference':'querry', 'querry':'reference'})
+    db = db[db['reference'] != db['querry']]
+    adb = pd.concat([adb, db], ignore_index=True).reset_index(drop=True)
+
+    # Load the af triangle
+    tdb = load_matrix_to_dataframe(file + '.af').rename(columns={'ani':'alignment_coverage'})
+
+    # Merge
+    assert len(adb) == len(tdb)
+    fdb = pd.merge(adb, tdb, how='inner')
+
+    # parse
+    for c in ['reference', 'querry']:
+        fdb[c] = [drep.d_cluster.utils._get_genome_name_from_fasta(x) for x in fdb[c]]
+
+    return fdb
 
 def _fix_fastani(odb):
     # Add back missing genomes
