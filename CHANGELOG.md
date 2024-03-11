@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.5.1] - 2024-03-11
+- Update goANI to only include 1 best query 
+
 ## [3.5.0] - 2024-02-21
 - Lots of little bug-fixes for scoring plots to update to new versions of python / matplotlib
 - Remove Biopython as a dependency

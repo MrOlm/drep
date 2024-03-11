@@ -354,7 +354,7 @@ def gen_goANI_cmd(file, g1, g2, exe):
         return []
 
     else:
-        cmd = [exe,'--om','TABX', g1, g2, file]
+        cmd = [exe,'--om','TABX', '--rpq', '1', g1, g2, file]
     return cmd
 
 def process_deltafiles(deltafiles, org_lengths, logger=None, **kwargs):
