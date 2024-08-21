@@ -29,12 +29,12 @@ class genomeChunk():
             if not os.path.exists(self.chunk_folder):
                 os.makedirs(self.chunk_folder)
 
-    def gen_sketch_cmds(self, mash_exe, MASH_s):
+    def gen_sketch_cmds(self, mash_exe, MASH_s, p):
         cmds = []
         for location, name in zip(self.genome_locations, self.genome_names):
             file = os.path.join(self.chunk_folder, name)
             if not os.path.isfile(file + '.msh'):
-                cmd = [mash_exe, 'sketch', location, '-s', str(MASH_s), '-o',
+                cmd = [mash_exe, 'sketch', location, '-p', str(p), '-s', str(MASH_s), '-o',
                        file]
                 cmds.append(cmd)
         return cmds
@@ -170,7 +170,7 @@ def run_mash_on_genome_chunks(genome_chunks, mash_exe, sketch_folder, MASH_folde
     # Step 1) Create Mash sketches
     cmds = []
     for GC in genome_chunks:
-        cmds += GC.gen_sketch_cmds(mash_exe, MASH_s)
+        cmds += GC.gen_sketch_cmds(mash_exe, MASH_s, p)
     if (not dry) & (len(cmds) > 0):
         drep.thread_cmds(cmds, logdir=logdir, t=int(p))
 
