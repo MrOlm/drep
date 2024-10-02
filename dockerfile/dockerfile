@@ -38,8 +38,9 @@ RUN mkdir skani_dir && cd skani_dir
 RUN wget https://github.com/bluenote-1577/skani/releases/download/latest/skani
 RUN chmod +x skani
 RUN mv skani /usr/local/bin
-RUN mkdir checkm_db && cd checkm_db
+RUN mkdir checkm_db && cd checkm_db 
 RUN wget https://zenodo.org/records/7401545/files/checkm_data_2015_01_16.tar.gz
-RUN tar -xvf checkm_data_2015_01_16.tar.gz
-RUN rm checkm_data_2015_01_16.tar.gz
+RUN mv checkm_data_2015_01_16.tar.gz /checkm_db
+RUN cd /checkm_db && tar -xvf checkm_data_2015_01_16.tar.gz
+RUN rm /checkm_db/checkm_data_2015_01_16.tar.gz
 ENV CHECKM_DATA_PATH="/checkm_db/"
