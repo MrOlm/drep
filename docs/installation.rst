@@ -45,8 +45,8 @@ To check which dependencies are installed on your system and accessible by dRep,
 
 * `fastANI <https://github.com/ParBLiSS/FastANI>`_ - A fast secondary clustering algorithm
 * `CheckM <http://ecogenomics.github.io/CheckM/>`_ - Determines contamination and completeness of genomes (v1.0.7 confirmed works)
-* `gANI (aka ANIcalculator) <https://ani.jgi-psf.org/html/download.php?>`_ - Performs gANI comparison method (v1.0 confirmed works)
-* `Prodigal <http://prodigal.ornl.gov/>`_ - Used be both checkM and gANI (v2.6.3 confirmed works)
+* `gANI (aka ANIcalculator) - Performs gANI comparison method (v1.0 confirmed works)
+* `Prodigal <https://github.com/hyattpd/Prodigal>`_ - Used be both checkM and gANI (v2.6.3 confirmed works)
 
 **Accessory**
 
