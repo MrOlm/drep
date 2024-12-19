@@ -9,7 +9,7 @@ Manual, installation instructions, and API are at available at
 [ReadTheDocs](https://drep.readthedocs.io/en/latest/)
 
 Publication is available at
-[ISMEJ](http://www.nature.com/ismej/journal/vaop/ncurrent/full/ismej2017126a.html)
+[ISMEJ](https://doi.org/10.1038/ismej.2017.126)
 
 Open source pre-print publication is available at
 [bioRxiv](https://doi.org/10.1101/108142)
