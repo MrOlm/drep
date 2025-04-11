@@ -44,7 +44,7 @@ def printHelp():
     print('                ...::: dRep v' + VERSION + ' :::...''')
     print('''\
 
-  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2024)
+  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2025)
 
   See https://drep.readthedocs.io/en/latest/index.html for documentation
   Choose one of the operations below for more detailed help. 
