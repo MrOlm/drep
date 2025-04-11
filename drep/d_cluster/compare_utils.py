@@ -264,6 +264,7 @@ def cluster_mash_database(db, **kwargs):
     Keyword arguments:
         clusterAlg: how to cluster database (default = single)
         P_ani: threshold to cluster at (default = 0.9)
+        low_ram_primary_clustering: whether to use memory-efficient algorithm
 
     Returns:
         list: [Cdb, [linkage, linkage_db, arguments]]
@@ -273,12 +274,13 @@ def cluster_mash_database(db, **kwargs):
     # Load key words
     P_Lmethod = kwargs.get('clusterAlg','single')
     P_Lcutoff = 1 - kwargs.get('P_ani',.9)
+    low_ram = kwargs.get('low_ram_primary_clustering', False)
 
     # Do the actual clustering
     db['dist'] = 1 - db['similarity']
     linkage_db = db.pivot(index="genome1", columns="genome2", values="dist")
     Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(linkage_db, linkage_method= P_Lmethod, \
-                                                                     linkage_cutoff= P_Lcutoff)
+                                                                     linkage_cutoff= P_Lcutoff, low_ram=low_ram)
     Cdb = Cdb.rename(columns={'cluster':'primary_cluster'})
     Cdb['primary_cluster'] = Cdb['primary_cluster'].astype(int)
 

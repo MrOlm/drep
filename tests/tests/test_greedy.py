@@ -46,6 +46,56 @@ def test_multiround_primary_clustering_1(self):
     # Make sure it handles plotting gracefully
     drep.d_analyze.mash_dendrogram_from_wd(wd, plot_dir=test_dir)
 
+def test_multiround_primary_clustering_with_low_ram(self):
+    """
+    Test that multiround primary clustering works with low_ram_primary_clustering
+    and verifies both optimizations were used
+    """
+    test_dir = self.test_dir
+
+    # Run it with both multiround and low_ram options
+    args = drep.argumentParser.parse_args(['compare', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '--low_ram_primary_clustering', '--S_algorithm', 'ANImf', '-sa', '0.99', '-pa', '0.95', '-d', '-g'] + self.genomes)
+    kwargs = vars(args)
+    drep.d_cluster.controller.d_cluster_wrapper(self.wd_loc, **kwargs)
+
+    # Load test results
+    wd = drep.WorkDirectory.WorkDirectory(self.wd_loc)
+
+    # Load solutions
+    wdS = drep.WorkDirectory.WorkDirectory(self.s_wd_loc)
+    CdbS = wdS.get_db('Cdb').sort_values('genome').reset_index(drop=True)
+
+    # Make sure you didn't pairwise (multiround check)
+    Mdb = wd.get_db('Mdb')
+    assert len(Mdb) != 25
+    assert 'genome_chunk' in list(Mdb.columns)
+    assert len(Mdb['genome_chunk'].unique()) == 3
+
+    # Make sure low_ram optimization was used
+    primary_linkage = wd.get_cluster('primary_linkage')['linkage']
+    assert primary_linkage == "optimized_method_used", "Optimized clustering method was not used"
+
+    # Make sure genomes in same primary cluster in one dataframe are also in same primary cluster in other
+    Cdb = wd.get_db('Cdb')
+    
+    # Get mapping of genome to primary cluster for each dataframe
+    cdb_clusters = Cdb.set_index('genome')['primary_cluster'].to_dict()
+    cdbs_clusters = CdbS.set_index('genome')['primary_cluster'].to_dict()
+    
+    # For each pair of genomes
+    for g1 in Cdb['genome']:
+        for g2 in Cdb['genome']:
+            if g1 >= g2:
+                continue
+                
+            # Check if they're in same cluster in one df, they're in same cluster in other
+            same_in_cdb = cdb_clusters[g1] == cdb_clusters[g2] 
+            same_in_cdbs = cdbs_clusters[g1] == cdbs_clusters[g2]
+            assert same_in_cdb == same_in_cdbs, f"Genomes {g1} and {g2} cluster differently between dataframes"
+
+    # Make sure it handles plotting gracefully
+    drep.d_analyze.mash_dendrogram_from_wd(wd, plot_dir=test_dir)
+
 def test_greedy_secondary_clustering_1(self):
     test_dir = self.test_dir
 

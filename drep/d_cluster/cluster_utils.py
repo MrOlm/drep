@@ -6,6 +6,7 @@ import numpy as np
 import pandas as pd
 import scipy.cluster
 from scipy.spatial import distance as ssd
+import networkx as nx
 
 import drep.d_cluster.utils
 
@@ -87,7 +88,33 @@ def iteratre_clusters(Bdb, Cdb, id='primary_cluster'):
         yield d, cluster
 
 
-def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
+def cluster_threshold_graph_optimized(db, linkage_cutoff=0.10, linkage_method='single'):
+    # Filter distances below threshold first
+    filtered_edges = db[db['dist'] <= linkage_cutoff]
+    
+    # Create graph directly from filtered edges
+    G = nx.Graph()
+    G.add_edges_from(filtered_edges[['genome1', 'genome2']].values)
+    
+    # Log that we're using the optimized method
+    logging.debug("Using low-RAM optimized clustering method with {0} edges".format(len(filtered_edges)))
+    
+    # Find connected components
+    clusters = {}
+    for cluster_id, component in enumerate(nx.connected_components(G)):
+        for genome in component:
+            clusters[genome] = cluster_id + 1
+            
+    # Add isolated nodes (if needed)
+    all_genomes = set(db['genome1']).union(set(db['genome2']))
+    for genome in all_genomes:
+        if genome not in clusters:
+            clusters[genome] = len(clusters)
+            
+    # Return clusters and a special value indicating we used the optimized method
+    return clusters, "optimized_method_used"
+
+def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10, low_ram=False):
     '''
     Perform hierarchical clustering on a symmetrical distiance matrix
 
@@ -95,6 +122,7 @@ def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
         db: result of db.pivot usually
         linkage_method: passed to scipy.cluster.hierarchy.fcluster
         linkage_cutoff: distance to draw the clustering line (default = .1)
+        low_ram: whether to use the memory-efficient algorithm
 
     Returns:
         list: [Cdb, linkage]
@@ -102,21 +130,32 @@ def cluster_hierarchical(db, linkage_method= 'single', linkage_cutoff= 0.10):
     # Save names
     names = list(db.columns)
 
-    # Generate linkage dataframe
-    arr =  np.asarray(db)
-    try:
-        arr = ssd.squareform(arr)
-    except:
-        logging.error("The database passed in is not symmetrical!")
-        logging.error(arr)
-        logging.error(names)
-        sys.exit()
-    linkage = scipy.cluster.hierarchy.linkage(arr, method= linkage_method)
+    if low_ram:
+        # Convert to long format for optimized clustering
+        db_long = db.stack().reset_index()
+        db_long.columns = ['genome1', 'genome2', 'dist']
+        clusters, _ = cluster_threshold_graph_optimized(db_long, linkage_cutoff, linkage_method)
+        
+        # Convert clusters to Cdb format
+        Cdb = pd.DataFrame({'genome': list(clusters.keys()), 
+                          'cluster': list(clusters.values())})
+        return Cdb, _
+    else:
+        # Generate linkage dataframe
+        arr =  np.asarray(db)
+        try:
+            arr = ssd.squareform(arr)
+        except:
+            logging.error("The database passed in is not symmetrical!")
+            logging.error(arr)
+            logging.error(names)
+            sys.exit()
+        linkage = scipy.cluster.hierarchy.linkage(arr, method= linkage_method)
 
-    # Form clusters
-    fclust = scipy.cluster.hierarchy.fcluster(linkage,linkage_cutoff, \
-                    criterion='distance')
-    # Make Cdb
-    Cdb = drep.d_cluster.utils._gen_cdb_from_fclust(fclust,names)
+        # Form clusters
+        fclust = scipy.cluster.hierarchy.fcluster(linkage,linkage_cutoff, \
+                        criterion='distance')
+        # Make Cdb
+        Cdb = drep.d_cluster.utils._gen_cdb_from_fclust(fclust,names)
 
-    return Cdb, linkage
+        return Cdb, linkage

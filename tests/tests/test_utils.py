@@ -79,7 +79,32 @@ def compare_dfs2(db1, db2, verbose=False):
         return True
     except AssertionError as e:
         if verbose:
+            print("DataFrames are not equal:")
+            print("\nShape difference:")
+            print(f"DataFrame 1 shape: {db1.shape}")
+            print(f"DataFrame 2 shape: {db2.shape}")
+            
+            print("\nColumn differences:")
+            cols1 = set(db1.columns)
+            cols2 = set(db2.columns)
+            if cols1 != cols2:
+                print(f"Only in df1: {cols1 - cols2}")
+                print(f"Only in df2: {cols2 - cols1}")
+            
+            print("\nDetailed differences:")
             print(e)
+            
+            if not db1.empty and not db2.empty:
+                # Show a sample of differing rows
+                try:
+                    diff_mask = (db1 != db2).any(axis=1)
+                    print("\nSample of differing rows:")
+                    print("DataFrame 1:")
+                    print(db1[diff_mask].head())
+                    print("\nDataFrame 2:")
+                    print(db2[diff_mask].head())
+                except:
+                    pass # Skip detailed diff if shapes don't match
         return False
 
 def report_diff(x):
