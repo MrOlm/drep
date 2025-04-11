@@ -33,3 +33,4 @@ docs/_build/
 
 # Mac specifics 
 .DS_Store
+.vscode/settings.json
