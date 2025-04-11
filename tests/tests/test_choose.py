@@ -14,6 +14,8 @@ from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
 
+loc, works = drep.d_bonus.find_program('checkm')
+
 # class Empty():
 #     pass
 #
@@ -51,6 +53,7 @@ def self(caplog):
     yield self
     #self.teardown()
 
+@pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
 def test_choose_1(self):
     '''
     Ensure choose can handle when Chdb is not present, running checkM automatically

@@ -4,38 +4,40 @@ import importlib
 import pandas as pd
 import logging
 import shutil
+import uuid
 
 def load_solutions_wd():
-    loc = os.path.join(str(os.getcwd()),'../tests/test_solutions/ecoli_wd')
-    return loc
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_solutions/ecoli_wd')
+
+def get_unique_test_dir():
+    """Generate a unique test directory path"""
+    unique_id = str(uuid.uuid4())
+    base_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_backend')
+    return os.path.join(base_dir, f'test_dir_{unique_id}')
 
 def load_test_wd_loc():
-    loc = os.path.join(str(os.getcwd()),'../tests/test_backend/ecoli_wd')
-    return loc
+    return get_unique_test_dir()
 
 def load_test_wd_loc_2():
-    loc = os.path.join(str(os.getcwd()),'../tests/test_backend/ecoli_wd2')
-    return loc
+    return get_unique_test_dir()
 
 def load_test_genomes():
-    return glob.glob(os.path.join(str(os.getcwd()) + '/genomes/*'))
+    return glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../genomes/*'))
 
 def load_zipped_genomes():
-    return glob.glob(os.path.join(str(os.getcwd()),'../tests/test_backend/zipped/*.gz'))
+    return glob.glob(os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_backend/zipped/*.gz'))
 
 def load_broken_genome():
-    return glob.glob(os.path.join(str(os.getcwd()),'../tests/test_backend/other/broken_genome.fasta'))[0]
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_backend/other/broken_genome.fasta')
 
 def load_zipped_genome():
-    return glob.glob(os.path.join(str(os.getcwd()),'../tests/test_backend/zipped/Enterococcus_casseliflavus_EC20.fasta.gz'))[0]
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_backend/zipped/Enterococcus_casseliflavus_EC20.fasta.gz')
 
 def load_random_test_dir():
-    loc = os.path.join(str(os.getcwd()),'../tests/test_backend/test_dir')
-    return loc
+    return get_unique_test_dir()
 
 def load_solutions_taxonomy_wd():
-    loc = os.path.join(str(os.getcwd()),'../tests/test_solutions/ecoli_taxonomy')
-    return loc
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_solutions/ecoli_taxonomy')
 
 def load_large_genome_set():
     loc = '/Users/mattolm/Programs/testing_house/test_genomes/'
@@ -43,8 +45,7 @@ def load_large_genome_set():
     return genomes
 
 def load_test_backend():
-    loc = os.path.join(str(os.getcwd()), '../tests/test_backend/')
-    return loc
+    return os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_backend/')
 
 def compare_dfs(db1, db2, round=3, verbose=False):
     '''
@@ -78,7 +79,32 @@ def compare_dfs2(db1, db2, verbose=False):
         return True
     except AssertionError as e:
         if verbose:
+            print("DataFrames are not equal:")
+            print("\nShape difference:")
+            print(f"DataFrame 1 shape: {db1.shape}")
+            print(f"DataFrame 2 shape: {db2.shape}")
+            
+            print("\nColumn differences:")
+            cols1 = set(db1.columns)
+            cols2 = set(db2.columns)
+            if cols1 != cols2:
+                print(f"Only in df1: {cols1 - cols2}")
+                print(f"Only in df2: {cols2 - cols1}")
+            
+            print("\nDetailed differences:")
             print(e)
+            
+            if not db1.empty and not db2.empty:
+                # Show a sample of differing rows
+                try:
+                    diff_mask = (db1 != db2).any(axis=1)
+                    print("\nSample of differing rows:")
+                    print("DataFrame 1:")
+                    print(db1[diff_mask].head())
+                    print("\nDataFrame 2:")
+                    print(db2[diff_mask].head())
+                except:
+                    pass # Skip detailed diff if shapes don't match
         return False
 
 def report_diff(x):
@@ -123,23 +149,29 @@ def ensure_identicle(Swd, wd, skip = None):
     pass
 
 class TestingClass():
+    def setup(self):
+        """Initialize unique test directories for this test instance"""
+        self.wd_loc = get_unique_test_dir()
+        self.test_dir = get_unique_test_dir()
+        self.working_wd_loc = get_unique_test_dir()
+        
+        # Create the directories
+        os.makedirs(self.wd_loc, exist_ok=True)
+        os.makedirs(self.test_dir, exist_ok=True)
+        os.makedirs(self.working_wd_loc, exist_ok=True)
+
     def teardown(self):
         importlib.reload(logging)
-        if os.path.isdir(self.wd_loc):
-            shutil.rmtree(self.wd_loc)
-        os.mkdir(self.wd_loc)
-
-        if os.path.isdir(self.test_dir):
-            shutil.rmtree(self.test_dir)
-        os.mkdir(self.test_dir)
-
-        if os.path.isdir(self.working_wd_loc):
-            shutil.rmtree(self.working_wd_loc)
+        # Clean up our unique test directories
+        for path in [self.wd_loc, self.test_dir, self.working_wd_loc]:
+            if os.path.isdir(path):
+                shutil.rmtree(path)
 
 def load_common_self():
-    # Set up
     self = TestingClass()
-
+    self.setup()  # Create unique directories
+    
+    # Set up
     self.genomes = load_test_genomes()
     self.zipped_genome = load_zipped_genome()
     self.test_dir = load_random_test_dir()

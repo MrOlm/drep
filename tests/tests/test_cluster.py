@@ -584,3 +584,30 @@ def test_skipsecondary(self):
     # Confirm Ndb.csv doesn't exist
     db2 = wd.get_db('Ndb')
     assert db2.empty, 'Ndb is not empty'
+
+def test_low_ram_primary_clustering(self):
+    '''
+    Test that low_ram_primary_clustering runs without crashing and uses the optimized method
+    '''
+    genomes = self.genomes
+    wd_loc  = self.wd_loc
+    s_wd_loc = self.s_wd_loc
+
+    # Create the work directory and data directory
+    os.makedirs(os.path.join(wd_loc, 'data'), exist_ok=True)
+
+    # Run dRep with low_ram_primary_clustering
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '--low_ram_primary_clustering', '-g'] + genomes)
+    kwargs = vars(args)
+    drep.d_cluster.controller.d_cluster_wrapper(wd_loc, **kwargs)
+
+    # Verify it ran by checking Cdb exists and has the right columns
+    wd = WorkDirectory(wd_loc)
+    Cdb = wd.get_db('Cdb')
+    assert 'genome' in Cdb.columns
+    assert 'primary_cluster' in Cdb.columns
+    assert len(Cdb) > 0
+
+    # Check that the optimized method was actually used by looking at the primary linkage
+    primary_linkage = wd.get_cluster('primary_linkage')['linkage']
+    assert primary_linkage == "optimized_method_used", "Optimized clustering method was not used"

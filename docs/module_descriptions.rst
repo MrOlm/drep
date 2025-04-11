@@ -126,6 +126,11 @@ This workflow compares a set of genomes. For a list of all parameters, check the
                             Impacts multiround_primary_clustering. If you have
                             more than this many genomes, process them in chunks of
                             this size. (default: 5000)
+      --low_ram_primary_clustering
+                            Use a memory-efficient algorithm for primary clustering.
+                            This only affects primary clustering and not secondary
+                            clustering. Can be combined with multiround_primary_clustering
+                            for even greater memory efficiency. (default: False)
       --greedy_secondary_clustering
                             Use a heuristic to avoid pair-wise comparisons when
                             doing secondary clustering. Will be done with single
@@ -282,6 +287,11 @@ This workflow dereplicates a set of genomes. For a list of all parameters, check
                             Impacts multiround_primary_clustering. If you have
                             more than this many genomes, process them in chunks of
                             this size. (default: 5000)
+      --low_ram_primary_clustering
+                            Use a memory-efficient algorithm for primary clustering.
+                            This only affects primary clustering and not secondary
+                            clustering. Can be combined with multiround_primary_clustering
+                            for even greater memory efficiency. (default: False)
       --greedy_secondary_clustering
                             Use a heuristic to avoid pair-wise comparisons when
                             doing secondary clustering. Will be done with single

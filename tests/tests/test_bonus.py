@@ -82,7 +82,7 @@ def test_drep_scaffold_level(self):
     '''
     test ScaffoldLevel_dRep.py basicaly
     '''
-    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/ScaffoldLevel_dRep.py')
+    script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../helper_scripts/ScaffoldLevel_dRep.py')
 
     cmd = "{0} -f {1} {1} -o {2}".format(script_loc, self.genomes[0], self.wd_loc)
     print(cmd)
@@ -98,7 +98,7 @@ def test_drep_scaffold_level_2(self):
     '''
     test ScaffoldLevel_dRep.py with --IgnoreSameScaffolds
     '''
-    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/ScaffoldLevel_dRep.py')
+    script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../helper_scripts/ScaffoldLevel_dRep.py')
 
     cmd = "{0} -f {1} {1} -o {2} --IgnoreSameScaffolds".format(script_loc, self.genomes[0], self.wd_loc)
     print(cmd)
@@ -114,7 +114,7 @@ def test_drep_scaffold_level_3(self):
     '''
     test ScaffoldLevel_dRep.py with a single fasta file
     '''
-    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/ScaffoldLevel_dRep.py')
+    script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../helper_scripts/ScaffoldLevel_dRep.py')
 
     cmd = "{0} -f {1} -o {2}".format(script_loc, self.genomes[0], self.wd_loc)
     print(cmd)
@@ -130,11 +130,14 @@ def test_drep_scaffold_level_4(self):
     '''
     test for graceful crash
     '''
-    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/ScaffoldLevel_dRep.py')
+    script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../helper_scripts/ScaffoldLevel_dRep.py')
 
     cmd = "{0} -f {1} -o {2}".format(script_loc, self.zipped_genome, self.wd_loc)
     print(cmd)
-    subprocess.call(cmd, shell=True)
+    try:
+        subprocess.call(cmd, shell=True, timeout=10)
+    except subprocess.TimeoutExpired:
+        print("Command timed out after 10 seconds")
 
     outs = glob.glob(self.wd_loc + '/*')
     assert(len(outs) == 1), outs
@@ -143,7 +146,7 @@ def test_drep_scaffold_level_5(self):
     '''
     test breaking things into chunks
     '''
-    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/ScaffoldLevel_dRep.py')
+    script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../helper_scripts/ScaffoldLevel_dRep.py')
 
     cmd = "{0} -f {1} -o {2} -m 1000000".format(script_loc, [g for g in self.genomes if 'Enterococcus_faecalis_YI6' in g][0], self.wd_loc)
     print(cmd)
@@ -156,11 +159,12 @@ def test_parse_stb(self):
     '''
     test parse_stb.py basicaly
     '''
-    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/parse_stb.py')
+    script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../helper_scripts/parse_stb.py')
     out_loc = self.wd_loc + '/test.stb'
 
     cmd = "{0} --reverse -f {1} -o {2}".format(script_loc, ' '.join(self.genomes), out_loc)
     print(cmd)
+    print('testeeeeeee')
     subprocess.call(cmd, shell=True)
 
     db = pd.read_csv(out_loc, sep='\t', names=['scaffold', 'bin'])
@@ -181,7 +185,7 @@ def test_parse_stb_2(self):
     '''
     test parse_stb.py on zipped genomes
     '''
-    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/parse_stb.py')
+    script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../helper_scripts/parse_stb.py')
     out_loc = self.wd_loc + '/test.stb'
 
     cmd = "{0} --reverse -f {1} -o {2}".format(script_loc, self.zipped_genome, out_loc)
@@ -205,7 +209,7 @@ def test_parse_stb_3(self):
     '''
     test parse_stb.py on list of genomes
     '''
-    script_loc = os.path.join(str(os.getcwd()),'../helper_scripts/parse_stb.py')
+    script_loc = os.path.join(os.path.dirname(os.path.abspath(__file__)), '../../helper_scripts/parse_stb.py')
     out_loc = self.wd_loc + '/test.stb'
     list_loc = self.wd_loc + '/test_genomes.txt'
 

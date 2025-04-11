@@ -44,7 +44,7 @@ def printHelp():
     print('                ...::: dRep v' + VERSION + ' :::...''')
     print('''\
 
-  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2024)
+  Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2025)
 
   See https://drep.readthedocs.io/en/latest/index.html for documentation
   Choose one of the operations below for more detailed help. 
@@ -149,6 +149,8 @@ def parse_args(args):
     Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
                         to scipy.cluster.hierarchy.linkage", default='average',
                            choices={'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'})
+    Compflags.add_argument("--low_ram_primary_clustering", help="Use a memory-efficient algorithm for primary clustering. This only affects primary clustering and not secondary clustering.", 
+                          action='store_true', default=False)
 
     GRflags = cluster_parent.add_argument_group('GREEDY CLUSTERING OPTIONS\n'
                                                 'These decrease RAM use and runtime at the expense of a minor loss in '
