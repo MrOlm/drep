@@ -134,7 +134,10 @@ def test_drep_scaffold_level_4(self):
 
     cmd = "{0} -f {1} -o {2}".format(script_loc, self.zipped_genome, self.wd_loc)
     print(cmd)
-    subprocess.call(cmd, shell=True)
+    try:
+        subprocess.call(cmd, shell=True, timeout=10)
+    except subprocess.TimeoutExpired:
+        print("Command timed out after 10 seconds")
 
     outs = glob.glob(self.wd_loc + '/*')
     assert(len(outs) == 1), outs
