@@ -15,6 +15,7 @@ import subprocess
 
 import pytest
 
+loc, works = drep.d_bonus.find_program('checkm')
 class Empty():
     pass
 
@@ -44,7 +45,7 @@ def self(caplog):
     if os.path.isdir(self.wd_loc):
        shutil.rmtree(self.wd_loc)
 
-
+@pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
 def test_run_checkm(self):
     """
     Test the method "run_checkM"
@@ -53,6 +54,7 @@ def test_run_checkm(self):
     print(chdb)
     assert len(chdb) == 5
 
+@pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
 def test_run_checkm2(self):
     """
     Test the method "run_checkM" when going over the group size limit
@@ -159,6 +161,7 @@ def test_validate_genomeInfo(self):
     assert t['completeness'].tolist()[0] == 10.0
     assert t['length'].tolist()[0] == 3427276
 
+@pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
 def test_filer_functional_1(self):
     '''
     Call filter on 'Escherichia_coli_Sakai.fna'

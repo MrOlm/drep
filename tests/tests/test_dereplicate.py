@@ -7,10 +7,12 @@ import pytest
 
 import tests.test_utils as test_utils
 
+import drep
 from drep import argumentParser
 from drep.controller import Controller
 from drep.WorkDirectory import WorkDirectory
 
+loc, works = drep.d_bonus.find_program('checkm')
 
 class Empty():
     pass
@@ -100,6 +102,7 @@ def self():
 #         self.functional_test_8()
 #         self.tearDown()
 
+@pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
 def test_dereplicate_1(self):
     genomes  = self.genomes
     wd_loc   = self.wd_loc
@@ -353,6 +356,7 @@ def test_dereplicate_8(self):
     assert set(CSdb['genome'].tolist()) == set(Cdb['genome'].tolist())
     assert set(CSdb.columns) - set(Cdb.columns) == set(['greedy_representative'])
 
+@pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
 def test_dereplicate_9(self):
     """
     Test --skip_analyze and --skip_evaluate
