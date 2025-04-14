@@ -4,6 +4,9 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.6.2] - 2024-04-14
+- update requirements
+
 ## [3.6.1] - 2024-03-19
 - Add low_ram_primary_clustering option for memory-efficient primary clustering
 - Add tests for low_ram_primary_clustering functionality
