@@ -5,3 +5,4 @@ seaborn
 matplotlib
 scikit-learn
 pytest
+networkx
