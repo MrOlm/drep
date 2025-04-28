@@ -1,0 +1,46 @@
+FROM ubuntu:22.04
+RUN apt update && apt upgrade -y
+RUN apt install -y wget
+RUN wget https://repo.anaconda.com/archive/Anaconda3-2024.06-1-Linux-x86_64.sh
+RUN bash Anaconda3-2024.06-1-Linux-x86_64.sh -b -p $HOME/anaconda3
+RUN  ~/anaconda3/bin/conda init 
+RUN wget https://github.com/marbl/Mash/releases/download/v2.3/mash-Linux64-v2.3.tar
+RUN tar -xvf mash-Linux64-v2.3.tar 
+RUN  mv mash-Linux64-v2.3/mash /usr/local/bin
+RUN rm -rf mash-Linux64-v2.3.tar mash-Linux64-v2.3
+RUN /root/anaconda3/bin/pip install drep
+RUN apt-get install gcc -y
+RUN apt-get install g++ -y
+RUN apt-get install make -y
+RUN apt install perl -y
+RUN apt-get install csh -y
+RUN wget https://sourceforge.net/projects/mummer/files/mummer/3.23/MUMmer3.23.tar.gz/download
+RUN tar -xvf download
+RUN cd MUMmer3.23 && make
+ENV PATH="export PATH=$PATH:/MUMmer3.23/"
+RUN apt install hmmer -y
+RUN /root/anaconda3/bin/pip install checkm-genome
+RUN /root/anaconda3/bin/conda install bioconda::prodigal
+RUN /root/anaconda3/bin/conda install -c bioconda pplacer
+RUN wget https://github.com/ParBLiSS/FastANI/releases/download/v1.34/fastANI-linux64-v1.34.zip
+RUN apt install unzip -y
+RUN unzip fastANI-linux64-v1.34.zip
+RUN mv fastANI /usr/local/bin
+RUN apt install -y git
+RUN git clone https://github.com/abadona/qsimscan.git
+RUN cd qsimscan && make
+ENV PATH="export PATH=$PATH:/qsimscan/psimscan:/qsimscan/nsimscan"
+RUN cd /root
+RUN git clone https://github.com/DaehwanKimLab/centrifuge
+RUN cd centrifuge && make
+ENV PATH="export PATH=$PATH:/centrifuge/"
+RUN mkdir skani_dir && cd skani_dir
+RUN wget https://github.com/bluenote-1577/skani/releases/download/latest/skani
+RUN chmod +x skani
+RUN mv skani /usr/local/bin
+RUN mkdir checkm_db && cd checkm_db 
+RUN wget https://zenodo.org/records/7401545/files/checkm_data_2015_01_16.tar.gz
+RUN mv checkm_data_2015_01_16.tar.gz /checkm_db
+RUN cd /checkm_db && tar -xvf checkm_data_2015_01_16.tar.gz
+RUN rm /checkm_db/checkm_data_2015_01_16.tar.gz
+ENV CHECKM_DATA_PATH="/checkm_db/"
