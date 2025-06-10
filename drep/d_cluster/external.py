@@ -116,6 +116,7 @@ def run_pairwise_fastANI(genome_list, outdir, **kwargs):
         return pd.DataFrame()
 
 def run_pairwise_skani(genome_list, outdir, **kwargs):
+    p = kwargs.get('processors',6)
     code = drep.d_cluster.utils._randomString(stringLength=10)
     extra_cmd = kwargs.get('skani_extra', "")
 
@@ -134,7 +135,7 @@ def run_pairwise_skani(genome_list, outdir, **kwargs):
     exe_loc = drep.get_exe('skani')
     out_base = os.path.join(outdir, 'skani_out_{0}'.format(code))
     #cmd = [exe_loc, '--ql', glist, '--rl', glist, '-o', out_base, '--matrix', '-t', str(p), "--minFraction", str(0)]
-    cmd = [exe_loc, "triangle", "-t", "1", '-o', out_base, '--full-matrix', '-l', glist, '--detailed', '-s', "1", '--min-af', "0"]
+    cmd = [exe_loc, "triangle", "-t", str(p), '-o', out_base, '--full-matrix', '-l', glist, '--detailed', '-s', "1", '--min-af', "0"]
     if extra_cmd != "":
         cmd += extra_cmd.split(' ')
 
