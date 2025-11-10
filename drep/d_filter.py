@@ -571,7 +571,7 @@ def run_checkM(genome_folder_whole, checkm_outf_whole, **kwargs):
         else:
              cmd = [check_exe,checkm_method,genome_folder,checkm_outf,'-f',\
                 checkm_outf + '/results.tsv','--tab_table','-t',str(t),'--pplacer_threads',\
-                str(t),'-g','-x','faa']
+                str(min(64, int(t))),'-g','-x','faa']
 
         logging.debug("Running CheckM with command: {0}".format(' '.join(cmd)))
 
