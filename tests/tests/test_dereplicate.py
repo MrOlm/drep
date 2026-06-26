@@ -158,6 +158,7 @@ def test_dereplicate_2(self):
     # being overwritten
     test_utils.sanity_check(s_wd)
 
+@pytest.mark.requires_nsimscan
 def test_dereplicate_3(self):
     '''
     Use goANI

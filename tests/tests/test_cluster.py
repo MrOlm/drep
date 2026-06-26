@@ -232,6 +232,7 @@ def test_compare_genomes(self):
         & (Ndb['querry'] == 'Enterococcus_casseliflavus_EC20.fasta')]
     assert (db['ani'].tolist()[0] > 0.85) & (db['ani'].tolist()[0] < 0.86)
 
+@pytest.mark.requires_nsimscan
 def test_goANI(self):
     '''
     Test goANI
@@ -256,6 +257,7 @@ def test_goANI(self):
 
     assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
 
+@pytest.mark.requires_nsimscan
 def test_goANI2(self):
     '''
     Test goANI in the case where the genomes share no genes
