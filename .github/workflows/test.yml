@@ -26,7 +26,7 @@ jobs:
 
       - name: Install dependencies
         run: |
-          conda install -y -c bioconda -c conda-forge mash skani prodigal pplacer fastani "mummer4=4.0.0rc1" nsimscan
+          conda install -y -c bioconda -c conda-forge mash skani prodigal pplacer fastani "mummer4=4.0.0rc1"
           pip install checkm-genome
           pip install -e .
 
