@@ -12,7 +12,7 @@ def load_solutions_wd():
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_solutions/ecoli_wd')
 
 def fix_bdb_paths(wd_loc):
-    """Rewrite relative paths in Bdb.csv to absolute paths. Safe to call multiple times."""
+    """Rewrite genome paths in Bdb.csv to absolute paths for this machine. Safe to call multiple times."""
     bdb_path = os.path.join(wd_loc, 'data_tables', 'Bdb.csv')
     if not os.path.exists(bdb_path):
         return
@@ -21,9 +21,9 @@ def fix_bdb_paths(wd_loc):
         lines = f.readlines()
     with open(bdb_path, 'w') as f:
         for line in lines:
-            # Only rewrite lines that still have a relative path
-            if ',tests/genomes/' in line:
-                line = line.replace('tests/genomes/', genomes_abs)
+            # Rewrite any path ending in /tests/genomes/<filename> to the correct absolute path
+            import re
+            line = re.sub(r',[^\n]*/tests/genomes/(\S+)', lambda m: ',' + genomes_abs + m.group(1), line)
             f.write(line)
 
 def get_unique_test_dir():
