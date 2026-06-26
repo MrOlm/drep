@@ -2,3 +2,9 @@
 *
 # Except this file
 !.gitignore
+# Except test fixtures
+!zipped/
+!zipped/*
+!extra_weights.tsv
+!other/
+!other/*
