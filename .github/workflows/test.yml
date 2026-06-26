@@ -27,7 +27,7 @@ jobs:
 
       - name: Install conda dependencies
         run: |
-          conda install -y mash skani prodigal pplacer
+          conda install -y mash skani prodigal pplacer fastani
 
       - name: Install pip dependencies
         run: |
