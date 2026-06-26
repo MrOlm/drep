@@ -6,8 +6,21 @@ import logging
 import shutil
 import uuid
 
+REPO_ROOT = os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
+
 def load_solutions_wd():
     return os.path.join(os.path.dirname(os.path.abspath(__file__)), '../test_solutions/ecoli_wd')
+
+def fix_bdb_paths(wd_loc):
+    """Rewrite relative paths in Bdb.csv to absolute paths after copying solution WD."""
+    bdb_path = os.path.join(wd_loc, 'data_tables', 'Bdb.csv')
+    if not os.path.exists(bdb_path):
+        return
+    with open(bdb_path) as f:
+        content = f.read()
+    content = content.replace('tests/genomes/', os.path.join(REPO_ROOT, 'tests', 'genomes') + '/')
+    with open(bdb_path, 'w') as f:
+        f.write(content)
 
 def get_unique_test_dir():
     """Generate a unique test directory path"""
@@ -203,6 +216,7 @@ def load_common_self():
                     os.path.join(self.working_wd_loc, 'data_tables'))
     shutil.copytree(os.path.join(self.s_wd_loc, 'log'), \
                     os.path.join(self.working_wd_loc, 'log'))
+    fix_bdb_paths(self.working_wd_loc)
     importlib.reload(logging)
 
     return self
