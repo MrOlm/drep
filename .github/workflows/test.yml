@@ -21,6 +21,7 @@ jobs:
         uses: conda-incubator/setup-miniconda@v3
         with:
           python-version: "3.10"
+          activate-environment: drep-test
           channels: bioconda,conda-forge,defaults
           channel-priority: strict
 
