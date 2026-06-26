@@ -78,6 +78,7 @@ def self():
 #         self.test_parse_stb2()
 #         self.tearDown()
 
+@pytest.mark.requires_mummer
 def test_drep_scaffold_level(self):
     '''
     test ScaffoldLevel_dRep.py basicaly
@@ -94,6 +95,7 @@ def test_drep_scaffold_level(self):
     Rdb = pd.read_csv(f)
     assert len(Rdb) == 5
 
+@pytest.mark.requires_mummer
 def test_drep_scaffold_level_2(self):
     '''
     test ScaffoldLevel_dRep.py with --IgnoreSameScaffolds
@@ -110,6 +112,7 @@ def test_drep_scaffold_level_2(self):
     Rdb = pd.read_csv(f)
     assert len(Rdb) == 0
 
+@pytest.mark.requires_mummer
 def test_drep_scaffold_level_3(self):
     '''
     test ScaffoldLevel_dRep.py with a single fasta file
@@ -126,6 +129,7 @@ def test_drep_scaffold_level_3(self):
     Rdb = pd.read_csv(f)
     assert len(Rdb) == 0
 
+@pytest.mark.requires_mummer
 def test_drep_scaffold_level_4(self):
     '''
     test for graceful crash
@@ -142,6 +146,7 @@ def test_drep_scaffold_level_4(self):
     outs = glob.glob(self.wd_loc + '/*')
     assert(len(outs) == 1), outs
 
+@pytest.mark.requires_mummer
 def test_drep_scaffold_level_5(self):
     '''
     test breaking things into chunks

@@ -46,6 +46,7 @@ def self(caplog):
        shutil.rmtree(self.wd_loc)
 
 @pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
+@pytest.mark.requires_checkm
 def test_run_checkm(self):
     """
     Test the method "run_checkM"
@@ -162,6 +163,7 @@ def test_validate_genomeInfo(self):
     assert t['length'].tolist()[0] == 3427276
 
 @pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
+@pytest.mark.requires_checkm
 def test_filer_functional_1(self):
     '''
     Call filter on 'Escherichia_coli_Sakai.fna'

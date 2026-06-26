@@ -103,6 +103,7 @@ def self():
 #         self.tearDown()
 
 @pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
+@pytest.mark.requires_checkm
 def test_dereplicate_1(self):
     genomes  = self.genomes
     wd_loc   = self.wd_loc
@@ -358,6 +359,7 @@ def test_dereplicate_8(self):
     assert set(CSdb.columns) - set(Cdb.columns) == set(['greedy_representative'])
 
 @pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
+@pytest.mark.requires_checkm
 def test_dereplicate_9(self):
     """
     Test --skip_analyze and --skip_evaluate
