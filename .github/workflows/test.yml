@@ -24,9 +24,13 @@ jobs:
           channels: bioconda,conda-forge,defaults
           channel-priority: strict
 
-      - name: Install dependencies
+      - name: Install conda dependencies
         run: |
-          conda install -y mash skani prodigal checkm-genome pplacer
+          conda install -y mash skani prodigal pplacer
+
+      - name: Install pip dependencies
+        run: |
+          pip install checkm-genome
           pip install -e .
 
       - name: Run tests
