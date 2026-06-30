@@ -1,7 +1,10 @@
+import os
+import tempfile
 import pandas as pd
 from collections import defaultdict
 
 import drep
+import drep.d_cluster.external
 
 import tests.test_utils as test_utils
 
@@ -102,3 +105,25 @@ def test_n50(self):
     genome = [x for x in genomes if 'T2' in x][0]
     n50 = drep.d_filter.calc_n50(genome)
     assert n50 == 774663, n50
+
+def test_load_fastani_pandas3_compat(self):
+    '''
+    Regression test for GitHub issue #299: load_fastani crashes with pandas>=3.0
+    because delim_whitespace=True was removed. Use sep=r'\s+' instead.
+    '''
+    # Minimal fastANI output format: reference query ANI j1 j2 (whitespace-delimited)
+    fastani_output = (
+        "/path/to/genome_A.fasta\t/path/to/genome_B.fasta\t98.5\t900\t1000\n"
+        "/path/to/genome_B.fasta\t/path/to/genome_A.fasta\t98.5\t850\t1000\n"
+    )
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as f:
+        f.write(fastani_output)
+        tmp_path = f.name
+
+    try:
+        fdb = drep.d_cluster.external.load_fastani(tmp_path)
+        assert len(fdb) == 2
+        assert set(fdb.columns) == {'reference', 'querry', 'ani', 'alignment_coverage'}
+        assert abs(fdb['ani'].iloc[0] - 0.985) < 0.001
+    finally:
+        os.unlink(tmp_path)

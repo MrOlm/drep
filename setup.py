@@ -25,6 +25,7 @@ setup(name='drep',
           'scikit-learn',
           'tqdm',
           'networkx',
+          'setuptools',
           'pytest'
       ],
       zip_safe=False)

@@ -220,7 +220,7 @@ def fastani_one_vs_many(one, many, genome_rep_file, outdir, **kwargs):
     return fdb
 
 def load_fastani(file):
-    fdb = pd.read_csv(file, names=['reference', 'querry', 'ANI', 'j1', 'j2'], delim_whitespace=True)
+    fdb = pd.read_csv(file, names=['reference', 'querry', 'ANI', 'j1', 'j2'], sep=r'\s+')
     for c in ['reference', 'querry']:
         fdb[c] = [drep.d_cluster.utils._get_genome_name_from_fasta(x) for x in fdb[c]]
     fdb = fdb.rename(columns={'ANI':'ani'})

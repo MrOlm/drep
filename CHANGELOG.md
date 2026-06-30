@@ -4,6 +4,10 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.7.0] - 2026-06-30
+- Implement testing with the GitHub CLI
+- Maintain compatibility with pandas 3
+
 ## [3.6.2] - 2024-04-14
 - update requirements
 

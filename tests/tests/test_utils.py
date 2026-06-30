@@ -68,21 +68,18 @@ def compare_dfs(db1, db2, round=3, verbose=False):
     '''
     Return True if dataframes are equal (order of dataframes doesn't matter)
     '''
+    if set(db1.columns) != set(db2.columns):
+        if verbose:
+            print("columns differ: ", set(db1.columns), set(db2.columns))
+        return False
 
-    db1 = db1.fillna(0).round(round)
-    db2 = db2.fillna(0).round(round)
+    db1 = db1.fillna(0).round(round).sort_values(list(db1.columns)).reset_index(drop=True)
+    db2 = db2.fillna(0).round(round).sort_values(list(db2.columns)).reset_index(drop=True)
 
-    df = pd.concat([db1, db2], sort=True)
-    df = df.reset_index(drop=True)
-    df_gpby = df.groupby(list(df.columns))
-    idx = [x[0] for x in df_gpby.groups.values() if len(x) == 1]
-
-    identicle = (len(idx) == 0)
-    if ((not identicle) and verbose):
-        print("index: ", idx)
-        print("db1: ",db1)
-        print("db2: ",db2)
-        print("df_gpby: ", str(df_gpby))
+    identicle = db1[sorted(db1.columns)].equals(db2[sorted(db2.columns)])
+    if not identicle and verbose:
+        print("db1: ", db1)
+        print("db2: ", db2)
 
     return identicle
 
