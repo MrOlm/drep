@@ -56,6 +56,7 @@ def test_run_checkm(self):
     assert len(chdb) == 5
 
 @pytest.mark.skipif(loc is None, reason="some_optional_package is not installed")
+@pytest.mark.requires_checkm
 def test_run_checkm2(self):
     """
     Test the method "run_checkM" when going over the group size limit

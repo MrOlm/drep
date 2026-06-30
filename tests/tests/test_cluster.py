@@ -363,6 +363,7 @@ def test_time_compare_genomes(self):
         comps = len(bdb) * len(bdb)
         print("{1} time: {0:.2f} seconds for {2} comparisons ({3:.2f} seconds per comparison)".format(end-start, method, comps, (end-start)/comps))
 
+@pytest.mark.requires_mummer
 def test_all_vs_all_mash(self):
     '''
     Test d_cluster.all_vs_all_MASH
