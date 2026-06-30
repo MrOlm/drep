@@ -393,6 +393,26 @@ def test_dereplicate_9(self):
     # being overwritten
     test_utils.sanity_check(s_wd)
 
+def test_dereplicate_single_genome(self):
+    '''
+    Regression test for GitHub issue #300: dRep should handle gracefully when
+    fewer than 2 genomes remain after filtering (e.g. only 1 genome passes checkM),
+    rather than crashing with a scipy empty distance matrix error.
+    '''
+    wd_loc = self.wd_loc
+
+    # Use only a single genome
+    genome = [self.genomes[0]]
+
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '--ignoreGenomeQuality',
+                                      '--SkipSecondary', '-g'] + genome)
+    controller = Controller()
+    controller.parseArguments(args)
+
+    wd = WorkDirectory(wd_loc)
+    Cdb = wd.get_db('Cdb')
+    assert len(Cdb) == 1
+
 def test_dereplicate_10(self):
     '''
     Use skani

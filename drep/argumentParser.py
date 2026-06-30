@@ -96,8 +96,8 @@ def parse_args(args):
                 or eukaryotes or things where checkM scoring does not work. Will only \
                 choose genomes based on length and N50", action='store_true')
     Iflags.add_argument('--genomeInfo', help='location of .csv file containing quality \
-                    information on the genomes. Must contain: ["genome"(basename of .fasta file \
-                    of that genome), "completeness"(0-100 value for completeness of the genome), \
+                    information on the genomes. Must contain: ["genome"(filename of .fasta file \
+                    of that genome, including extension e.g. genome.fasta), "completeness"(0-100 value for completeness of the genome), \
                     "contamination"(0-100 value of the contamination of the genome)]')
     Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) \
                         or taxonomy_wf (faster)", choices={'taxonomy_wf', 'lineage_wf'}, \

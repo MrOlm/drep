@@ -381,7 +381,7 @@ def test_all_vs_all_mash(self):
     d = float(db['dist'].tolist()[0])
     assert (d > .01) & (d < .02)
     assert len(glob.glob(data_folder + '/MASH_files/sketches/*')) == 1
-    assert len(glob.glob(data_folder + '/MASH_files/sketches/*/*')) == 6
+    assert len(glob.glob(data_folder + '/MASH_files/sketches/*/*')) == 7
 
     # Start over
     shutil.rmtree(self.test_dir)
@@ -396,7 +396,7 @@ def test_all_vs_all_mash(self):
     d = float(db['dist'].tolist()[0])
     assert (d > .01) & (d < .02)
     assert len(glob.glob(data_folder + '/MASH_files/sketches/*')) == 3
-    assert len(glob.glob(data_folder + '/MASH_files/sketches/*/*')) == 8
+    assert len(glob.glob(data_folder + '/MASH_files/sketches/*/*')) == 11
 
 def test_cluster_mash_database(self):
     '''

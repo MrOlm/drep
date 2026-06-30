@@ -84,7 +84,7 @@ Using external genome quality information
 
 If you already have your own genome quality information and would not like dRep to run checkM to generate it again, you can provide it using the `genomeInformation` flag.
 
-The genomeInformation file must be in .csv format and have the columns "genome", "completeness", and "contamination". Columns "completeness" and "contamination" should be 0-100, and "genome" is the filename of the genome.
+The genomeInformation file must be in .csv format and have the columns "genome", "completeness", and "contamination". Columns "completeness" and "contamination" should be 0-100, and "genome" is the filename of the genome (including the file extension, e.g. ``genome.fasta``).
 
 For example::
 
@@ -94,6 +94,12 @@ For example::
   Enterococcus_faecalis_TX0104.fa,96.55,0.0
   Enterococcus_faecalis_YI6-1.fna,98.28,0.0
   Escherichia_coli_Sakai.fna,100.0,0.0
+
+To convert CheckM2 output for use with dRep::
+
+  awk -F'\t' 'BEGIN {OFS=","; print "genome,completeness,contamination"} NR>1 {print $1 ".fasta", $2, $3}' quality_report.tsv > genomeInfo.csv
+
+Note: adjust the ``.fasta`` extension to match your actual genome filenames.
 
 Caching
 --------

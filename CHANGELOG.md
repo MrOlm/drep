@@ -4,6 +4,16 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [3.7.1] - 2026-06-30
+- Fix crash when fewer than 2 genomes remain after filtering (issue #300)
+- Fix argument list bug (issue #288)
+- Dendrogram label contrast fix (issue #235)
+- Fix Widb.csv showing NA for completeness/contamination when using --genomeInfo (issue #220)
+- Clarify --genomeInfo help text: genome name must include file extension (issue #220)
+- Fix plotting crash with tertiary clustering due to decimal cluster names (issue #202)
+- Add warning when MASH sketch size may be too small for low P_ani thresholds (issue #137)
+- Fix false "fastANI isn't working" error when fastANI -h returns non-zero exit code (issue #96)
+
 ## [3.7.0] - 2026-06-30
 - Implement testing with the GitHub CLI
 - Maintain compatibility with pandas 3

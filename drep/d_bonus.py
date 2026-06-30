@@ -118,9 +118,11 @@ def find_program(dep):
     works = False
     if loc != None:
         try:
-            o = subprocess.check_output([loc, '-h'],stderr= subprocess.STDOUT)
-            works = True
-        except:
+            result = subprocess.run([loc, '-h'], capture_output=True)
+            # Some tools (e.g. older fastANI) exit with code 1 on -h even when working
+            if len(result.stdout) > 0 or len(result.stderr) > 0:
+                works = True
+        except Exception:
             pass
 
     return loc, works

@@ -253,6 +253,27 @@ def evaluate_winners(wd, **kwrags):
             Table['N50'].append(d['N50 (scaffolds)'].tolist()[0])
             Table['completeness_metric'].append(comp_str(d['Completeness'].tolist()[0]))
             Table['contamination_metric'].append(con_str(d['Contamination'].tolist()[0]))
+        elif wd.hasDb('genomeInfo'):
+            Gdb = wd.get_db('genomeInfo')
+            d = Gdb[Gdb['genome'] == row['genome']]
+            if len(d) > 0:
+                comp = d['completeness'].tolist()[0]
+                con = d['contamination'].tolist()[0]
+                Table['completeness'].append(comp)
+                Table['contamination'].append(con)
+                Table['strain_heterogeneity'].append(d['strain_heterogeneity'].tolist()[0] if 'strain_heterogeneity' in d.columns else "NA")
+                Table['size'].append(d['length'].tolist()[0] if 'length' in d.columns else "NA")
+                Table['N50'].append(d['N50'].tolist()[0] if 'N50' in d.columns else "NA")
+                Table['completeness_metric'].append(comp_str(comp))
+                Table['contamination_metric'].append(con_str(con))
+            else:
+                Table['completeness'].append("NA")
+                Table['contamination'].append("NA")
+                Table['strain_heterogeneity'].append("NA")
+                Table['size'].append("NA")
+                Table['N50'].append("NA")
+                Table['completeness_metric'].append("NA")
+                Table['contamination_metric'].append("NA")
         else:
             Table['completeness'].append("NA")
             Table['contamination'].append("NA")

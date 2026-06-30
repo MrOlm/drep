@@ -41,8 +41,11 @@ class genomeChunk():
 
     def gen_paste_cmd(self, mash_exe):
         all_file = os.path.join(self.chunk_folder, 'chunk_all.msh')
-        cmd = [mash_exe, 'paste', all_file] \
-              + glob.glob(os.path.join(self.chunk_folder, '*'))
+        list_file = os.path.join(self.chunk_folder, 'sketch_list.txt')
+        with open(list_file, 'w') as f:
+            for path in glob.glob(os.path.join(self.chunk_folder, '*.msh')):
+                f.write(path + '\n')
+        cmd = [mash_exe, 'paste', '-l', all_file, list_file]
         self.all_file = all_file
         return cmd
 
@@ -98,6 +101,18 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
         debug: if True, log all of the commands
         wd: if you want to log commands, you also need the wd
     """
+    # Warn if sketch size may be too small for the requested P_ani threshold
+    MASH_s = kwargs.get('MASH_sketch', 1000)
+    P_ani = kwargs.get('P_ani', 0.9)
+    if P_ani < 0.90 and MASH_s <= 1000:
+        logging.warning(
+            f"P_ani is set to {P_ani} but MASH_sketch is only {MASH_s}. "
+            "At low ANI thresholds, a small sketch size can cause Mash to underestimate "
+            "distances and place related genomes into separate primary clusters, which "
+            "means they will never be compared with the secondary algorithm. "
+            "Consider increasing -ms (MASH_sketch) to 10000 or higher."
+        )
+
     # Set up the mash folder structure
     logdir, MASH_folder, sketch_folder, mash_exe = prepare_mash(data_folder, **kwargs)
 

@@ -1016,7 +1016,9 @@ def fancy_dendrogram(linkage,names,name2color=False,threshold=False,self_thresh=
         ax = plt.gca()
         xlbls = ax.get_ymajorticklabels()
         for lbl in xlbls:
-            lbl.set_color(name2color[lbl.get_text()])
+            color = name2color[lbl.get_text()]
+            lbl.set_color('black')
+            lbl.set_bbox(dict(facecolor=color, alpha=0.7, edgecolor='none', pad=2))
 
     # Add the threshold
     if threshold:
@@ -1062,7 +1064,7 @@ def gen_color_list(names,name2cluster):
         try:
             cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
         except:
-            cluster2color[cluster] = cm(1.*int(str(cluster).split('_')[1])/NUM_COLORS)
+            cluster2color[cluster] = cm(1.*float(str(cluster).split('_')[1])/NUM_COLORS)
 
     #2. generate list of colors
     colors = []
@@ -1095,7 +1097,7 @@ def gen_color_dictionary(names, name2cluster):
         try:
             cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
         except:
-            cluster2color[cluster] = cm(1.*int(str(cluster).split('_')[1])/NUM_COLORS)
+            cluster2color[cluster] = cm(1.*float(str(cluster).split('_')[1])/NUM_COLORS)
 
     #2. name to color
     name2color = {}

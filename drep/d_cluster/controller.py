@@ -95,6 +95,11 @@ class GenomeClusterController(object):
             Cdb = self.wd.get_db('CdbF')
             logging.info('2. Primary clustering cache loaded')
 
+        elif len(self.Bdb) < 2:
+            logging.warning("Fewer than 2 genomes remain after filtering — skipping MASH clustering")
+            Cdb = drep.d_cluster.external._gen_nomash_cdb(self.Bdb)
+            Mdb = pd.DataFrame({'Blank': []})
+
         else:
             logging.info("Running pair-wise MASH clustering")
             Mdb, Cdb, cluster_ret = drep.d_cluster.compare_utils.all_vs_all_MASH(self.Bdb, self.wd.get_dir('MASH'), **self.kwargs)
@@ -125,7 +130,12 @@ class GenomeClusterController(object):
         # Wipe any old secondary clusters
         self.wd._wipe_secondary_clusters()
 
-        if not self.kwargs.get('SkipSecondary', False):
+        if len(self.Bdb) < 2:
+            logging.warning("Fewer than 2 genomes remain after filtering — skipping secondary clustering")
+            Cdb = drep.d_cluster.utils._gen_nomani_cdb(self.MCdb, data_folder=self.wd.get_dir('data'), **self.kwargs)
+            Ndb = pd.DataFrame({'Blank': []})
+
+        elif not self.kwargs.get('SkipSecondary', False):
             if cached:
                 logging.info('3. Loading cached secondary clustering')
                 Ndb = self.wd.get_db('Ndb')
