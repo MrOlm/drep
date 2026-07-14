@@ -341,6 +341,27 @@ def test_skani(self):
 
     assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
 
+def test_skani_alignment_coverage_is_fraction_not_percent(self):
+    '''
+    Regression test: skani reports aligned fractions as percentages, but dRep
+    compares alignment_coverage against cov_thresh on a 0-1 scale (see
+    make_linkage_Ndb). If the conversion is dropped the coverage filter silently
+    stops working, and distantly related genomes sharing a small conserved
+    region get merged.
+    '''
+    bdb = drep.d_cluster.utils.load_genomes(self.genomes)
+    Ndb = drep.d_cluster.compare_utils.compare_genomes(bdb, 'skani', self.test_dir)
+
+    assert Ndb['alignment_coverage'].between(0, 1).all(), \
+        "skani alignment_coverage must be a 0-1 fraction, not a percent"
+
+    # E. casseliflavus and E. faecalis align over only ~1% of their genomes, so
+    # a demanding coverage threshold must keep them in separate clusters.
+    Cdb, _ = drep.d_cluster.cluster_utils.genome_hierarchical_clustering(
+        Ndb, S_ani=0.85, cov_thresh=0.5, comp_method='skani', cluster='X')
+    g2c = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+    assert g2c['Enterococcus_casseliflavus_EC20.fasta'] != g2c['Enterococcus_faecalis_T2.fna']
+
 @pytest.mark.skip(reason="You don't need to run this")
 def test_time_compare_genomes(self):
     '''

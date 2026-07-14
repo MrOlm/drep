@@ -240,8 +240,15 @@ def load_skani(file):
     db = db[db['reference'] != db['querry']]
     adb = pd.concat([adb, db], ignore_index=True).reset_index(drop=True)
 
-    # Load the af triangle
+    # Load the af triangle. skani reports aligned fractions as percentages
+    # (0-100); every other dRep algorithm reports alignment_coverage on a 0-1
+    # scale, and that is what cov_thresh is compared against in
+    # make_linkage_Ndb. Without this conversion the coverage filter is inert for
+    # skani (e.g. a pair aligning over only 1% of the genome has
+    # alignment_coverage=1.04, which sails past a cov_thresh of 0.5), which can
+    # merge distantly related genomes that share a small conserved region.
     tdb = load_matrix_to_dataframe(file + '.af').rename(columns={'ani':'alignment_coverage'})
+    tdb['alignment_coverage'] = tdb['alignment_coverage'] / 100
 
     # Merge
     assert len(adb) == len(tdb)
