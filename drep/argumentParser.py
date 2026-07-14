@@ -114,23 +114,22 @@ def parse_args(args):
 
     Clustflags = cluster_parent.add_argument_group('GENOME COMPARISON OPTIONS')
     Clustflags.add_argument("--S_algorithm", help="R|Algorithm for secondary clustering comaprisons:\n" \
+                                                  + "skani   = (DEFAULT) Kmer-based approach; fastest and most accurate.\n" \
+                                                  + "          When paired with --primary_algorithm skani, secondary reuses\n" \
+                                                  + "          the comparisons already done during primary clustering.\n" \
                                                   + "fastANI = Kmer-based approach; very fast\n" \
-                                                  + "skani = Even faster Kmer-based approacht\n" \
-                                                  + "pyskani = skani run in-process via the pyskani library. Each genome is\n" \
-                                                  + "          sketched exactly once instead of being re-sketched by a new\n" \
-                                                  + "          subprocess for every comparison, which is much faster for\n" \
-                                                  + "          greedy clustering. Requires `pip install pyskani`.\n" \
-                                                  + "ANImf   = (DEFAULT) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
+                                                  + "ANImf   = Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
                                                   + "ANIn    = Align whole genomes with nucmer; compare aligned regions\n" \
                                                   + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
                                                   + "goANI   = Open source version of gANI; requires nsmimscan\n",
-                            default='fastANI', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI', 'skani', 'pyskani'})
+                            default='skani', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI', 'skani'})
     Clustflags.add_argument("--primary_algorithm", help="R|Program to use for primary clustering.\n" \
-                            + "MASH   = (DEFAULT) all-vs-all Mash\n" \
-                            + "skani  = skani triangle --sparse; only above-threshold pairs are\n" \
-                            + "         produced and they are streamed rather than held as a dense\n" \
-                            + "         matrix. Recommended for very large genome sets (no N^2 RAM/disk).",
-                            default='MASH', choices={'MASH', 'skani'})
+                            + "skani  = (DEFAULT) skani triangle --sparse. Only above-threshold pairs\n" \
+                            + "         are produced, so there is no N^2 matrix in RAM or on disk, and\n" \
+                            + "         a skani --S_algorithm can reuse these comparisons instead of\n" \
+                            + "         recomputing them.\n" \
+                            + "MASH   = all-vs-all Mash. Pre-v4 behavior; builds the full N^2 table.",
+                            default='skani', choices={'MASH', 'skani'})
     Clustflags.add_argument("--no_reuse_primary_comparisons", dest='reuse_primary_comparisons',
                             help="Re-run skani during secondary clustering instead of reusing the "
                                  "comparisons already computed during primary clustering. Only "
@@ -148,8 +147,10 @@ def parse_args(args):
                                  "and understand the chaining risk.",
                             default=15, type=float)
     Clustflags.add_argument("-ms", "--MASH_sketch", help="MASH sketch size", default=1000)
-    Clustflags.add_argument("--SkipMash", help="Skip MASH clustering,\
-                            just do secondary clustering on all genomes", action='store_true')
+    Clustflags.add_argument("--SkipMash", help="Skip primary clustering entirely and run secondary\
+                            clustering on all genomes at once. (Named for when primary clustering was\
+                            always MASH; it applies to whichever --primary_algorithm is in use.)",
+                            action='store_true')
     Clustflags.add_argument("--SkipSecondary", help="Skip secondary clustering, just perform MASH\
                             clustering", action='store_true')
     Clustflags.add_argument("--skani_extra",
@@ -185,9 +186,6 @@ def parse_args(args):
                         clustering path instead of the streaming single-linkage algorithm. Uses much more\
                         RAM at scale but reproduces pre-v4 behavior and allows non-single linkage methods\
                         and the primary dendrogram plot.",
-                          action='store_true', default=False)
-    Compflags.add_argument("--low_ram_primary_clustering", help="(Deprecated; the streaming single-linkage\
-                        algorithm is now the default for primary clustering.) Kept for backwards compatibility.",
                           action='store_true', default=False)
 
     GRflags = cluster_parent.add_argument_group('GREEDY CLUSTERING OPTIONS\n'

@@ -333,7 +333,7 @@ def test_filer_functional_4(self):
 
     # Make sure it doesnt warn incorrectly
     self._caplog.clear()
-    args = argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '4', '--multiround_primary_clustering', '-g'] + self.genomes)
+    args = argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '4', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '-g'] + self.genomes)
     kwargs = vars(args)
     bdb = drep.d_cluster.utils.load_genomes(kwargs['genomes'])
     drep.d_filter.sanity_check(bdb, **kwargs)

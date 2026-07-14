@@ -7,7 +7,6 @@ import pandas as pd
 
 import drep.d_cluster.external
 import drep.d_cluster.compare_utils
-import drep.d_cluster.pyskani_backend
 
 def greedy_secondary_clustering(Bdb, Cdb, algorithm, data_folder, **kwargs):
     ndbs = []
@@ -108,13 +107,12 @@ def compare_genomes_greedy(bdb, algorithm, data_folder, **kwargs):
 
 def genome_vs_reps(new_genome, genome_reps, genome_rep_file, algorithm, data_folder, **kwargs):
     if algorithm == 'fastANI':
-        # Return Ndb. NOTE: this spawns a subprocess that re-sketches every
-        # representative on every call (O(N*R) sketching). The pyskani path below
-        # sketches each genome exactly once instead.
+        # NOTE: this spawns a subprocess that re-sketches every representative on
+        # every call, so sketching is O(N*R). Greedy exists to avoid O(n^2)
+        # comparisons within a primary cluster; --primary_algorithm skani avoids
+        # that quadratic in the first place by only ever producing
+        # above-threshold pairs, and is usually the better answer at scale.
         return drep.d_cluster.external.fastani_one_vs_many(new_genome, genome_reps, genome_rep_file, data_folder, **kwargs)
-    elif algorithm == 'pyskani':
-        return drep.d_cluster.pyskani_backend.pyskani_one_vs_many(
-            new_genome, kwargs['pyskani_db'], **kwargs)
     else:
         logging.error("{0} algorithm is not yet supported for greedy clustering; sorry!".format(algorithm))
         assert False
@@ -124,13 +122,11 @@ def add_genome_as_rep(location, algorithm, **kwargs):
     """
     Register a genome as a new cluster representative.
 
-    For pyskani this sketches it once into the in-memory database, so subsequent
-    genomes can be compared against it without any re-sketching. Subprocess-based
-    algorithms read the representative list from a file instead and need nothing
-    here.
+    Subprocess-based algorithms read the representative list from a file, which
+    compare_genomes_greedy has already written, so there is nothing to do here.
+    Kept as a hook for backends that need to index representatives as they appear.
     """
-    if algorithm == 'pyskani':
-        kwargs['pyskani_db'].add_genome(location)
+    return
 
 
 def prepare_for_greedy(algorithm, data_folder, **kwargs):
@@ -154,11 +150,6 @@ def prepare_for_greedy(algorithm, data_folder, **kwargs):
         kwargs['tmp_dir'] = tmp_dir
         kwargs['logdir'] = logdir
         kwargs['current_exe'] = drep.get_exe('fastANI')
-
-    elif algorithm == 'pyskani':
-        # One in-memory database of representatives for this primary cluster.
-        # Each representative is sketched exactly once, on the way in.
-        kwargs['pyskani_db'] = drep.d_cluster.pyskani_backend.PyskaniDatabase(**kwargs)
 
     return kwargs
 

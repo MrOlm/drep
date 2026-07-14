@@ -75,8 +75,8 @@ def test_cluster_mash_files_streaming(tmp_path):
     assert g2c['g0.fasta'] != g2c['g3.fasta']
 
 
-def test_low_ram_matches_scipy_membership():
-    # Build a random symmetric similarity table and confirm union-find (low_ram)
+def test_union_find_matches_scipy_membership():
+    # Build a random symmetric similarity table and confirm union-find
     # and scipy single-linkage produce identical cluster membership.
     rng = np.random.default_rng(1)
     n = 40
@@ -236,8 +236,11 @@ def test_sparse_skani_primary_matches_mash():
 
         # Every input genome is represented (including singletons skani screened out)
         assert set(Cdb_sk['genome']) == set(Bdb['genome'])
-        # Marker so downstream plotting skips the (nonexistent) primary dendrogram
-        assert cret[0] == 'union_find_streaming'
+        # Small genome sets still get a scipy linkage so the primary dendrogram
+        # can be drawn, and it must cover every genome -- not just the ones that
+        # appear in the sparse edge list
+        assert not isinstance(cret[0], str), "expected a real linkage matrix for a small set"
+        assert list(cret[1].columns) == sorted(Bdb['genome'])
 
         def part(Cdb):
             return {frozenset(sub['genome']) for _, sub in Cdb.groupby('primary_cluster')}

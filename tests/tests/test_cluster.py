@@ -609,29 +609,33 @@ def test_skipsecondary(self):
     db2 = wd.get_db('Ndb')
     assert db2.empty, 'Ndb is not empty'
 
-def test_low_ram_primary_clustering(self):
+def test_mash_primary_algorithm(self):
     '''
-    Test that low_ram_primary_clustering runs without crashing and uses the optimized method
+    skani is the default primary algorithm, so exercise the MASH path explicitly
+    to make sure it still works.
     '''
     genomes = self.genomes
     wd_loc  = self.wd_loc
-    s_wd_loc = self.s_wd_loc
 
-    # Create the work directory and data directory
     os.makedirs(os.path.join(wd_loc, 'data'), exist_ok=True)
 
-    # Run dRep with low_ram_primary_clustering
-    args = argumentParser.parse_args(['dereplicate', wd_loc, '--low_ram_primary_clustering', '-g'] + genomes)
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '--primary_algorithm', 'MASH',
+                                      '-g'] + genomes)
     kwargs = vars(args)
     drep.d_cluster.controller.d_cluster_wrapper(wd_loc, **kwargs)
 
-    # Verify it ran by checking Cdb exists and has the right columns
     wd = WorkDirectory(wd_loc)
     Cdb = wd.get_db('Cdb')
     assert 'genome' in Cdb.columns
     assert 'primary_cluster' in Cdb.columns
     assert len(Cdb) > 0
 
-    # Check that the optimized method was actually used by looking at the primary linkage
-    primary_linkage = wd.get_cluster('primary_linkage')['linkage']
-    assert primary_linkage == "union_find_streaming", "Optimized clustering method was not used"
+    # The MASH Mdb is the dense pairwise table (no alignment fractions), so
+    # secondary must NOT try to reuse it as if it were skani edges
+    Mdb = wd.get_db('Mdb')
+    assert 'alignment_coverage' not in Mdb.columns
+
+    # E. faecalis genomes should land in one primary cluster, apart from E. coli
+    g2c = Cdb.set_index('genome')['primary_cluster'].to_dict()
+    assert g2c['Enterococcus_faecalis_T2.fna'] == g2c['Enterococcus_faecalis_TX0104.fa']
+    assert g2c['Enterococcus_faecalis_T2.fna'] != g2c['Escherichia_coli_Sakai.fna']

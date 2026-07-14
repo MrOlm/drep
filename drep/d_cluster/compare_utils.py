@@ -14,7 +14,6 @@ import drep.d_cluster.external
 import drep.d_cluster.utils
 import drep.d_cluster.greedy_clustering
 import drep.d_cluster.union_find
-import drep.d_cluster.pyskani_backend
 
 class genomeChunk():
     """
@@ -144,15 +143,23 @@ def all_vs_all_primary(Bdb, data_folder, **kwargs):
     """
     Dispatch primary clustering to the requested algorithm.
 
-    'MASH' (default) uses the classic all-vs-all Mash path. 'skani' uses
-    `skani triangle --sparse` + streaming union-find, which never builds the N^2
-    matrix on disk or in RAM and is the recommended path for very large genome
-    sets.
+    'skani' (default) uses `skani triangle --sparse` + union-find, which never
+    builds the N^2 matrix on disk or in RAM and lets a skani --S_algorithm reuse
+    the comparisons. 'MASH' is the classic all-vs-all Mash path (pre-v4).
 
     Returns (Mdb, Cdb, cluster_ret), matching all_vs_all_MASH.
     """
-    method = kwargs.get('primary_algorithm', 'MASH')
+    method = kwargs.get('primary_algorithm', 'skani')
     if method == 'skani':
+        # These only mean something on the MASH path. skani's sparse output never
+        # builds the N^2 table they exist to work around, so say so rather than
+        # silently ignoring them.
+        if kwargs.get('multiround_primary_clustering', False):
+            logging.warning(
+                "--multiround_primary_clustering only applies to --primary_algorithm MASH "
+                "and is ignored with skani. skani's sparse output never builds the full "
+                "N^2 table that multiround exists to avoid, and it does not suffer the "
+                "chunk-splitting imprecision of multiround.")
         return primary_cluster_skani_sparse(Bdb, data_folder, **kwargs)
     return all_vs_all_MASH(Bdb, data_folder, **kwargs)
 
@@ -217,9 +224,26 @@ def primary_cluster_skani_sparse(Bdb, data_folder, **kwargs):
     Mdb = edges.rename(columns={'ani': 'similarity'}).copy()
     Mdb['dist'] = 1 - Mdb['similarity']
 
+    # The sparse path builds no dense matrix, so there is normally no scipy
+    # linkage to draw a primary dendrogram from. For modest genome sets the dense
+    # matrix is cheap, so build it from the edges purely so the dendrogram still
+    # works. Above the cutoff we store a marker and plotting skips it.
+    linkage = 'union_find_streaming'
+    linkage_db = None
+    dendro_max = kwargs.get('primary_dendrogram_max_genomes', 2000)
+    if len(all_genomes) <= dendro_max:
+        try:
+            linkage_db = drep.d_cluster.union_find.edges_to_dense_dist(edges, all_genomes)
+            arr = ssd.squareform(np.asarray(linkage_db), checks=False)
+            linkage = scipy.cluster.hierarchy.linkage(arr, method='single')
+        except Exception as e:
+            logging.debug(f"Skipping primary dendrogram linkage computation: {e}")
+            linkage = 'union_find_streaming'
+            linkage_db = None
+
     arguments = {'linkage_method': 'single', 'linkage_cutoff': 1 - P_ani,
                  'comparison_algorithm': 'skani'}
-    cluster_ret = ['union_find_streaming', None, arguments]
+    cluster_ret = [linkage, linkage_db, arguments]
     return Mdb, Cdb, cluster_ret
 
 
@@ -418,7 +442,6 @@ def cluster_mash_database(db, **kwargs):
         clusterAlg: legacy fallback for primary_clusterAlg (default = single)
         P_ani: threshold to cluster at (default = 0.9)
         classic_primary_clustering: force the dense scipy path
-        low_ram_primary_clustering: deprecated alias forcing single-linkage union-find
 
     Returns:
         list: [Cdb, [linkage, linkage_db, arguments]]
@@ -431,7 +454,6 @@ def cluster_mash_database(db, **kwargs):
     P_Lmethod = kwargs.get('primary_clusterAlg') or kwargs.get('clusterAlg', 'single')
     P_Lcutoff = 1 - kwargs.get('P_ani',.9)
     classic = kwargs.get('classic_primary_clustering', False)
-    low_ram = kwargs.get('low_ram_primary_clustering', False)
 
     db['dist'] = 1 - db['similarity']
 
@@ -439,12 +461,8 @@ def cluster_mash_database(db, **kwargs):
     # components. Compute it directly on the long-format table with union-find and
     # skip the O(N^2) dense pivot entirely (issue #259 / the large-N RAM crash).
     # This is the default; --classic_primary_clustering forces the dense path.
-    use_union_find = (not classic) and ((P_Lmethod == 'single') or low_ram)
+    use_union_find = (not classic) and (P_Lmethod == 'single')
     if use_union_find:
-        if low_ram and P_Lmethod != 'single':
-            logging.warning(
-                f"low_ram_primary_clustering uses single-linkage (connected components); "
-                f"ignoring primary_clusterAlg={P_Lmethod} for primary clustering.")
         Cdb = drep.d_cluster.union_find.cluster_long_df(db, P_Lcutoff)
 
         arguments = {'linkage_method': 'single', 'linkage_cutoff': P_Lcutoff,
@@ -459,7 +477,7 @@ def cluster_mash_database(db, **kwargs):
         linkage_db = None
         dendro_max = kwargs.get('primary_dendrogram_max_genomes', 2000)
         n_genomes = Cdb['genome'].nunique()
-        if (not low_ram) and n_genomes <= dendro_max and 'genome_chunk' not in db.columns:
+        if n_genomes <= dendro_max and 'genome_chunk' not in db.columns:
             try:
                 linkage_db = db.pivot(index="genome1", columns="genome2", values="dist")
                 arr = ssd.squareform(np.asarray(linkage_db))
@@ -475,7 +493,7 @@ def cluster_mash_database(db, **kwargs):
     # Classic dense path (non-single linkage, or --classic_primary_clustering).
     linkage_db = db.pivot(index="genome1", columns="genome2", values="dist")
     Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(linkage_db, linkage_method= P_Lmethod, \
-                                                                     linkage_cutoff= P_Lcutoff, low_ram=False)
+                                                                     linkage_cutoff= P_Lcutoff)
     Cdb = Cdb.rename(columns={'cluster':'primary_cluster'})
     Cdb['primary_cluster'] = Cdb['primary_cluster'].astype(int)
 
@@ -572,11 +590,6 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
             df = drep.d_cluster.external.run_pairwise_skani(genome_list, working_data_folder, **kwargs)
             return df
 
-        elif algorithm == 'pyskani':
-            genome_list = bdb['location'].tolist()
-            df = drep.d_cluster.pyskani_backend.run_pairwise_pyskani(genome_list, **kwargs)
-            return df
-
         elif algorithm == 'gANI':
             # Figure out prodigal folder
             wd = kwargs.get('wd', False)
@@ -610,7 +623,7 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
             sys.exit()
 
     else:
-        SUPPORTED = ['fastANI', 'pyskani']
+        SUPPORTED = ['fastANI']
         if algorithm not in SUPPORTED:
             message = f"{algorithm} is not supported for greedy secondary clustering!\nChoose one of the following supported S_algorithm options: {' '.join(SUPPORTED)}"
             logging.error(message)

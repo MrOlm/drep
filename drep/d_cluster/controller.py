@@ -44,11 +44,12 @@ class GenomeClusterController(object):
         """
         Load the genomes and store Bdb in the wd
         """
-        # Make sure you have the required program installed
-        loc = shutil.which('mash')
-        if loc is None:
+        # Make sure the program this run actually needs is installed. Only the
+        # MASH primary path needs mash; the default (skani) does not.
+        primary_exe = 'mash' if self.kwargs.get('primary_algorithm', 'skani') == 'MASH' else 'skani'
+        if shutil.which(primary_exe) is None:
             logging.error('Cannot locate the program {0}- make sure its in the system path' \
-                          .format('mash'))
+                          .format(primary_exe))
 
         # If genomes are provided, load them
         if self.kwargs.get('genomes', None) is not None:
@@ -193,9 +194,9 @@ class GenomeClusterController(object):
         """
         if self.kwargs.get('reuse_primary_comparisons', True) is False:
             return False
-        if self.kwargs.get('primary_algorithm', 'MASH') != 'skani':
+        if self.kwargs.get('primary_algorithm', 'skani') != 'skani':
             return False
-        if algorithm not in ('skani', 'pyskani'):
+        if algorithm != 'skani':
             return False
         if self.kwargs.get('greedy_secondary_clustering', False):
             return False

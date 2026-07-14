@@ -103,8 +103,6 @@ def estimate_time(comps, alg):
         'ANImf': .5,
         'fastANI': 0.00667,
         'skani': 0.00667,
-        # in-process; sketches each genome once, so at least as fast as skani
-        'pyskani': 0.00667,
     }
     if alg not in per_comparison:
         logging.debug(f"No time estimate available for {alg}; assuming a fast algorithm")

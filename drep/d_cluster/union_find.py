@@ -104,8 +104,7 @@ def cluster_long_df(db, cutoff, all_genomes=None):
     Cluster an in-memory long-format MASH table with union-find (no pivot).
 
     This is the drop-in, single-linkage replacement for the pivot -> squareform
-    -> scipy path in ``cluster_mash_database`` and for the ``low_ram`` path that
-    used to ``stack()`` an already-dense matrix back into long format.
+    -> scipy path in ``cluster_mash_database``.
 
     Args:
         db: DataFrame with columns 'genome1', 'genome2', and either 'dist' or
@@ -237,6 +236,41 @@ def cluster_mash_files(dist_files, cutoff, all_genomes=None, chunksize=5_000_000
         'primary_clusters': Cdb['primary_cluster'].nunique() if len(Cdb) else 0,
     }
     return Cdb, stats
+
+
+def edges_to_dense_dist(edges, genomes):
+    """
+    Build a dense, symmetric distance matrix from a sparse edge table.
+
+    Only for modest genome counts -- this is the O(N^2) representation the rest of
+    this module exists to avoid. It is used solely so the primary dendrogram can
+    still be plotted for small runs; clustering itself never needs it.
+
+    Pairs absent from the edge list have no detectable similarity, so they get
+    distance 1. The diagonal is 0.
+
+    Returns:
+        DataFrame indexed and columned by genome, values = 1 - ani.
+    """
+    names = sorted(genomes)
+    idx = {g: i for i, g in enumerate(names)}
+    n = len(names)
+
+    arr = np.ones((n, n), dtype=np.float32)
+    np.fill_diagonal(arr, 0.0)
+
+    for a, b, ani in zip(edges['genome1'].values, edges['genome2'].values,
+                         edges['ani'].values):
+        i, j = idx.get(a), idx.get(b)
+        if i is None or j is None:
+            continue
+        d = 1.0 - ani
+        # edges are symmetric already, but write both to be safe against
+        # one-directional input
+        arr[i, j] = d
+        arr[j, i] = d
+
+    return pd.DataFrame(arr, index=names, columns=names)
 
 
 def build_ndb_from_edges(edges, Cdb):
