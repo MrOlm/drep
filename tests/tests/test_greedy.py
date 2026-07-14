@@ -73,7 +73,7 @@ def test_multiround_primary_clustering_with_low_ram(self):
 
     # Make sure low_ram optimization was used
     primary_linkage = wd.get_cluster('primary_linkage')['linkage']
-    assert primary_linkage == "optimized_method_used", "Optimized clustering method was not used"
+    assert primary_linkage == "union_find_streaming", "Streaming union-find method was not used"
 
     # Make sure genomes in same primary cluster in one dataframe are also in same primary cluster in other
     Cdb = wd.get_db('Cdb')

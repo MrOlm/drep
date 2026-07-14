@@ -3,13 +3,17 @@ import logging
 import os
 import sys
 
+import numpy as np
 import pandas as pd
+import scipy.cluster
+from scipy.spatial import distance as ssd
 
 import drep
 import drep.d_cluster.cluster_utils
 import drep.d_cluster.external
 import drep.d_cluster.utils
 import drep.d_cluster.greedy_clustering
+import drep.d_cluster.union_find
 
 class genomeChunk():
     """
@@ -134,6 +138,63 @@ def all_vs_all_MASH(Bdb, data_folder, **kwargs):
     logging.info("  Final step: comparing between all groups")
     return run_second_round_clustering(Bdb, genome_chunks, data_folder, verbose=True, **kwargs)
 
+
+def all_vs_all_primary(Bdb, data_folder, **kwargs):
+    """
+    Dispatch primary clustering to the requested algorithm.
+
+    'MASH' (default) uses the classic all-vs-all Mash path. 'skani' uses
+    `skani triangle --sparse` + streaming union-find, which never builds the N^2
+    matrix on disk or in RAM and is the recommended path for very large genome
+    sets.
+
+    Returns (Mdb, Cdb, cluster_ret), matching all_vs_all_MASH.
+    """
+    method = kwargs.get('primary_algorithm', 'MASH')
+    if method == 'skani':
+        return primary_cluster_skani_sparse(Bdb, data_folder, **kwargs)
+    return all_vs_all_MASH(Bdb, data_folder, **kwargs)
+
+
+def primary_cluster_skani_sparse(Bdb, data_folder, **kwargs):
+    """
+    Primary clustering via `skani triangle --sparse` streamed into union-find.
+
+    Only above-threshold pairs are ever produced (skani screens during sketching)
+    and they are streamed rather than held as a dense matrix, so memory stays
+    O(genomes + edges) regardless of genome count. Always single-linkage
+    (connected components); --classic_primary_clustering / non-single
+    primary_clusterAlg do not apply here.
+    """
+    P_ani = kwargs.get('P_ani', 0.9)
+    ani_threshold = P_ani * 100.0
+
+    # Screen a few points below the ANI threshold so skani's k-mer pre-filter
+    # doesn't drop a pair whose full ANI would clear the threshold.
+    default_screen = max(1.0, min(ani_threshold - 5.0, 99.0))
+    screen = kwargs.get('primary_skani_screen', default_screen)
+
+    skani_folder = os.path.join(data_folder, 'skani_sparse_files/')
+    genome_list = list(Bdb['location'].unique())
+
+    logging.info(f"  Running sparse skani primary clustering on {len(genome_list):,} genomes "
+                 f"(ANI threshold {ani_threshold:.1f}%, screen {screen:.1f}%)")
+    sparse_file = drep.d_cluster.external.run_skani_triangle_sparse(
+        genome_list, skani_folder, screen, **kwargs)
+
+    all_genomes = list(Bdb['genome'].unique())
+    Cdb, Mdb, stats = drep.d_cluster.union_find.cluster_skani_sparse_files(
+        sparse_file, ani_threshold, all_genomes,
+        progress=kwargs.get('primary_progress', True))
+
+    logging.info(f"  Sparse skani primary clustering: {stats['edges_kept']:,} edges kept, "
+                 f"{stats['primary_clusters']:,} primary clusters")
+
+    arguments = {'linkage_method': 'single', 'linkage_cutoff': 1 - P_ani,
+                 'comparison_algorithm': 'skani'}
+    cluster_ret = ['union_find_streaming', None, arguments]
+    return Mdb, Cdb, cluster_ret
+
 def prepare_mash(data_folder, **kwargs):
     """
     Make some folders and things
@@ -214,8 +275,27 @@ def run_mash_on_genome_chunks(genome_chunks, mash_exe, sketch_folder, MASH_folde
 
     return genome_chunks
 
+def _subsample_mdb(mdb, max_rows):
+    """
+    Cap a per-chunk Mdb to at most max_rows rows so multiround primary clustering
+    doesn't accumulate an O(N^2) table across all chunks (the source of the
+    43k-genome MemoryError at pd.concat). The full pairwise table is only kept for
+    storage/inspection; clustering itself does not use the concatenated Mdb.
+    """
+    if max_rows is None or len(mdb) <= max_rows:
+        return mdb
+    return mdb.sample(n=max_rows, random_state=0)
+
+
 def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
     verbose = kwargs.get('verbose', False)
+
+    # Bound the total number of pairwise rows retained for the stored Mdb across
+    # all chunks. Set to 0/None to disable (restores pre-v4 unbounded behavior).
+    max_mdb_rows = kwargs.get('max_stored_mdb_rows', 5_000_000)
+    per_chunk_cap = None
+    if max_mdb_rows:
+        per_chunk_cap = max(1, int(max_mdb_rows // (len(genome_chunks) + 1)))
 
     kwargs_copy = kwargs.copy()
     kwargs_copy['multiround_primary_clustering'] = False
@@ -233,7 +313,10 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
 
         mdb = gc.Mdb
         mdb['genome_chunk'] = gc.name
-        mdbs.append(mdb)
+        # Subsample before retaining so we never hold all N^2 rows at once
+        mdbs.append(_subsample_mdb(mdb, per_chunk_cap))
+        # Free the chunk's full table now that its clusters are computed
+        gc.Mdb = None
 
     Cdb = pd.concat(dbs)
 
@@ -255,10 +338,11 @@ def run_second_round_clustering(Bdb, genome_chunks, data_folder, **kwargs):
 
     mdb = genome_chunks[0].Mdb
     mdb['genome_chunk'] = 'v2'
-    mdbs.append(mdb)
-    Mdb = pd.concat(mdbs).reset_index(drop=True)
-
+    # Cluster on the full second-round table, but only store a bounded subsample
     Cdb2, cluster_ret = cluster_mash_database(mdb, **kwargs)
+
+    mdbs.append(_subsample_mdb(mdb, per_chunk_cap))
+    Mdb = pd.concat(mdbs).reset_index(drop=True)
     Cdb2['primary_representitive'] = True
 
     # Step 5) Merge the new Cdb back in with the old
@@ -277,25 +361,70 @@ def cluster_mash_database(db, **kwargs):
         db: Mdb (all_vs_all Mash results)
 
     Keyword arguments:
-        clusterAlg: how to cluster database (default = single)
+        primary_clusterAlg: how to cluster the primary database (default = single).
+            'single' uses the fast streaming union-find algorithm; any other
+            method uses the classic dense scipy path.
+        clusterAlg: legacy fallback for primary_clusterAlg (default = single)
         P_ani: threshold to cluster at (default = 0.9)
-        low_ram_primary_clustering: whether to use memory-efficient algorithm
+        classic_primary_clustering: force the dense scipy path
+        low_ram_primary_clustering: deprecated alias forcing single-linkage union-find
 
     Returns:
         list: [Cdb, [linkage, linkage_db, arguments]]
     '''
     logging.debug('Clustering MASH database')
 
-    # Load key words
-    P_Lmethod = kwargs.get('clusterAlg','single')
+    # Load key words. Primary clustering has its own linkage method
+    # (primary_clusterAlg), independent of the secondary clusterAlg. Fall back to
+    # clusterAlg for older callers that only pass that.
+    P_Lmethod = kwargs.get('primary_clusterAlg') or kwargs.get('clusterAlg', 'single')
     P_Lcutoff = 1 - kwargs.get('P_ani',.9)
+    classic = kwargs.get('classic_primary_clustering', False)
     low_ram = kwargs.get('low_ram_primary_clustering', False)
 
-    # Do the actual clustering
     db['dist'] = 1 - db['similarity']
+
+    # Single-linkage clustering at a fixed cutoff is identical to connected
+    # components. Compute it directly on the long-format table with union-find and
+    # skip the O(N^2) dense pivot entirely (issue #259 / the large-N RAM crash).
+    # This is the default; --classic_primary_clustering forces the dense path.
+    use_union_find = (not classic) and ((P_Lmethod == 'single') or low_ram)
+    if use_union_find:
+        if low_ram and P_Lmethod != 'single':
+            logging.warning(
+                f"low_ram_primary_clustering uses single-linkage (connected components); "
+                f"ignoring primary_clusterAlg={P_Lmethod} for primary clustering.")
+        Cdb = drep.d_cluster.union_find.cluster_long_df(db, P_Lcutoff)
+
+        arguments = {'linkage_method': 'single', 'linkage_cutoff': P_Lcutoff,
+                     'comparison_algorithm': 'MASH'}
+
+        # The streaming path builds no dense matrix, so by default there is no
+        # scipy linkage to plot a primary dendrogram from. For modest genome sets
+        # the dense pivot is cheap, so compute the single-linkage matrix purely so
+        # the dendrogram can still be drawn. Above the cutoff (or if it fails) we
+        # store a marker and downstream plotting skips the dendrogram gracefully.
+        linkage = 'union_find_streaming'
+        linkage_db = None
+        dendro_max = kwargs.get('primary_dendrogram_max_genomes', 2000)
+        n_genomes = Cdb['genome'].nunique()
+        if (not low_ram) and n_genomes <= dendro_max and 'genome_chunk' not in db.columns:
+            try:
+                linkage_db = db.pivot(index="genome1", columns="genome2", values="dist")
+                arr = ssd.squareform(np.asarray(linkage_db))
+                linkage = scipy.cluster.hierarchy.linkage(arr, method='single')
+            except Exception as e:
+                logging.debug(f"Skipping primary dendrogram linkage computation: {e}")
+                linkage = 'union_find_streaming'
+                linkage_db = None
+
+        cluster_ret = [linkage, linkage_db, arguments]
+        return Cdb, cluster_ret
+
+    # Classic dense path (non-single linkage, or --classic_primary_clustering).
     linkage_db = db.pivot(index="genome1", columns="genome2", values="dist")
     Cdb, linkage = drep.d_cluster.cluster_utils.cluster_hierarchical(linkage_db, linkage_method= P_Lmethod, \
-                                                                     linkage_cutoff= P_Lcutoff, low_ram=low_ram)
+                                                                     linkage_cutoff= P_Lcutoff, low_ram=False)
     Cdb = Cdb.rename(columns={'cluster':'primary_cluster'})
     Cdb['primary_cluster'] = Cdb['primary_cluster'].astype(int)
 

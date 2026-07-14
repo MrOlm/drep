@@ -102,7 +102,7 @@ class GenomeClusterController(object):
 
         else:
             logging.info("Running pair-wise MASH clustering")
-            Mdb, Cdb, cluster_ret = drep.d_cluster.compare_utils.all_vs_all_MASH(self.Bdb, self.wd.get_dir('MASH'), **self.kwargs)
+            Mdb, Cdb, cluster_ret = drep.d_cluster.compare_utils.all_vs_all_primary(self.Bdb, self.wd.get_dir('MASH'), **self.kwargs)
 
             if self.debug:
                 logging.debug("Debug mode on - saving Mdb ASAP")

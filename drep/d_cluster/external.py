@@ -271,6 +271,60 @@ def _fix_fastani(odb):
     return fdb
 
 
+def run_skani_triangle_sparse(genome_list, outdir, screen, **kwargs):
+    """
+    Run `skani triangle --sparse` and return the path to the sparse output file.
+
+    The sparse output is an edge list of only the above-screening-threshold pairs,
+    so it never materializes the N^2 matrix on disk or in memory. It is meant to
+    be streamed (see union_find.cluster_skani_sparse_files), not loaded whole.
+
+    Args:
+        genome_list: list of genome file locations.
+        outdir: directory to write the sparse output and temp files.
+        screen: skani -s screening threshold (percent identity). Pairs below this
+            are discarded during sketching and never appear in the output. Should
+            be <= the primary ANI threshold so no real edges are missed.
+
+    Keyword Args:
+        processors: threads for skani (default 6).
+        skani_extra: extra args passed through to skani triangle.
+        wd, debug: for command logging.
+
+    Returns:
+        Path to the sparse skani output file.
+    """
+    p = kwargs.get('processors', 6)
+    code = drep.d_cluster.utils._randomString(stringLength=10)
+    extra_cmd = kwargs.get('skani_extra', "")
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    tmp_dir = os.path.join(outdir, 'tmp/')
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+
+    glist = os.path.join(tmp_dir, 'genomeList_{0}'.format(code))
+    glist = _make_glist(genome_list, glist)
+
+    exe_loc = drep.get_exe('skani')
+    out_file = os.path.join(outdir, 'skani_sparse_{0}.tsv'.format(code))
+    cmd = [exe_loc, "triangle", "--sparse", "-t", str(p), '-o', out_file,
+           '-l', glist, '-s', str(screen)]
+    if extra_cmd != "":
+        cmd += extra_cmd.split(' ')
+
+    logging.debug(' '.join(cmd) + ' ' + code)
+
+    if ('wd' in kwargs) and (kwargs.get('debug', False)):
+        logdir = kwargs.get('wd').get_dir('cmd_logs')
+    else:
+        logdir = False
+    drep.thread_cmds([cmd], shell=False, logdir=logdir, t=1)
+
+    return out_file
+
+
 def _make_glist(genomes, floc):
     o = open(floc, 'w')
     for g in genomes:

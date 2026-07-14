@@ -121,6 +121,12 @@ def parse_args(args):
                                                   + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
                                                   + "goANI   = Open source version of gANI; requires nsmimscan\n",
                             default='fastANI', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI', 'skani'})
+    Clustflags.add_argument("--primary_algorithm", help="R|Program to use for primary clustering.\n" \
+                            + "MASH   = (DEFAULT) all-vs-all Mash\n" \
+                            + "skani  = skani triangle --sparse; only above-threshold pairs are\n" \
+                            + "         produced and they are streamed rather than held as a dense\n" \
+                            + "         matrix. Recommended for very large genome sets (no N^2 RAM/disk).",
+                            default='MASH', choices={'MASH', 'skani'})
     Clustflags.add_argument("-ms", "--MASH_sketch", help="MASH sketch size", default=1000)
     Clustflags.add_argument("--SkipMash", help="Skip MASH clustering,\
                             just do secondary clustering on all genomes", action='store_true')
@@ -146,10 +152,22 @@ def parse_args(args):
                                                             + "total   = 2*(aligned length) / (sum of total genome lengths)\n" \
                                                             + "larger  = max((aligned length / genome 1), (aligned_length / genome2))\n",
                            choices=['total', 'larger'], default='larger')
-    Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes (passed\
-                        to scipy.cluster.hierarchy.linkage", default='average',
+    Compflags.add_argument("--clusterAlg", help="Algorithm used to cluster genomes during SECONDARY\
+                        clustering (passed to scipy.cluster.hierarchy.linkage)", default='average',
                            choices={'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'})
-    Compflags.add_argument("--low_ram_primary_clustering", help="Use a memory-efficient algorithm for primary clustering. This only affects primary clustering and not secondary clustering.", 
+    Compflags.add_argument("--primary_clusterAlg", help="R|Algorithm used to cluster genomes during PRIMARY\n" \
+                        "(MASH/skani) clustering. The default 'single' is equivalent to connected\n" \
+                        "components and is computed with a fast, low-memory streaming algorithm that\n" \
+                        "scales to very large genome sets. Any other choice falls back to the classic\n" \
+                        "dense scipy path (see --classic_primary_clustering).", default='single',
+                           choices={'single', 'complete', 'average', 'weighted', 'centroid', 'median', 'ward'})
+    Compflags.add_argument("--classic_primary_clustering", help="Force the classic dense (scipy) primary\
+                        clustering path instead of the streaming single-linkage algorithm. Uses much more\
+                        RAM at scale but reproduces pre-v4 behavior and allows non-single linkage methods\
+                        and the primary dendrogram plot.",
+                          action='store_true', default=False)
+    Compflags.add_argument("--low_ram_primary_clustering", help="(Deprecated; the streaming single-linkage\
+                        algorithm is now the default for primary clustering.) Kept for backwards compatibility.",
                           action='store_true', default=False)
 
     GRflags = cluster_parent.add_argument_group('GREEDY CLUSTERING OPTIONS\n'

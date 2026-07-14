@@ -150,6 +150,10 @@ def mash_dendrogram_from_wd(wd, plot_dir=False):
         logging.error("Skipping plot 1 - cannot generate with multiround_primary_clustering enabled")
         return
 
+    if Plinkage is None or isinstance(Plinkage, str):
+        logging.error("Skipping plot 1 - cannot generate with low_ram_primary_clustering (no linkage matrix)")
+        return
+
     # Make the plot
     logging.info("Plotting primary dendrogram")
     plot_MASH_dendrogram(Mdb, Cdb, Plinkage, threshold = PL_thresh,\

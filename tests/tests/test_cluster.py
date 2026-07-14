@@ -613,4 +613,4 @@ def test_low_ram_primary_clustering(self):
 
     # Check that the optimized method was actually used by looking at the primary linkage
     primary_linkage = wd.get_cluster('primary_linkage')['linkage']
-    assert primary_linkage == "optimized_method_used", "Optimized clustering method was not used"
+    assert primary_linkage == "union_find_streaming", "Optimized clustering method was not used"
