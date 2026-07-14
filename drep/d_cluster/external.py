@@ -278,7 +278,7 @@ def _fix_fastani(odb):
     return fdb
 
 
-def run_skani_triangle_sparse(genome_list, outdir, screen, **kwargs):
+def run_skani_triangle_sparse(genome_list, outdir, screen, min_af=15, **kwargs):
     """
     Run `skani triangle --sparse` and return the path to the sparse output file.
 
@@ -292,6 +292,9 @@ def run_skani_triangle_sparse(genome_list, outdir, screen, **kwargs):
         screen: skani -s screening threshold (percent identity). Pairs below this
             are discarded during sketching and never appear in the output. Should
             be <= the primary ANI threshold so no real edges are missed.
+        min_af: skani --min-af, the minimum percent of a genome that must align
+            for the pair to be reported. See the note below -- do not set this to
+            0 for primary clustering.
 
     Keyword Args:
         processors: threads for skani (default 6).
@@ -316,15 +319,19 @@ def run_skani_triangle_sparse(genome_list, outdir, screen, **kwargs):
 
     exe_loc = drep.get_exe('skani')
     out_file = os.path.join(outdir, 'skani_sparse_{0}.tsv'.format(code))
-    # --min-af 0 is essential here. skani defaults to dropping pairs that align
-    # over <15% of the genome, but primary clustering is a deliberately loose,
-    # inclusive pre-filter -- the MASH path applies no alignment-fraction filter
-    # at all. Fragmented/partial MAGs of the same organism routinely align over
-    # less than 15%, and dropping those pairs would strand related genomes in
-    # separate primary clusters, where they are never compared by the secondary
-    # algorithm. (The pairwise skani path passes --min-af 0 for the same reason.)
+    # min_af matters far more than it looks, because MASH similarity and skani ANI
+    # measure different things. MASH compares k-mers across the whole genome, so
+    # two genomes sharing only a small conserved region score as distant. skani's
+    # ANI is the identity *within aligned regions only*, so that same pair reports
+    # a high ANI and (with min_af 0) becomes a primary-clustering edge. Under
+    # single linkage those few spurious bridges chain everything together: on 10k
+    # UHGG genomes, --min-af 0 collapsed 59% of the dataset into one primary
+    # cluster (largest 5857) while skani's 15% default reproduced the MASH
+    # partition almost exactly (984 clusters vs MASH's 989, largest 626 vs 626).
+    # The aligned-fraction filter is what makes skani's ANI comparable to MASH's
+    # whole-genome similarity -- it is not an obstacle to work around.
     cmd = [exe_loc, "triangle", "--sparse", "-t", str(p), '-o', out_file,
-           '-l', glist, '-s', str(screen), '--min-af', '0']
+           '-l', glist, '-s', str(screen), '--min-af', str(min_af)]
     if extra_cmd != "":
         cmd += extra_cmd.split(' ')
 

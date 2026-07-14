@@ -104,6 +104,46 @@ def test_low_ram_matches_scipy_membership():
     assert membership(scipy_Cdb) == membership(uf_Cdb)
 
 
+def test_skani_sparse_min_af_filters_low_alignment_edges():
+    """
+    The aligned-fraction filter is what keeps skani ANI comparable to MASH's
+    whole-genome similarity. skani reports ANI within aligned regions only, so a
+    pair sharing one small conserved region looks like a high-ANI edge; under
+    single linkage a few such bridges chain unrelated genomes into one giant
+    primary cluster (measured on 10k UHGG genomes: min-af 0 collapsed 59% of the
+    dataset into a single cluster).
+
+    Here a and b are genuinely similar, and c is joined to each only by a
+    high-ANI/low-alignment bridge. With the filter on, c must stay separate.
+    """
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        f = os.path.join(td, 'sparse.tsv')
+        rows = [
+            # ref, query, ANI, af_ref, af_query
+            ('a.fna', 'b.fna', 99.0, 90.0, 92.0),   # real relationship
+            ('a.fna', 'c.fna', 98.0, 2.0, 3.0),     # spurious bridge (tiny overlap)
+            ('b.fna', 'c.fna', 97.5, 2.5, 2.0),     # spurious bridge
+        ]
+        with open(f, 'w') as o:
+            o.write("Ref_file\tQuery_file\tANI\tAlign_fraction_ref\tAlign_fraction_query\n")
+            for r in rows:
+                o.write("\t".join(str(x) for x in r) + "\n")
+
+        allg = ['a.fna', 'b.fna', 'c.fna']
+
+        # No filter: the bridges chain a, b and c into one cluster
+        C0, _, _ = uf.cluster_skani_sparse_files(f, 90.0, allg, cov_threshold=0.0)
+        assert C0['primary_cluster'].nunique() == 1
+
+        # With a 15% aligned-fraction floor, c is correctly left on its own
+        C1, _, s1 = uf.cluster_skani_sparse_files(f, 90.0, allg, cov_threshold=0.15)
+        g2c = C1.set_index('genome')['primary_cluster'].to_dict()
+        assert g2c['a.fna'] == g2c['b.fna']
+        assert g2c['c.fna'] != g2c['a.fna']
+        assert s1['edges_kept'] == 1
+
+
 @pytest.mark.skipif(shutil.which('skani') is None, reason="skani not installed")
 def test_sparse_skani_primary_matches_mash():
     """

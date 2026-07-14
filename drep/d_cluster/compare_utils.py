@@ -175,13 +175,20 @@ def primary_cluster_skani_sparse(Bdb, data_folder, **kwargs):
     default_screen = max(1.0, min(ani_threshold - 5.0, 99.0))
     screen = kwargs.get('primary_skani_screen', default_screen)
 
+    # Minimum percent of a genome that must align for a pair to count as an edge.
+    # Do not lower this casually: skani's ANI ignores how much of the genome
+    # aligned, so without this filter genomes sharing only a small conserved
+    # region become edges and single linkage chains them into one huge cluster.
+    # See run_skani_triangle_sparse for the measurements behind the default.
+    min_af = kwargs.get('primary_skani_min_af', 15)
+
     skani_folder = os.path.join(data_folder, 'skani_sparse_files/')
     genome_list = list(Bdb['location'].unique())
 
     logging.info(f"  Running sparse skani primary clustering on {len(genome_list):,} genomes "
-                 f"(ANI threshold {ani_threshold:.1f}%, screen {screen:.1f}%)")
+                 f"(ANI threshold {ani_threshold:.1f}%, screen {screen:.1f}%, min-af {min_af}%)")
     sparse_file = drep.d_cluster.external.run_skani_triangle_sparse(
-        genome_list, skani_folder, screen, **kwargs)
+        genome_list, skani_folder, screen, min_af=min_af, **kwargs)
 
     all_genomes = list(Bdb['genome'].unique())
     Cdb, Mdb, stats = drep.d_cluster.union_find.cluster_skani_sparse_files(

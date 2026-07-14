@@ -131,6 +131,15 @@ def parse_args(args):
                             + "         produced and they are streamed rather than held as a dense\n" \
                             + "         matrix. Recommended for very large genome sets (no N^2 RAM/disk).",
                             default='MASH', choices={'MASH', 'skani'})
+    Clustflags.add_argument("--primary_skani_min_af",
+                            help="Minimum percent of a genome that must align for a pair to form a "
+                                 "primary-clustering edge (--primary_algorithm skani only). skani's ANI "
+                                 "is measured within aligned regions only, so without this filter genomes "
+                                 "sharing just a small conserved region become edges and single linkage "
+                                 "chains them into one huge cluster. The default reproduces the MASH "
+                                 "partition closely; lower it only if you have very fragmented genomes "
+                                 "and understand the chaining risk.",
+                            default=15, type=float)
     Clustflags.add_argument("-ms", "--MASH_sketch", help="MASH sketch size", default=1000)
     Clustflags.add_argument("--SkipMash", help="Skip MASH clustering,\
                             just do secondary clustering on all genomes", action='store_true')

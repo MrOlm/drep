@@ -31,6 +31,9 @@ setup(name='drep',
       extras_require={
           # In-process skani (--S_algorithm pyskani). Optional: dRep falls back
           # to the skani/fastANI executables when it isn't installed.
-          'pyskani': ['pyskani'],
+          # >=0.2 is required for the `cutoff` query argument. Note there is no
+          # macOS arm64 wheel for 0.2 yet, so Apple Silicon builds it from source
+          # and needs a Rust toolchain (conda install -c conda-forge rust).
+          'pyskani': ['pyskani>=0.2'],
       },
       zip_safe=False)
