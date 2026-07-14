@@ -116,11 +116,15 @@ def parse_args(args):
     Clustflags.add_argument("--S_algorithm", help="R|Algorithm for secondary clustering comaprisons:\n" \
                                                   + "fastANI = Kmer-based approach; very fast\n" \
                                                   + "skani = Even faster Kmer-based approacht\n" \
+                                                  + "pyskani = skani run in-process via the pyskani library. Each genome is\n" \
+                                                  + "          sketched exactly once instead of being re-sketched by a new\n" \
+                                                  + "          subprocess for every comparison, which is much faster for\n" \
+                                                  + "          greedy clustering. Requires `pip install pyskani`.\n" \
                                                   + "ANImf   = (DEFAULT) Align whole genomes with nucmer; filter alignment; compare aligned regions\n" \
                                                   + "ANIn    = Align whole genomes with nucmer; compare aligned regions\n" \
                                                   + "gANI    = Identify and align ORFs; compare aligned ORFS\n" \
                                                   + "goANI   = Open source version of gANI; requires nsmimscan\n",
-                            default='fastANI', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI', 'skani'})
+                            default='fastANI', choices={'ANIn', 'gANI', 'ANImf', 'goANI', 'fastANI', 'skani', 'pyskani'})
     Clustflags.add_argument("--primary_algorithm", help="R|Program to use for primary clustering.\n" \
                             + "MASH   = (DEFAULT) all-vs-all Mash\n" \
                             + "skani  = skani triangle --sparse; only above-threshold pairs are\n" \

@@ -28,4 +28,9 @@ setup(name='drep',
           'setuptools',
           'pytest'
       ],
+      extras_require={
+          # In-process skani (--S_algorithm pyskani). Optional: dRep falls back
+          # to the skani/fastANI executables when it isn't installed.
+          'pyskani': ['pyskani'],
+      },
       zip_safe=False)

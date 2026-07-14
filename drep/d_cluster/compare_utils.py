@@ -14,6 +14,7 @@ import drep.d_cluster.external
 import drep.d_cluster.utils
 import drep.d_cluster.greedy_clustering
 import drep.d_cluster.union_find
+import drep.d_cluster.pyskani_backend
 
 class genomeChunk():
     """
@@ -521,6 +522,11 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
             df = drep.d_cluster.external.run_pairwise_skani(genome_list, working_data_folder, **kwargs)
             return df
 
+        elif algorithm == 'pyskani':
+            genome_list = bdb['location'].tolist()
+            df = drep.d_cluster.pyskani_backend.run_pairwise_pyskani(genome_list, **kwargs)
+            return df
+
         elif algorithm == 'gANI':
             # Figure out prodigal folder
             wd = kwargs.get('wd', False)
@@ -554,7 +560,7 @@ def compare_genomes(bdb, algorithm, data_folder, **kwargs):
             sys.exit()
 
     else:
-        SUPPORTED = ['fastANI']
+        SUPPORTED = ['fastANI', 'pyskani']
         if algorithm not in SUPPORTED:
             message = f"{algorithm} is not supported for greedy secondary clustering!\nChoose one of the following supported S_algorithm options: {' '.join(SUPPORTED)}"
             logging.error(message)
