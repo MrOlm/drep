@@ -316,8 +316,15 @@ def run_skani_triangle_sparse(genome_list, outdir, screen, **kwargs):
 
     exe_loc = drep.get_exe('skani')
     out_file = os.path.join(outdir, 'skani_sparse_{0}.tsv'.format(code))
+    # --min-af 0 is essential here. skani defaults to dropping pairs that align
+    # over <15% of the genome, but primary clustering is a deliberately loose,
+    # inclusive pre-filter -- the MASH path applies no alignment-fraction filter
+    # at all. Fragmented/partial MAGs of the same organism routinely align over
+    # less than 15%, and dropping those pairs would strand related genomes in
+    # separate primary clusters, where they are never compared by the secondary
+    # algorithm. (The pairwise skani path passes --min-af 0 for the same reason.)
     cmd = [exe_loc, "triangle", "--sparse", "-t", str(p), '-o', out_file,
-           '-l', glist, '-s', str(screen)]
+           '-l', glist, '-s', str(screen), '--min-af', '0']
     if extra_cmd != "":
         cmd += extra_cmd.split(' ')
 
