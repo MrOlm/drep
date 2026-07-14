@@ -148,6 +148,16 @@ class GenomeClusterController(object):
 
                 logging.info('3. Secondary clustering cache loaded')
 
+            # Reuse primary's skani edges instead of re-running skani per cluster
+            elif self.can_reuse_primary_edges(algorithm):
+                logging.info("Reusing primary skani comparisons for secondary clustering")
+                Ndb, Cdb, c2ret = drep.d_cluster.compare_utils.secondary_clustering_from_primary_edges(
+                    self.Bdb, self.MCdb, self.Mdb, **self.kwargs)
+                if self.debug:
+                    self.wd.store_db(Ndb, 'Ndb')
+                    self.wd.store_db(Cdb, 'Cdb')
+                self.wd.store_special('secondary_linkages', c2ret)
+
             # Run comparisons, make Ndb
             else:
                 drep.d_cluster.utils._print_time_estimate(self.Bdb, self.MCdb, algorithm, p)
@@ -170,6 +180,27 @@ class GenomeClusterController(object):
 
         self.Cdb = Cdb
         self.Ndb = Ndb
+
+    def can_reuse_primary_edges(self, algorithm):
+        """
+        Whether secondary clustering can be derived from primary's edges rather
+        than re-running comparisons.
+
+        This only holds when primary was skani (so Mdb contains real ANI plus
+        alignment fractions for every pair above the screen) and secondary wants
+        skani too. Any other secondary algorithm measures something different and
+        has to run for itself; greedy has its own code path.
+        """
+        if self.kwargs.get('reuse_primary_comparisons', True) is False:
+            return False
+        if self.kwargs.get('primary_algorithm', 'MASH') != 'skani':
+            return False
+        if algorithm not in ('skani', 'pyskani'):
+            return False
+        if self.kwargs.get('greedy_secondary_clustering', False):
+            return False
+        # Mdb must be the skani edge table, not a Mash table or a blank
+        return (self.Mdb is not None) and ('alignment_coverage' in self.Mdb.columns)
 
     def store_output(self):
         logging.debug("Main program run complete- saving output")

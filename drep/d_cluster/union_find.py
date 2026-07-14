@@ -239,6 +239,159 @@ def cluster_mash_files(dist_files, cutoff, all_genomes=None, chunksize=5_000_000
     return Cdb, stats
 
 
+def build_ndb_from_edges(edges, Cdb):
+    """
+    Build a secondary-clustering Ndb out of primary's edge table, without running
+    any new comparisons.
+
+    Primary clustering (skani, sparse) already computed the exact ANI for every
+    pair above skani's screening threshold. Secondary clustering only ever
+    compares genomes *within* a primary cluster, and those pairs are a subset of
+    what primary already has -- so re-running skani per primary cluster
+    recomputes numbers that are already known, bit for bit.
+
+    dRep's hierarchical secondary clustering needs a complete matrix per primary
+    cluster, so pairs absent from the sparse edge list (i.e. below skani's
+    screen, meaning no meaningful similarity) are filled in as ani=0 and
+    coverage=0, and self-comparisons as 1.
+
+    Args:
+        edges: DataFrame from load_skani_sparse_edges.
+        Cdb: primary clustering result with ['genome', 'primary_cluster'].
+
+    Returns:
+        Ndb: ['reference', 'querry', 'ani', 'alignment_coverage', 'primary_cluster']
+    """
+    g2p = Cdb.set_index('genome')['primary_cluster'].to_dict()
+
+    e = edges.copy()
+    e['pc'] = e['genome1'].map(g2p)
+    # secondary only ever compares within a primary cluster
+    e = e[e['pc'].notna() & (e['pc'] == e['genome2'].map(g2p))]
+
+    have = set(zip(e['genome1'].values, e['genome2'].values))
+
+    fill_r, fill_q, fill_pc, fill_ani, fill_cov = [], [], [], [], []
+    for pc, sub in Cdb.groupby('primary_cluster'):
+        gs = list(sub['genome'])
+        for x in gs:
+            for y in gs:
+                if x == y:
+                    fill_r.append(x); fill_q.append(y); fill_pc.append(pc)
+                    fill_ani.append(1.0); fill_cov.append(1.0)
+                elif (x, y) not in have:
+                    fill_r.append(x); fill_q.append(y); fill_pc.append(pc)
+                    fill_ani.append(0.0); fill_cov.append(0.0)
+
+    kept = e.rename(columns={'genome1': 'reference', 'genome2': 'querry',
+                             'pc': 'primary_cluster'})[
+        ['reference', 'querry', 'ani', 'alignment_coverage', 'primary_cluster']]
+    filled = pd.DataFrame({
+        'reference': fill_r, 'querry': fill_q, 'ani': fill_ani,
+        'alignment_coverage': fill_cov, 'primary_cluster': fill_pc,
+    })
+
+    Ndb = pd.concat([kept, filled], ignore_index=True)
+    Ndb['primary_cluster'] = Ndb['primary_cluster'].astype(int)
+    return Ndb
+
+
+SKANI_SPARSE_COLUMNS = ['Ref_file', 'Query_file', 'ANI',
+                        'Align_fraction_ref', 'Align_fraction_query']
+
+
+def load_skani_sparse_edges(sparse_files, progress=False):
+    """
+    Load `skani triangle --sparse` output into a symmetric edge table.
+
+    skani's sparse output is already only the pairs above its screening
+    threshold, so unlike Mash's N^2 output it is small enough to hold in memory
+    (~390k rows for 10,000 genomes) and can be reused rather than recomputed.
+
+    Each input pair is emitted in both directions, because dRep treats
+    alignment_coverage as the aligned fraction of the genome named in the first
+    column, and the two directions have different coverages.
+
+    Returns:
+        DataFrame with ['genome1', 'genome2', 'ani', 'alignment_coverage'],
+        where ani and alignment_coverage are 0-1 fractions.
+    """
+    if isinstance(sparse_files, (str, bytes)):
+        sparse_files = [sparse_files]
+
+    frames = []
+    for f in sparse_files:
+        d = pd.read_csv(f, sep='\t', usecols=SKANI_SPARSE_COLUMNS,
+                        dtype={'Ref_file': str, 'Query_file': str,
+                               'ANI': np.float32,
+                               'Align_fraction_ref': np.float32,
+                               'Align_fraction_query': np.float32})
+        if len(d) == 0:
+            continue
+        a = np.array([drep.d_cluster.utils._get_genome_name_from_fasta(x)
+                      for x in d['Ref_file'].values])
+        b = np.array([drep.d_cluster.utils._get_genome_name_from_fasta(x)
+                      for x in d['Query_file'].values])
+        ani = (d['ANI'].values / 100).astype(np.float32)
+        af_a = (d['Align_fraction_ref'].values / 100).astype(np.float32)
+        af_b = (d['Align_fraction_query'].values / 100).astype(np.float32)
+
+        frames.append(pd.DataFrame({
+            'genome1': np.concatenate([a, b]),
+            'genome2': np.concatenate([b, a]),
+            'ani': np.concatenate([ani, ani]),
+            # coverage is always the aligned fraction of the genome1 genome
+            'alignment_coverage': np.concatenate([af_a, af_b]),
+        }))
+
+    if not frames:
+        return pd.DataFrame(columns=['genome1', 'genome2', 'ani', 'alignment_coverage'])
+
+    edges = pd.concat(frames, ignore_index=True)
+    # drop self comparisons; they are added back explicitly where needed
+    return edges[edges['genome1'] != edges['genome2']].reset_index(drop=True)
+
+
+def cluster_edges(edges, ani_threshold, all_genomes, cov_threshold=0.0):
+    """
+    Union-find clustering of an in-memory edge table (see load_skani_sparse_edges).
+
+    Args:
+        edges: DataFrame with ['genome1', 'genome2', 'ani', 'alignment_coverage'].
+        ani_threshold: minimum ANI (0-1) for a pair to be an edge.
+        all_genomes: every genome name, so singletons get their own cluster.
+        cov_threshold: minimum alignment_coverage (0-1) for a pair to be an edge.
+            See run_skani_triangle_sparse for why this matters -- without it,
+            genomes sharing a small conserved region chain together.
+
+    Returns:
+        (Cdb, stats)
+    """
+    uf = UnionFind()
+    for g in all_genomes:
+        uf.add(g)
+
+    keep = edges['ani'].values >= ani_threshold
+    if cov_threshold > 0:
+        keep &= edges['alignment_coverage'].values >= cov_threshold
+
+    g1 = edges['genome1'].values[keep]
+    g2 = edges['genome2'].values[keep]
+    for a, b in zip(g1, g2):
+        uf.add(a)
+        uf.add(b)
+        uf.union(a, b)
+
+    Cdb = _components_to_cdb(uf)
+    stats = {
+        'edges_total': len(edges),
+        'edges_kept': int(keep.sum()),
+        'genomes': len(uf.parent),
+        'primary_clusters': Cdb['primary_cluster'].nunique() if len(Cdb) else 0,
+    }
+    return Cdb, stats
+
+
 def cluster_skani_sparse_files(sparse_files, ani_threshold, all_genomes,
                                cov_threshold=0.0, chunksize=2_000_000, progress=False):
     """

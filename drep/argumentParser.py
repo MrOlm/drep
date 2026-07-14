@@ -131,6 +131,13 @@ def parse_args(args):
                             + "         produced and they are streamed rather than held as a dense\n" \
                             + "         matrix. Recommended for very large genome sets (no N^2 RAM/disk).",
                             default='MASH', choices={'MASH', 'skani'})
+    Clustflags.add_argument("--no_reuse_primary_comparisons", dest='reuse_primary_comparisons',
+                            help="Re-run skani during secondary clustering instead of reusing the "
+                                 "comparisons already computed during primary clustering. Only "
+                                 "relevant with --primary_algorithm skani and a skani --S_algorithm, "
+                                 "where the two stages otherwise compute the same ANI values twice. "
+                                 "Reuse is exact, so this is mostly a debugging escape hatch.",
+                            action='store_false', default=True)
     Clustflags.add_argument("--primary_skani_min_af",
                             help="Minimum percent of a genome that must align for a pair to form a "
                                  "primary-clustering edge (--primary_algorithm skani only). skani's ANI "

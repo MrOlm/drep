@@ -144,6 +144,80 @@ def test_skani_sparse_min_af_filters_low_alignment_edges():
         assert s1['edges_kept'] == 1
 
 
+def test_build_ndb_from_edges_fills_matrix():
+    """
+    Secondary clustering needs a complete matrix per primary cluster, so pairs
+    absent from the sparse edge list must come back as ani=0 and self-pairs as 1.
+    """
+    edges = pd.DataFrame({
+        'genome1': ['a', 'b'],
+        'genome2': ['b', 'a'],
+        'ani': [0.99, 0.99],
+        'alignment_coverage': [0.9, 0.92],
+    })
+    Cdb = pd.DataFrame({'genome': ['a', 'b', 'c'], 'primary_cluster': [1, 1, 1]})
+    Ndb = uf.build_ndb_from_edges(edges, Cdb)
+
+    # complete 3x3 matrix for the one primary cluster
+    assert len(Ndb) == 9
+    g = Ndb.set_index(['reference', 'querry'])
+    assert g.loc[('a', 'b'), 'ani'] == pytest.approx(0.99)
+    assert g.loc[('a', 'a'), 'ani'] == 1.0
+    assert g.loc[('a', 'a'), 'alignment_coverage'] == 1.0
+    # c had no edges -> filled as no similarity
+    assert g.loc[('a', 'c'), 'ani'] == 0.0
+    assert g.loc[('c', 'a'), 'ani'] == 0.0
+    # coverage is directional: fraction of the 'reference' genome
+    assert g.loc[('a', 'b'), 'alignment_coverage'] == pytest.approx(0.9)
+    assert g.loc[('b', 'a'), 'alignment_coverage'] == pytest.approx(0.92)
+
+
+def test_build_ndb_from_edges_only_within_primary_clusters():
+    """Secondary never compares across primary clusters."""
+    edges = pd.DataFrame({
+        'genome1': ['a', 'b'], 'genome2': ['b', 'a'],
+        'ani': [0.99, 0.99], 'alignment_coverage': [0.9, 0.9],
+    })
+    Cdb = pd.DataFrame({'genome': ['a', 'b'], 'primary_cluster': [1, 2]})
+    Ndb = uf.build_ndb_from_edges(edges, Cdb)
+    # a and b are in different primary clusters: only self-comparisons survive
+    assert set(zip(Ndb['reference'], Ndb['querry'])) == {('a', 'a'), ('b', 'b')}
+
+
+@pytest.mark.skipif(shutil.which('skani') is None, reason="skani not installed")
+def test_reused_edges_match_rerunning_skani():
+    """
+    The one-pass path must give exactly what re-running skani per primary cluster
+    gives -- that is the whole premise for skipping the second pass.
+    """
+    import drep.d_cluster.compare_utils as cu
+    import drep.d_cluster.utils
+
+    genomes = _test_genomes()
+    Bdb = drep.d_cluster.utils.load_genomes(genomes)
+    workdir = tempfile.mkdtemp()
+    try:
+        Mdb, Cdb, _ = cu.primary_cluster_skani_sparse(
+            Bdb, os.path.join(workdir, 'p'), P_ani=0.9, S_ani=0.99,
+            cov_thresh=0.1, processors=4, primary_progress=False)
+
+        # reuse primary's edges
+        Ndb_r, Cdb_r, _ = cu.secondary_clustering_from_primary_edges(
+            Bdb, Cdb, Mdb, S_ani=0.99, cov_thresh=0.1, clusterAlg='average')
+
+        # re-run skani per primary cluster (the classic path)
+        Ndb_c, Cdb_c, _ = cu.secondary_clustering(
+            Bdb, Cdb, 'skani', os.path.join(workdir, 's'),
+            S_ani=0.99, cov_thresh=0.1, clusterAlg='average', processors=4)
+
+        def part(C):
+            return {frozenset(s['genome']) for _, s in C.groupby('secondary_cluster')}
+
+        assert part(Cdb_r) == part(Cdb_c)
+    finally:
+        shutil.rmtree(workdir, ignore_errors=True)
+
+
 @pytest.mark.skipif(shutil.which('skani') is None, reason="skani not installed")
 def test_sparse_skani_primary_matches_mash():
     """
