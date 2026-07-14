@@ -93,19 +93,22 @@ def estimate_time(comps, alg):
     Return:
         float: time to perfom comparison (in minutes)
     '''
-    if alg == 'ANIn':
-        time = comps * .33
-    elif alg == 'gANI':
-        time = comps * .1
-    elif alg == 'goANI':
-        time = comps * .1
-    elif alg == 'ANImf':
-        time = comps * .5
-    elif alg == 'fastANI':
-        time = comps * 0.00667
-    elif alg == 'skani':
-        time = comps * 0.00667
-    return time
+    # Minutes per comparison, very roughly. This only drives a log message, so an
+    # unknown algorithm must never take the run down with it -- fall back to the
+    # fastest estimate rather than raising.
+    per_comparison = {
+        'ANIn': .33,
+        'gANI': .1,
+        'goANI': .1,
+        'ANImf': .5,
+        'fastANI': 0.00667,
+        'skani': 0.00667,
+        # in-process; sketches each genome once, so at least as fast as skani
+        'pyskani': 0.00667,
+    }
+    if alg not in per_comparison:
+        logging.debug(f"No time estimate available for {alg}; assuming a fast algorithm")
+    return comps * per_comparison.get(alg, 0.00667)
 
 
 

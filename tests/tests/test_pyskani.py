@@ -146,6 +146,23 @@ def test_greedy_pyskani_sketches_each_genome_once():
         shutil.rmtree(workdir, ignore_errors=True)
 
 
+def test_estimate_time_handles_every_S_algorithm():
+    """
+    estimate_time only drives a log line, but it used to raise UnboundLocalError
+    for any algorithm it didn't know about -- which killed a 10k-genome run at
+    the start of secondary clustering. Every --S_algorithm choice must work, and
+    unknown ones must not raise.
+    """
+    from drep.d_cluster.utils import estimate_time
+
+    for alg in ['ANIn', 'gANI', 'goANI', 'ANImf', 'fastANI', 'skani', 'pyskani']:
+        t = estimate_time(100, alg)
+        assert t > 0, f"{alg} gave {t!r}"
+
+    # An unrecognized algorithm must degrade gracefully, not raise
+    assert estimate_time(100, 'some_future_algorithm') > 0
+
+
 @requires_pyskani
 def test_compare_genomes_dispatches_pyskani():
     """--S_algorithm pyskani is reachable through the normal dispatch path."""
