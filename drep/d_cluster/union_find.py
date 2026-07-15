@@ -334,7 +334,7 @@ SKANI_SPARSE_COLUMNS = ['Ref_file', 'Query_file', 'ANI',
                         'Align_fraction_ref', 'Align_fraction_query']
 
 
-def load_skani_sparse_edges(sparse_files, progress=False):
+def load_skani_sparse_edges(sparse_files):
     """
     Load `skani triangle --sparse` output into a symmetric edge table.
 
