@@ -1089,6 +1089,32 @@ def gen_color_list(names,name2cluster):
 
     return colors
 
+# UC Berkeley palette. The point of coloring clusters is to tell neighbouring
+# ones apart, not to identify a cluster by its color, so a handful of distinct
+# colors cycled is strictly more readable than giving every cluster its own
+# barely-distinguishable shade.
+CLUSTER_COLORS = [
+    '#003262',  # Berkeley Blue
+    '#FDB515',  # California Gold
+    '#3B7EA1',  # Founders Rock
+]
+
+
+def _cluster_sort_key(cluster):
+    '''
+    Order clusters naturally so that cycling colors lands adjacent clusters on
+    different colors. Handles primary clusters ('2') and secondary clusters
+    ('2_10'), sorting numerically where possible: 2_2 before 2_10, not after.
+    '''
+    key = []
+    for part in str(cluster).split('_'):
+        try:
+            key.append((0, float(part), ''))
+        except ValueError:
+            key.append((1, 0.0, part))
+    return key
+
+
 def gen_color_dictionary(names, name2cluster):
     '''
     Make the dictionary name2color
@@ -1100,27 +1126,14 @@ def gen_color_dictionary(names, name2cluster):
     Returns:
         dict: name -> color
     '''
-    #cm = _rand_cmap(len(set(name2cluster.values()))+1,type='bright')
-    vals = np.linspace(0,1,len(set(name2cluster.values()))+1)
-    np.random.shuffle(vals)
-    cm = plt.cm.colors.ListedColormap(plt.cm.jet(vals))
+    # Cycle a small palette in cluster order. This is deterministic: the previous
+    # implementation shuffled an unseeded colormap, so the same analysis produced
+    # different colors on every run.
+    clusters = sorted(set(name2cluster.values()), key=_cluster_sort_key)
+    cluster2color = {c: CLUSTER_COLORS[i % len(CLUSTER_COLORS)]
+                     for i, c in enumerate(clusters)}
 
-    # 1. generate cluster to color
-    cluster2color = {}
-    clusters = set(name2cluster.values())
-    NUM_COLORS = len(clusters)
-    for cluster in clusters:
-        try:
-            cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
-        except:
-            cluster2color[cluster] = cm(1.*float(str(cluster).split('_')[1])/NUM_COLORS)
-
-    #2. name to color
-    name2color = {}
-    for name in names:
-        name2color[name] = cluster2color[name2cluster[name]]
-
-    return name2color
+    return {name: cluster2color[name2cluster[name]] for name in names}
 
 def _comp_cluster(c):
     '''

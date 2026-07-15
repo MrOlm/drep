@@ -639,3 +639,33 @@ def test_mash_primary_algorithm(self):
     g2c = Cdb.set_index('genome')['primary_cluster'].to_dict()
     assert g2c['Enterococcus_faecalis_T2.fna'] == g2c['Enterococcus_faecalis_TX0104.fa']
     assert g2c['Enterococcus_faecalis_T2.fna'] != g2c['Escherichia_coli_Sakai.fna']
+def test_cluster_colors_are_deterministic_and_cycled():
+    '''
+    Cluster colors exist to tell neighbouring clusters apart, not to identify a
+    cluster. Cycle a small palette rather than giving each cluster its own shade,
+    and do it deterministically -- the old implementation shuffled an unseeded
+    colormap, so the same analysis produced different colors every run.
+    '''
+    from drep.d_analyze import gen_color_dictionary, CLUSTER_COLORS
+
+    n2c = {f'g{i}': i for i in range(1, 8)}
+    names = list(n2c)
+    d = gen_color_dictionary(names, n2c)
+
+    # only palette colors are used
+    assert set(d.values()) <= set(CLUSTER_COLORS)
+    # adjacent clusters are always distinguishable
+    for i in range(1, 7):
+        assert d[f'g{i}'] != d[f'g{i+1}'], f"clusters {i} and {i+1} share a color"
+    # same input -> same colors, every time
+    assert gen_color_dictionary(names, n2c) == d
+
+def test_cluster_colors_handle_secondary_cluster_names():
+    '''Secondary clusters are named like "2_10"; sorting must be numeric.'''
+    from drep.d_analyze import gen_color_dictionary, CLUSTER_COLORS
+
+    n2c = {'a': '2_1', 'b': '2_2', 'c': '2_10'}
+    d = gen_color_dictionary(list(n2c), n2c)
+    assert set(d.values()) <= set(CLUSTER_COLORS)
+    # 2_1, 2_2, 2_10 are consecutive, so they must all differ (palette has 3)
+    assert len({d['a'], d['b'], d['c']}) == 3
