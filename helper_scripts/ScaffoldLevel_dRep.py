@@ -14,6 +14,8 @@ import textwrap
 import shutil
 import distutils
 import argparse
+import functools
+import subprocess
 import pandas as pd
 
 from shutil import copyfile
@@ -154,13 +156,34 @@ class ANImCommand(abstractCommand):
     def __str__(self):
         ''' Show the command parameters '''
 
+@functools.lru_cache(maxsize=None)
+def nucmer_supports_threads(exe):
+    '''
+    Whether this nucmer accepts -t/--threads.
+
+    MUMmer 4 added it; MUMmer 3 (still what `conda install mummer` gives, as
+    version 3.23) does not, and errors out with "Unknown option: t" rather than
+    ignoring it. Passing it unconditionally makes this script fail outright on
+    MUMmer 3, so detect support instead of assuming.
+    '''
+    try:
+        r = subprocess.run([exe, '--help'], capture_output=True, text=True, timeout=60)
+        return '--threads' in (r.stdout + r.stderr)
+    except Exception:
+        return False
+
+
 def gen_mummer_cmd(**kwargs):
     '''
     from a dictionary of arguments, return the ANIm command as an array of strings
     '''
 
     cmd = [kwargs['exe'],'--' + kwargs['method'],'-p',kwargs['prefix'], '-c', \
-        kwargs['c'], '-g', kwargs['maxgap'], '-t', str(kwargs['p'])]
+        kwargs['c'], '-g', kwargs['maxgap']]
+
+    # MUMmer 3's nucmer is single-threaded and rejects -t outright
+    if nucmer_supports_threads(kwargs['exe']):
+        cmd += ['-t', str(kwargs['p'])]
 
     if kwargs['noextend'] == 'True':
         cmd.append('--noextend')
