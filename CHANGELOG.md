@@ -4,6 +4,117 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [4.0.0] - Unreleased
+
+dRep v4 makes genome clustering scale. The headline change is that primary and
+secondary clustering now both default to skani, and run as a **single pass** over
+the data instead of comparing every genome twice.
+
+**This release changes results.** Read "Breaking changes" below before upgrading
+an existing analysis. If you need the old behavior, `--primary_algorithm MASH
+--S_algorithm fastANI --primary_clusterAlg average` gets close, but the skani
+coverage fix (see Fixed) cannot be turned off, and it was a genuine bug.
+
+### Breaking changes
+
+- **skani is now the default for both clustering steps** (`--primary_algorithm`
+  defaults to `skani`, was MASH; `--S_algorithm` defaults to `skani`, was
+  fastANI). skani must be installed. Mash is now only needed for
+  `--primary_algorithm MASH`, and the startup dependency check no longer demands
+  it otherwise.
+- **Primary clustering now defaults to single linkage.** Previously `--clusterAlg`
+  (default `average`) drove *both* clustering steps. Primary now has its own
+  `--primary_clusterAlg`, defaulting to `single`. Single linkage is the right
+  choice for a deliberately inclusive pre-filter, and it is what makes the
+  low-memory algorithm possible. `--clusterAlg` still controls secondary
+  clustering and still defaults to `average`.
+- **`Mdb.csv` means something different under `--primary_algorithm skani`.** It is
+  now a *sparse* table of real skani ANI values plus alignment coverage, holding
+  only pairs above skani's screening threshold — roughly 779k rows for 10,000
+  genomes, versus 100M rows of dense Mash distances. Genomes with no
+  above-threshold pairs do not appear in it at all. Anything parsing `Mdb.csv`
+  needs to account for this.
+- `--S_algorithm skani` results change; see the coverage fix under Fixed.
+- `--low_ram_primary_clustering` was removed (see Removed).
+
+### Added
+
+- `--primary_algorithm {skani,MASH}` — choose the primary clustering program.
+- `--primary_clusterAlg` — linkage method for primary clustering, independent of
+  the secondary `--clusterAlg`.
+- `--classic_primary_clustering` — force the pre-v4 dense scipy primary path.
+- `--primary_skani_min_af` — minimum aligned fraction for a pair to form a
+  primary-clustering edge (skani only, default 15).
+- `--no_reuse_primary_comparisons` — re-run skani during secondary clustering
+  rather than reusing primary's comparisons. A debugging escape hatch; reuse is
+  exact.
+
+### Changed
+
+- **Primary clustering no longer builds the N x N distance matrix.** Single-linkage
+  clustering at a fixed threshold is identical to finding connected components,
+  so it is now computed directly with union-find, removing the pivot-then-unpivot
+  RAM spike (issue #259). Memory is O(genomes + edges) instead of O(genomes^2).
+  On a synthetic 8,000-genome set, peak RAM for this step dropped from 7.42 GB to
+  0.55 GB; the old path grew quadratically while the new one stays flat. Together
+  with `--primary_algorithm skani`, this addresses the out-of-memory crashes
+  reported when clustering tens of thousands of genomes.
+- **Secondary clustering reuses primary's comparisons.** With skani for both
+  steps, dRep previously sketched every genome twice and computed the same ANI
+  values twice: once across all genomes, then again within each primary cluster.
+  Since secondary only compares genomes *within* a primary cluster, those pairs
+  are a subset of what primary already computed. On 10,000 UHGG genomes, 94% of
+  the pairs driving secondary clustering were already present with identical ANI
+  to 6 decimal places. dRep now runs skani once and derives both steps from it.
+  Secondary clustering went from 15 minutes to 24 seconds, producing an identical
+  partition; whole-pipeline `dereplicate` went from 22.4 to 13.8 minutes.
+- Primary clustering with skani writes far less to disk: 82 MB vs 15 GB of Mash
+  output for 10,000 genomes.
+- `--multiround_primary_clustering` and `--primary_chunksize` now warn that they
+  only apply to `--primary_algorithm MASH`. skani's sparse output never builds
+  the N x N table that multiround exists to avoid, and has none of multiround's
+  chunk-splitting imprecision.
+- `--SkipMash` help text clarified: it skips primary clustering whatever the
+  primary algorithm is. The name is historical.
+
+### Removed
+
+- `--low_ram_primary_clustering`. Union-find is now the default for single-linkage
+  primary clustering, so the flag had become a no-op.
+- **networkx is no longer a dependency.** It was only used by the connected-components
+  path behind `--low_ram_primary_clustering`.
+
+### Fixed
+
+- **skani alignment coverage was a percent, not a fraction (results-affecting).**
+  skani reports aligned fractions as 0-100, but `load_skani` only divided ANI by
+  100 and passed the aligned fraction through untouched. Every other algorithm
+  reports `alignment_coverage` on a 0-1 scale, which is the scale `cov_thresh` is
+  compared against, so the coverage filter was effectively inert for
+  `--S_algorithm skani`: a pair aligning over 1% of the genome had
+  `alignment_coverage=1.04` and sailed past a `cov_thresh` of 0.5. On the bundled
+  test genomes this merged *E. casseliflavus* with *E. faecalis* — two different
+  species — into one secondary cluster. Coverage filtering now actually applies.
+- `ScaffoldLevel_dRep.py` crashed on MUMmer 3 with "nucmer failed with exit code
+  1". It passed `-t` (threads) unconditionally, but that option only exists in
+  MUMmer 4, and MUMmer 3 rejects it rather than ignoring it. `conda install
+  mummer` still installs 3.23. The script now detects whether nucmer supports
+  `-t` and only passes it if so; MUMmer 4 keeps its threading.
+- The primary dendrogram is still produced for modest genome sets under the
+  streaming/sparse paths, which build no linkage matrix of their own. Above
+  `--primary_dendrogram_max_genomes` (2000) it is skipped, as multiround already
+  did.
+
+### Validation
+
+v4 clustering was validated against 10,000 real genomes from the UHGG catalogue
+(24 GB, 1,248 species, 9,599 MAGs + 401 isolates). dRep independently recovered
+1,232 secondary clusters at `-sa 0.95`, against UHGG's own 1,248 species
+assignments: 2.4% of clusters spanned more than one UHGG species, and 2.9% of
+UHGG species were split across clusters. The one-pass path reproduced the
+two-pass result exactly — same primary clusters, same secondary clusters, same
+representative genomes.
+
 ## [3.7.1] - 2026-06-30
 - Fix crash when fewer than 2 genomes remain after filtering (issue #300)
 - Fix argument list bug (issue #288)
