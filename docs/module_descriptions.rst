@@ -6,7 +6,7 @@ dRep has 3 commands: compare, dereplicate, and check dependencies. To see a list
   $ dRep -h
 
 
-                    ...::: dRep v3.7.1 :::...
+                    ...::: dRep v4.0.0 :::...
 
       Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2026)
 
@@ -44,16 +44,16 @@ This workflow compares a set of genomes. For a list of all parameters, check the
   $ dRep compare -h
 
     usage: dRep compare [-p PROCESSORS] [-d] [-h] [-g [GENOMES ...]]
-                        [--S_algorithm {ANImf,goANI,fastANI,gANI,skani,ANIn}]
-                        [--primary_algorithm {MASH,skani}]
+                        [--S_algorithm {ANImf,fastANI,skani,ANIn,gANI,goANI}]
+                        [--primary_algorithm {skani,MASH}]
                         [--no_reuse_primary_comparisons]
                         [--primary_skani_min_af PRIMARY_SKANI_MIN_AF]
                         [-ms MASH_SKETCH] [--SkipMash] [--SkipSecondary]
                         [--skani_extra SKANI_EXTRA] [--n_PRESET {normal,tight}]
                         [-pa P_ANI] [-sa S_ANI] [-nc COV_THRESH]
                         [-cm {total,larger}]
-                        [--clusterAlg {average,weighted,single,median,centroid,complete,ward}]
-                        [--primary_clusterAlg {average,weighted,single,median,centroid,complete,ward}]
+                        [--clusterAlg {single,median,ward,centroid,complete,average,weighted}]
+                        [--primary_clusterAlg {single,median,ward,centroid,complete,average,weighted}]
                         [--classic_primary_clustering]
                         [--multiround_primary_clustering]
                         [--primary_chunksize PRIMARY_CHUNKSIZE]
@@ -81,224 +81,7 @@ This workflow compares a set of genomes. For a list of all parameters, check the
                             issues than wildcard expansion (default: None)
 
     GENOME COMPARISON OPTIONS:
-      --S_algorithm {ANImf,goANI,fastANI,gANI,skani,ANIn}
-                            Algorithm for secondary clustering comaprisons:
-                            skani   = (DEFAULT) Kmer-based approach; fastest and most accurate.
-                                      When paired with --primary_algorithm skani, secondary reuses
-                                      the comparisons already done during primary clustering.
-                            fastANI = Kmer-based approach; very fast
-                            ANImf   = Align whole genomes with nucmer; filter alignment; compare aligned regions
-                            ANIn    = Align whole genomes with nucmer; compare aligned regions
-                            gANI    = Identify and align ORFs; compare aligned ORFS
-                            goANI   = Open source version of gANI; requires nsmimscan
-                             (default: skani)
-      --primary_algorithm {MASH,skani}
-                            Program to use for primary clustering.
-                            skani  = (DEFAULT) skani triangle --sparse. Only above-threshold pairs
-                                     are produced, so there is no N^2 matrix in RAM or on disk, and
-                                     a skani --S_algorithm can reuse these comparisons instead of
-                                     recomputing them.
-                            MASH   = all-vs-all Mash. Pre-v4 behavior; builds the full N^2 table. (default: skani)
-      --no_reuse_primary_comparisons
-                            Re-run skani during secondary clustering instead of
-                            reusing the comparisons already computed during
-                            primary clustering. Only relevant with
-                            --primary_algorithm skani and a skani --S_algorithm,
-                            where the two stages otherwise compute the same ANI
-                            values twice. Reuse is exact, so this is mostly a
-                            debugging escape hatch. (default: True)
-      --primary_skani_min_af PRIMARY_SKANI_MIN_AF
-                            Minimum percent of a genome that must align for a pair
-                            to form a primary-clustering edge (--primary_algorithm
-                            skani only). skani's ANI is measured within aligned
-                            regions only, so without this filter genomes sharing
-                            just a small conserved region become edges and single
-                            linkage chains them into one huge cluster. The default
-                            reproduces the MASH partition closely; lower it only
-                            if you have very fragmented genomes and understand the
-                            chaining risk. (default: 15)
-      -ms MASH_SKETCH, --MASH_sketch MASH_SKETCH
-                            MASH sketch size (default: 1000)
-      --SkipMash            Skip primary clustering entirely and run secondary
-                            clustering on all genomes at once. (Named for when
-                            primary clustering was always MASH; it applies to
-                            whichever --primary_algorithm is in use.) (default:
-                            False)
-      --SkipSecondary       Skip secondary clustering, just perform MASH
-                            clustering (default: False)
-      --skani_extra SKANI_EXTRA
-                            Extra arguments to pass to skani triangle (default: )
-      --n_PRESET {normal,tight}
-                            Presets to pass to nucmer
-                            tight   = only align highly conserved regions
-                            normal  = default ANIn parameters (default: normal)
-
-    GENOME CLUSTERING OPTIONS:
-      -pa P_ANI, --P_ani P_ANI
-                            ANI threshold to form primary (MASH) clusters
-                            (default: 0.9)
-      -sa S_ANI, --S_ani S_ANI
-                            ANI threshold to form secondary clusters (default:
-                            0.95)
-      -nc COV_THRESH, --cov_thresh COV_THRESH
-                            Minmum level of overlap between genomes when doing
-                            secondary comparisons (default: 0.1)
-      -cm {total,larger}, --coverage_method {total,larger}
-                            Method to calculate coverage of an alignment
-                            (for ANIn/ANImf only; gANI and fastANI can only do larger method)
-                            total   = 2*(aligned length) / (sum of total genome lengths)
-                            larger  = max((aligned length / genome 1), (aligned_length / genome2))
-                             (default: larger)
-      --clusterAlg {average,weighted,single,median,centroid,complete,ward}
-                            Algorithm used to cluster genomes during SECONDARY
-                            clustering (passed to scipy.cluster.hierarchy.linkage)
-                            (default: average)
-      --primary_clusterAlg {average,weighted,single,median,centroid,complete,ward}
-                            Algorithm used to cluster genomes during PRIMARY
-                            (MASH/skani) clustering. The default 'single' is equivalent to connected
-                            components and is computed with a fast, low-memory streaming algorithm that
-                            scales to very large genome sets. Any other choice falls back to the classic
-                            dense scipy path (see --classic_primary_clustering). (default: single)
-      --classic_primary_clustering
-                            Force the classic dense (scipy) primary clustering
-                            path instead of the streaming single-linkage
-                            algorithm. Uses much more RAM at scale but reproduces
-                            pre-v4 behavior and allows non-single linkage methods
-                            and the primary dendrogram plot. (default: False)
-
-    GREEDY CLUSTERING OPTIONS
-    These decrease RAM use and runtime at the expense of a minor loss in accuracy.
-    Recommended when clustering 5000+ genomes:
-      --multiround_primary_clustering
-                            Cluster each primary clunk separately and merge at the
-                            end with single linkage. Decreases RAM usage and
-                            increases speed, and the cost of a minor loss in
-                            precision and the inability to plot
-                            primary_clustering_dendrograms. Especially helpful
-                            when clustering 5000+ genomes. Will be done with
-                            single linkage clustering (default: False)
-      --primary_chunksize PRIMARY_CHUNKSIZE
-                            Impacts multiround_primary_clustering. If you have
-                            more than this many genomes, process them in chunks of
-                            this size. (default: 5000)
-      --greedy_secondary_clustering
-                            Use a heuristic to avoid pair-wise comparisons when
-                            doing secondary clustering. Will be done with single
-                            linkage clustering. Only works for fastANI S_algorithm
-                            option at the moment (default: False)
-      --run_tertiary_clustering
-                            Run an additional round of clustering on the final
-                            genome set. This is especially useful when greedy
-                            clustering is performed and/or to handle cases where
-                            similar genomes end up in different primary clusters.
-                            Only works with dereplicate, not compare. (default:
-                            False)
-
-    WARNINGS:
-      --gen_warnings        Generate warnings (default: False)
-      --warn_dist WARN_DIST
-                            How far from the threshold to throw cluster warnings
-                            (default: 0.25)
-      --warn_sim WARN_SIM   Similarity threshold for warnings between dereplicated
-                            genomes (default: 0.98)
-      --warn_aln WARN_ALN   Minimum aligned fraction for warnings between
-                            dereplicated genomes (ANIn) (default: 0.25)
-
-    Example: dRep compare output_dir/ -g /path/to/genomes/*.fasta
-
-
-Dereplicate
-------------
-
-This workflow dereplicates a set of genomes. For a list of all parameters, check the help::
-
-  $ dRep dereplicate -h
-
-    usage: dRep dereplicate [-p PROCESSORS] [-d] [-h] [-g [GENOMES ...]]
-                            [-l LENGTH] [-comp COMPLETENESS] [-con CONTAMINATION]
-                            [--ignoreGenomeQuality] [--genomeInfo GENOMEINFO]
-                            [--checkM_method {taxonomy_wf,lineage_wf}]
-                            [--set_recursion SET_RECURSION]
-                            [--checkm_group_size CHECKM_GROUP_SIZE]
-                            [--S_algorithm {ANIn,skani,gANI,fastANI,ANImf,goANI}]
-                            [--primary_algorithm {skani,MASH}]
-                            [--no_reuse_primary_comparisons]
-                            [--primary_skani_min_af PRIMARY_SKANI_MIN_AF]
-                            [-ms MASH_SKETCH] [--SkipMash] [--SkipSecondary]
-                            [--skani_extra SKANI_EXTRA]
-                            [--n_PRESET {normal,tight}] [-pa P_ANI] [-sa S_ANI]
-                            [-nc COV_THRESH] [-cm {total,larger}]
-                            [--clusterAlg {weighted,ward,complete,single,average,median,centroid}]
-                            [--primary_clusterAlg {weighted,ward,complete,single,average,median,centroid}]
-                            [--classic_primary_clustering]
-                            [--multiround_primary_clustering]
-                            [--primary_chunksize PRIMARY_CHUNKSIZE]
-                            [--greedy_secondary_clustering]
-                            [--run_tertiary_clustering]
-                            [-comW COMPLETENESS_WEIGHT]
-                            [-conW CONTAMINATION_WEIGHT]
-                            [-strW STRAIN_HETEROGENEITY_WEIGHT] [-N50W N50_WEIGHT]
-                            [-sizeW SIZE_WEIGHT] [-centW CENTRALITY_WEIGHT]
-                            [-extraW EXTRA_WEIGHT_TABLE] [--gen_warnings]
-                            [--warn_dist WARN_DIST] [--warn_sim WARN_SIM]
-                            [--warn_aln WARN_ALN] [--skip_plots]
-                            work_directory
-
-    positional arguments:
-      work_directory        Directory where data and output are stored    
-                            *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
-
-    SYSTEM PARAMETERS:
-      -p PROCESSORS, --processors PROCESSORS
-                            threads (default: 6)
-      -d, --debug           make extra debugging output (default: False)
-      -h, --help            show this help message and exit
-
-    GENOME INPUT:
-      -g [GENOMES ...], --genomes [GENOMES ...]
-                            genomes to filter in .fasta format. Not necessary if
-                            Bdb or Wdb already exist. Can also input a text file
-                            with paths to genomes, which results in fewer OS
-                            issues than wildcard expansion (default: None)
-
-    GENOME FILTERING OPTIONS:
-      -l LENGTH, --length LENGTH
-                            Minimum genome length (default: 50000)
-      -comp COMPLETENESS, --completeness COMPLETENESS
-                            Minimum genome completeness (default: 75)
-      -con CONTAMINATION, --contamination CONTAMINATION
-                            Maximum genome contamination (default: 25)
-
-    GENOME QUALITY ASSESSMENT OPTIONS:
-      --ignoreGenomeQuality
-                            Don't run checkM or do any quality filtering. NOT
-                            RECOMMENDED! This is useful for use with
-                            bacteriophages or eukaryotes or things where checkM
-                            scoring does not work. Will only choose genomes based
-                            on length and N50 (default: False)
-      --genomeInfo GENOMEINFO
-                            location of .csv file containing quality information
-                            on the genomes. Must contain: ["genome"(filename of
-                            .fasta file of that genome, including extension e.g.
-                            genome.fasta), "completeness"(0-100 value for
-                            completeness of the genome), "contamination"(0-100
-                            value of the contamination of the genome)] (default:
-                            None)
-      --checkM_method {taxonomy_wf,lineage_wf}
-                            Either lineage_wf (more accurate) or taxonomy_wf
-                            (faster) (default: lineage_wf)
-      --set_recursion SET_RECURSION
-                            Increases the python recursion limit. NOT RECOMMENDED
-                            unless checkM is crashing due to recursion issues.
-                            Recommended to set to 2000 if needed, but setting this
-                            could crash python (default: 0)
-      --checkm_group_size CHECKM_GROUP_SIZE
-                            The number of genomes passed to checkM at a time.
-                            Increasing this increases RAM but makes checkM faster
-                            (default: 2000)
-
-    GENOME COMPARISON OPTIONS:
-      --S_algorithm {ANIn,skani,gANI,fastANI,ANImf,goANI}
+      --S_algorithm {ANImf,fastANI,skani,ANIn,gANI,goANI}
                             Algorithm for secondary clustering comaprisons:
                             skani   = (DEFAULT) Kmer-based approach; fastest and most accurate.
                                       When paired with --primary_algorithm skani, secondary reuses
@@ -366,11 +149,228 @@ This workflow dereplicates a set of genomes. For a list of all parameters, check
                             total   = 2*(aligned length) / (sum of total genome lengths)
                             larger  = max((aligned length / genome 1), (aligned_length / genome2))
                              (default: larger)
-      --clusterAlg {weighted,ward,complete,single,average,median,centroid}
+      --clusterAlg {single,median,ward,centroid,complete,average,weighted}
                             Algorithm used to cluster genomes during SECONDARY
                             clustering (passed to scipy.cluster.hierarchy.linkage)
                             (default: average)
-      --primary_clusterAlg {weighted,ward,complete,single,average,median,centroid}
+      --primary_clusterAlg {single,median,ward,centroid,complete,average,weighted}
+                            Algorithm used to cluster genomes during PRIMARY
+                            (MASH/skani) clustering. The default 'single' is equivalent to connected
+                            components and is computed with a fast, low-memory streaming algorithm that
+                            scales to very large genome sets. Any other choice falls back to the classic
+                            dense scipy path (see --classic_primary_clustering). (default: single)
+      --classic_primary_clustering
+                            Force the classic dense (scipy) primary clustering
+                            path instead of the streaming single-linkage
+                            algorithm. Uses much more RAM at scale but reproduces
+                            pre-v4 behavior and allows non-single linkage methods
+                            and the primary dendrogram plot. (default: False)
+
+    GREEDY CLUSTERING OPTIONS
+    These decrease RAM use and runtime at the expense of a minor loss in accuracy.
+    Recommended when clustering 5000+ genomes:
+      --multiround_primary_clustering
+                            Cluster each primary clunk separately and merge at the
+                            end with single linkage. Decreases RAM usage and
+                            increases speed, and the cost of a minor loss in
+                            precision and the inability to plot
+                            primary_clustering_dendrograms. Especially helpful
+                            when clustering 5000+ genomes. Will be done with
+                            single linkage clustering (default: False)
+      --primary_chunksize PRIMARY_CHUNKSIZE
+                            Impacts multiround_primary_clustering. If you have
+                            more than this many genomes, process them in chunks of
+                            this size. (default: 5000)
+      --greedy_secondary_clustering
+                            Use a heuristic to avoid pair-wise comparisons when
+                            doing secondary clustering. Will be done with single
+                            linkage clustering. Only works for fastANI S_algorithm
+                            option at the moment (default: False)
+      --run_tertiary_clustering
+                            Run an additional round of clustering on the final
+                            genome set. This is especially useful when greedy
+                            clustering is performed and/or to handle cases where
+                            similar genomes end up in different primary clusters.
+                            Only works with dereplicate, not compare. (default:
+                            False)
+
+    WARNINGS:
+      --gen_warnings        Generate warnings (default: False)
+      --warn_dist WARN_DIST
+                            How far from the threshold to throw cluster warnings
+                            (default: 0.25)
+      --warn_sim WARN_SIM   Similarity threshold for warnings between dereplicated
+                            genomes (default: 0.98)
+      --warn_aln WARN_ALN   Minimum aligned fraction for warnings between
+                            dereplicated genomes (ANIn) (default: 0.25)
+
+    Example: dRep compare output_dir/ -g /path/to/genomes/*.fasta
+
+
+Dereplicate
+------------
+
+This workflow dereplicates a set of genomes. For a list of all parameters, check the help::
+
+  $ dRep dereplicate -h
+
+    usage: dRep dereplicate [-p PROCESSORS] [-d] [-h] [-g [GENOMES ...]]
+                            [-l LENGTH] [-comp COMPLETENESS] [-con CONTAMINATION]
+                            [--ignoreGenomeQuality] [--genomeInfo GENOMEINFO]
+                            [--checkM_method {lineage_wf,taxonomy_wf}]
+                            [--set_recursion SET_RECURSION]
+                            [--checkm_group_size CHECKM_GROUP_SIZE]
+                            [--S_algorithm {goANI,ANImf,gANI,skani,ANIn,fastANI}]
+                            [--primary_algorithm {skani,MASH}]
+                            [--no_reuse_primary_comparisons]
+                            [--primary_skani_min_af PRIMARY_SKANI_MIN_AF]
+                            [-ms MASH_SKETCH] [--SkipMash] [--SkipSecondary]
+                            [--skani_extra SKANI_EXTRA]
+                            [--n_PRESET {normal,tight}] [-pa P_ANI] [-sa S_ANI]
+                            [-nc COV_THRESH] [-cm {total,larger}]
+                            [--clusterAlg {average,complete,weighted,centroid,single,ward,median}]
+                            [--primary_clusterAlg {average,complete,weighted,centroid,single,ward,median}]
+                            [--classic_primary_clustering]
+                            [--multiround_primary_clustering]
+                            [--primary_chunksize PRIMARY_CHUNKSIZE]
+                            [--greedy_secondary_clustering]
+                            [--run_tertiary_clustering]
+                            [-comW COMPLETENESS_WEIGHT]
+                            [-conW CONTAMINATION_WEIGHT]
+                            [-strW STRAIN_HETEROGENEITY_WEIGHT] [-N50W N50_WEIGHT]
+                            [-sizeW SIZE_WEIGHT] [-centW CENTRALITY_WEIGHT]
+                            [-extraW EXTRA_WEIGHT_TABLE] [--gen_warnings]
+                            [--warn_dist WARN_DIST] [--warn_sim WARN_SIM]
+                            [--warn_aln WARN_ALN] [--skip_plots]
+                            work_directory
+
+    positional arguments:
+      work_directory        Directory where data and output are stored    
+                            *** USE THE SAME WORK DIRECTORY FOR ALL DREP OPERATIONS ***
+
+    SYSTEM PARAMETERS:
+      -p PROCESSORS, --processors PROCESSORS
+                            threads (default: 6)
+      -d, --debug           make extra debugging output (default: False)
+      -h, --help            show this help message and exit
+
+    GENOME INPUT:
+      -g [GENOMES ...], --genomes [GENOMES ...]
+                            genomes to filter in .fasta format. Not necessary if
+                            Bdb or Wdb already exist. Can also input a text file
+                            with paths to genomes, which results in fewer OS
+                            issues than wildcard expansion (default: None)
+
+    GENOME FILTERING OPTIONS:
+      -l LENGTH, --length LENGTH
+                            Minimum genome length (default: 50000)
+      -comp COMPLETENESS, --completeness COMPLETENESS
+                            Minimum genome completeness (default: 75)
+      -con CONTAMINATION, --contamination CONTAMINATION
+                            Maximum genome contamination (default: 25)
+
+    GENOME QUALITY ASSESSMENT OPTIONS:
+      --ignoreGenomeQuality
+                            Don't run checkM or do any quality filtering. NOT
+                            RECOMMENDED! This is useful for use with
+                            bacteriophages or eukaryotes or things where checkM
+                            scoring does not work. Will only choose genomes based
+                            on length and N50 (default: False)
+      --genomeInfo GENOMEINFO
+                            location of .csv file containing quality information
+                            on the genomes. Must contain: ["genome"(filename of
+                            .fasta file of that genome, including extension e.g.
+                            genome.fasta), "completeness"(0-100 value for
+                            completeness of the genome), "contamination"(0-100
+                            value of the contamination of the genome)] (default:
+                            None)
+      --checkM_method {lineage_wf,taxonomy_wf}
+                            Either lineage_wf (more accurate) or taxonomy_wf
+                            (faster) (default: lineage_wf)
+      --set_recursion SET_RECURSION
+                            Increases the python recursion limit. NOT RECOMMENDED
+                            unless checkM is crashing due to recursion issues.
+                            Recommended to set to 2000 if needed, but setting this
+                            could crash python (default: 0)
+      --checkm_group_size CHECKM_GROUP_SIZE
+                            The number of genomes passed to checkM at a time.
+                            Increasing this increases RAM but makes checkM faster
+                            (default: 2000)
+
+    GENOME COMPARISON OPTIONS:
+      --S_algorithm {goANI,ANImf,gANI,skani,ANIn,fastANI}
+                            Algorithm for secondary clustering comaprisons:
+                            skani   = (DEFAULT) Kmer-based approach; fastest and most accurate.
+                                      When paired with --primary_algorithm skani, secondary reuses
+                                      the comparisons already done during primary clustering.
+                            fastANI = Kmer-based approach; very fast
+                            ANImf   = Align whole genomes with nucmer; filter alignment; compare aligned regions
+                            ANIn    = Align whole genomes with nucmer; compare aligned regions
+                            gANI    = Identify and align ORFs; compare aligned ORFS
+                            goANI   = Open source version of gANI; requires nsmimscan
+                             (default: skani)
+      --primary_algorithm {skani,MASH}
+                            Program to use for primary clustering.
+                            skani  = (DEFAULT) skani triangle --sparse. Only above-threshold pairs
+                                     are produced, so there is no N^2 matrix in RAM or on disk, and
+                                     a skani --S_algorithm can reuse these comparisons instead of
+                                     recomputing them.
+                            MASH   = all-vs-all Mash. Pre-v4 behavior; builds the full N^2 table. (default: skani)
+      --no_reuse_primary_comparisons
+                            Re-run skani during secondary clustering instead of
+                            reusing the comparisons already computed during
+                            primary clustering. Only relevant with
+                            --primary_algorithm skani and a skani --S_algorithm,
+                            where the two stages otherwise compute the same ANI
+                            values twice. Reuse is exact, so this is mostly a
+                            debugging escape hatch. (default: True)
+      --primary_skani_min_af PRIMARY_SKANI_MIN_AF
+                            Minimum percent of a genome that must align for a pair
+                            to form a primary-clustering edge (--primary_algorithm
+                            skani only). skani's ANI is measured within aligned
+                            regions only, so without this filter genomes sharing
+                            just a small conserved region become edges and single
+                            linkage chains them into one huge cluster. The default
+                            reproduces the MASH partition closely; lower it only
+                            if you have very fragmented genomes and understand the
+                            chaining risk. (default: 15)
+      -ms MASH_SKETCH, --MASH_sketch MASH_SKETCH
+                            MASH sketch size (default: 1000)
+      --SkipMash            Skip primary clustering entirely and run secondary
+                            clustering on all genomes at once. (Named for when
+                            primary clustering was always MASH; it applies to
+                            whichever --primary_algorithm is in use.) (default:
+                            False)
+      --SkipSecondary       Skip secondary clustering, just perform MASH
+                            clustering (default: False)
+      --skani_extra SKANI_EXTRA
+                            Extra arguments to pass to skani triangle (default: )
+      --n_PRESET {normal,tight}
+                            Presets to pass to nucmer
+                            tight   = only align highly conserved regions
+                            normal  = default ANIn parameters (default: normal)
+
+    GENOME CLUSTERING OPTIONS:
+      -pa P_ANI, --P_ani P_ANI
+                            ANI threshold to form primary (MASH) clusters
+                            (default: 0.9)
+      -sa S_ANI, --S_ani S_ANI
+                            ANI threshold to form secondary clusters (default:
+                            0.95)
+      -nc COV_THRESH, --cov_thresh COV_THRESH
+                            Minmum level of overlap between genomes when doing
+                            secondary comparisons (default: 0.1)
+      -cm {total,larger}, --coverage_method {total,larger}
+                            Method to calculate coverage of an alignment
+                            (for ANIn/ANImf only; gANI and fastANI can only do larger method)
+                            total   = 2*(aligned length) / (sum of total genome lengths)
+                            larger  = max((aligned length / genome 1), (aligned_length / genome2))
+                             (default: larger)
+      --clusterAlg {average,complete,weighted,centroid,single,ward,median}
+                            Algorithm used to cluster genomes during SECONDARY
+                            clustering (passed to scipy.cluster.hierarchy.linkage)
+                            (default: average)
+      --primary_clusterAlg {average,complete,weighted,centroid,single,ward,median}
                             Algorithm used to cluster genomes during PRIMARY
                             (MASH/skani) clustering. The default 'single' is equivalent to connected
                             components and is computed with a fast, low-memory streaming algorithm that

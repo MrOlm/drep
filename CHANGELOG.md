@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [4.0.0] - Unreleased
+## [4.0.0] - 2026-07-15
 
 dRep v4 makes genome clustering scale. The headline change is that primary and
 secondary clustering now both default to skani, and run as a **single pass** over
@@ -13,7 +13,8 @@ the data instead of comparing every genome twice.
 **This release changes results.** Read "Breaking changes" below before upgrading
 an existing analysis. If you need the old behavior, `--primary_algorithm MASH
 --S_algorithm fastANI --primary_clusterAlg average` gets close, but the skani
-coverage fix (see Fixed) cannot be turned off, and it was a genuine bug.
+alignment-coverage fix (see Fixed) cannot be turned off, and it was a genuine
+bug.
 
 ### Breaking changes
 
@@ -94,7 +95,10 @@ coverage fix (see Fixed) cannot be turned off, and it was a genuine bug.
   `--S_algorithm skani`: a pair aligning over 1% of the genome had
   `alignment_coverage=1.04` and sailed past a `cov_thresh` of 0.5. On the bundled
   test genomes this merged *E. casseliflavus* with *E. faecalis* — two different
-  species — into one secondary cluster. Coverage filtering now actually applies.
+  species — into one secondary cluster. `--S_algorithm skani` users should expect
+  different (more conservative) clusters as a result. Note this fixes the
+  *units*, not how low-coverage pairs are handled once measured; see Known
+  limitations.
 - `ScaffoldLevel_dRep.py` crashed on MUMmer 3 with "nucmer failed with exit code
   1". It passed `-t` (threads) unconditionally, but that option only exists in
   MUMmer 4, and MUMmer 3 rejects it rather than ignoring it. `conda install
@@ -104,6 +108,24 @@ coverage fix (see Fixed) cannot be turned off, and it was a genuine bug.
   streaming/sparse paths, which build no linkage matrix of their own. Above
   `--primary_dendrogram_max_genomes` (2000) it is skipped, as multiround already
   did.
+
+### Known limitations
+
+- **Alignment coverage still only filters pairs, not clusters.** `cov_thresh` is
+  applied by setting a low-coverage pair's ANI to 0 before hierarchical
+  clustering. That stops the pair itself from pulling two genomes together, but
+  average linkage can still route around it: a genome joins a cluster on the
+  strength of its *other* relationships and ends up grouped with a member it
+  never had adequate coverage with. Concretely, with `cov_thresh=0.5`, a genome
+  aligning over only 1% of another still lands in the same secondary cluster as
+  it — via their mutual neighbours — and so one of the two is discarded as
+  redundant. Three genomes is enough to trigger this.
+
+  This is a real and long-standing behavior, not a regression, and it is separate
+  from the skani units bug fixed above. Fixing it properly means validating
+  cluster membership after clustering (e.g. rejecting a genome that lacks
+  sufficient coverage with the cluster) rather than adjusting distances, and it
+  has to hold for hierarchical, greedy, and multiround paths alike. Deferred.
 
 ### Validation
 
