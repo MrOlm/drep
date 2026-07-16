@@ -16,7 +16,7 @@ Open source pre-print publication is available at
 
 ## ⚡ New in v4
 
-dRep v4 uses [skani](https://github.com/bluenote-1577/skani) for **both** primary and secondary genome comparisons by default, replacing v3's default of MASH (primary) + fastANI (secondary). skani is much faster than that pair, and it *streams* its comparisons instead of building an all-vs-all matrix in memory — so `dereplicate` runs far quicker and its memory footprint grows roughly linearly with genome count rather than quadratically (the O(N²) scaling that previously limited large runs — see [#259](https://github.com/MrOlm/drep/issues/259)).
+dRep v4 uses [skani](https://github.com/bluenote-1577/skani) for **both** primary and secondary genome comparisons by default, replacing v3's default of MASH (primary) + fastANI (secondary). skani is much faster than that pair, and it *streams* its comparisons instead of building an all-vs-all matrix in memory — so `dereplicate` runs far quicker and its memory footprint grows roughly linearly with genome count rather than quadratically.
 
 **Whole-pipeline `dRep dereplicate` on 10,000 genomes** — identical inputs and settings:
 
