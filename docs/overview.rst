@@ -13,9 +13,13 @@ Genome comparison
 
 dRep can rapidly and accurately compare a list of genomes in a pair-wise manner. This allows identification of groups of organisms that share similar DNA content in terms of Average Nucleotide Identity (ANI).
 
-dRep performs this in two steps- first with a rapid primary algorithm (Mash), and second with a more sensitive algorithm (ANIm). We can't just use Mash because, while incredibly fast, it is not robust to genome incompletenss (see :doc:`choosing_parameters`) and only provides an "estimate" of ANI. ANIm is robust to genome incompleteness and is more accurate, but too slow to perform pair-wise comparisons of longer genome lists.
+dRep performs this in two steps. **Primary clustering** groups genomes that could plausibly be the same organism, using a permissive threshold and single-linkage (connected components). **Secondary clustering** then runs within each of those groups, using average-linkage hierarchical clustering to decide which genomes actually are the same.
 
-dRep first compares all genomes using Mash, and then only runs the secondary algorithm (ANIm or gANI) on sets of genomes that have at least 90% Mash ANI. This results in a great decrease in the number of (slow) secondary comparisons that need to be run while maintaining the sensitivity of ANIm.
+Both steps matter. Primary clustering is deliberately inclusive, and it partitions the genomes so that the more expensive secondary clustering only ever has to consider a small group at a time. Secondary clustering uses average linkage, which is what stops a chain of similar-but-distinct strains from collapsing distinct species into one cluster.
+
+As of v4 both steps default to `skani <https://github.com/bluenote-1577/skani>`_. Primary clustering runs it in ``--sparse`` mode, which only emits pairs above a screening threshold, so dRep never builds or stores the full N x N comparison table. Because secondary clustering only compares genomes *within* a primary cluster, those pairs are a subset of what the primary pass already computed, so it reuses them rather than running the comparisons a second time.
+
+Older versions used Mash for primary clustering and an alignment-based algorithm (ANIm) for secondary. That path is still available (``--primary_algorithm MASH``, ``--S_algorithm ANImf``), but it computes all N x N Mash comparisons up front, which is slower and uses far more memory on large genome sets.
 
 .. See the `publication <https://www.youtube.com/watch?v=dQw4w9WgXcQ>`_ for details
 

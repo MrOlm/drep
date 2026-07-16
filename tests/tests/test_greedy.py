@@ -22,7 +22,7 @@ def test_multiround_primary_clustering_1(self):
     test_dir = self.test_dir
 
     # Run it under normal conditions
-    args = drep.argumentParser.parse_args(['compare', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '--S_algorithm', 'ANImf', '-sa', '0.99', '-pa', '0.95', '-d', '-g'] + self.genomes)
+    args = drep.argumentParser.parse_args(['compare', self.wd_loc, '--primary_chunksize', '3', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--S_algorithm', 'ANImf', '-sa', '0.99', '-pa', '0.95', '-d', '-g'] + self.genomes)
     kwargs = vars(args)
     drep.d_cluster.controller.d_cluster_wrapper(self.wd_loc, **kwargs)
 
@@ -46,15 +46,15 @@ def test_multiround_primary_clustering_1(self):
     # Make sure it handles plotting gracefully
     drep.d_analyze.mash_dendrogram_from_wd(wd, plot_dir=test_dir)
 
-def test_multiround_primary_clustering_with_low_ram(self):
+def test_multiround_primary_clustering_streaming(self):
     """
-    Test that multiround primary clustering works with low_ram_primary_clustering
-    and verifies both optimizations were used
+    Multiround primary clustering only applies to the MASH path, so it has to be
+    requested explicitly now that skani is the default primary algorithm. It uses
+    single-linkage union-find, which produces no dendrogram linkage matrix.
     """
     test_dir = self.test_dir
 
-    # Run it with both multiround and low_ram options
-    args = drep.argumentParser.parse_args(['compare', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '--low_ram_primary_clustering', '--S_algorithm', 'ANImf', '-sa', '0.99', '-pa', '0.95', '-d', '-g'] + self.genomes)
+    args = drep.argumentParser.parse_args(['compare', self.wd_loc, '--primary_algorithm', 'MASH', '--primary_chunksize', '3', '--multiround_primary_clustering', '--S_algorithm', 'ANImf', '-sa', '0.99', '-pa', '0.95', '-d', '-g'] + self.genomes)
     kwargs = vars(args)
     drep.d_cluster.controller.d_cluster_wrapper(self.wd_loc, **kwargs)
 
@@ -71,9 +71,10 @@ def test_multiround_primary_clustering_with_low_ram(self):
     assert 'genome_chunk' in list(Mdb.columns)
     assert len(Mdb['genome_chunk'].unique()) == 3
 
-    # Make sure low_ram optimization was used
+    # Multiround chunks carry a genome_chunk column, so no primary dendrogram is
+    # computed and the streaming marker is stored instead of a linkage matrix
     primary_linkage = wd.get_cluster('primary_linkage')['linkage']
-    assert primary_linkage == "optimized_method_used", "Optimized clustering method was not used"
+    assert primary_linkage == "union_find_streaming", "Streaming union-find method was not used"
 
     # Make sure genomes in same primary cluster in one dataframe are also in same primary cluster in other
     Cdb = wd.get_db('Cdb')
@@ -149,7 +150,7 @@ def test_multiround_primary_clustering_2(self):
     test_dir = self.test_dir
 
     # Run it under normal conditions
-    args = drep.argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '--ignoreGenomeQuality', '-pa', '0.95', '--S_algorithm', 'ANImf', '-sa', '0.99', '-d', '-g'] + self.genomes)
+    args = drep.argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '3', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--ignoreGenomeQuality', '-pa', '0.95', '--S_algorithm', 'ANImf', '-sa', '0.99', '-d', '-g'] + self.genomes)
     drep.controller.Controller().parseArguments(args)
 
     # Load test results
@@ -180,7 +181,7 @@ def test_multiround_primary_clustering_3(self):
     test_dir = self.test_dir
 
     # Run it under normal conditions
-    args = drep.argumentParser.parse_args(['dereplicate', self.wd_loc, '--clusterAlg', 'single', '--primary_chunksize', '3', '--multiround_primary_clustering', '--ignoreGenomeQuality', '-pa', '0.75', '-d', '-g'] + self.genomes)
+    args = drep.argumentParser.parse_args(['dereplicate', self.wd_loc, '--clusterAlg', 'single', '--primary_chunksize', '3', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--ignoreGenomeQuality', '-pa', '0.75', '-d', '-g'] + self.genomes)
     drep.controller.Controller().parseArguments(args)
 
     # Load test results
@@ -191,7 +192,7 @@ def test_multiround_primary_clustering_3(self):
 
     # Run it with a different clusterAlg
     shutil.rmtree(self.working_wd_loc)
-    args = drep.argumentParser.parse_args(['dereplicate', self.working_wd_loc, '--clusterAlg', 'complete', '--primary_chunksize', '3', '--multiround_primary_clustering', '--ignoreGenomeQuality', '-pa', '0.75', '-d', '-g'] + self.genomes)
+    args = drep.argumentParser.parse_args(['dereplicate', self.working_wd_loc, '--clusterAlg', 'complete', '--primary_chunksize', '3', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--ignoreGenomeQuality', '-pa', '0.75', '-d', '-g'] + self.genomes)
     drep.controller.Controller().parseArguments(args)
 
     # Load test results
@@ -210,7 +211,7 @@ def test_multiround_primary_clustering_4(self):
     test_dir = self.test_dir
 
     # Run it under normal conditions
-    args = drep.argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '3', '--multiround_primary_clustering', '--ignoreGenomeQuality', '--SkipSecondary', '-d', '-g'] + self.genomes)
+    args = drep.argumentParser.parse_args(['dereplicate', self.wd_loc, '--primary_chunksize', '3', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--ignoreGenomeQuality', '--SkipSecondary', '-d', '-g'] + self.genomes)
     drep.controller.Controller().parseArguments(args)
 
     # Load test results

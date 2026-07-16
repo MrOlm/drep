@@ -138,6 +138,7 @@ def mash_dendrogram_from_wd(wd, plot_dir=False):
         Cdb = wd.get_db('Cdb', return_none=False)
         Pcluster = wd.get_primary_linkage()
         Plinkage = Pcluster['linkage']
+        Plinkage_db = Pcluster.get('db')
         clust_args = wd.arguments['cluster']
         PL_thresh = clust_args.get('P_ani', False)
         if PL_thresh != False:
@@ -150,10 +151,19 @@ def mash_dendrogram_from_wd(wd, plot_dir=False):
         logging.error("Skipping plot 1 - cannot generate with multiround_primary_clustering enabled")
         return
 
+    if Plinkage is None or isinstance(Plinkage, str):
+        logging.error("Skipping plot 1 - no primary linkage matrix was computed (too many genomes, or a streaming primary algorithm was used)")
+        return
+
+    # Leaf labels have to come from whatever the linkage was built on. The sparse
+    # skani Mdb only holds above-threshold pairs, so a genome with no relatives is
+    # absent from it and labels derived from Mdb would not match the linkage.
+    names = list(Plinkage_db.columns) if Plinkage_db is not None else None
+
     # Make the plot
     logging.info("Plotting primary dendrogram")
     plot_MASH_dendrogram(Mdb, Cdb, Plinkage, threshold = PL_thresh,\
-                    plot_dir = plot_dir)
+                    plot_dir = plot_dir, names = names)
 
 def plot_secondary_dendrograms_from_wd(wd, plot_dir, **kwargs):
     '''
@@ -614,7 +624,7 @@ def plot_ANIn_vs_len(Mdb,Ndb,exclude_zero_MASH=True):
 CLUSETER PLOTS
 """
 
-def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
+def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False, names=None):
     '''
     Make a dendrogram of the primary clustering
 
@@ -624,6 +634,11 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
         linkage: Result of scipy.cluster.hierarchy.linkage
         threshold (optional): Line to plot on x-axis
         plot_dir (optional): Location to store plot
+        names (optional): Leaf labels, in the order the linkage was built from.
+            Required when Mdb does not contain every genome -- the sparse skani
+            Mdb only holds above-threshold pairs, so a genome with no relatives
+            never appears in it and deriving labels from Mdb would silently
+            mismatch the linkage.
 
     Returns:
         Makes and shows plot
@@ -633,8 +648,9 @@ def plot_MASH_dendrogram(Mdb, Cdb, linkage, threshold=False, plot_dir=False):
     if Mdb['genome1'].dtype.name == 'category':
         logging.error("WARNING: Primary dendrogram labels may be shuffled! Load as csv to prevent this")
 
-    db = Mdb.pivot(index="genome1", columns="genome2", values="similarity")
-    names = list(db.columns)
+    if names is None:
+        db = Mdb.pivot(index="genome1", columns="genome2", values="similarity")
+        names = list(db.columns)
     name2cluster = Cdb.set_index('genome')['primary_cluster'].to_dict()
     name2color = gen_color_dictionary(names, name2cluster)
 
@@ -1073,6 +1089,32 @@ def gen_color_list(names,name2cluster):
 
     return colors
 
+# UC Berkeley palette. The point of coloring clusters is to tell neighbouring
+# ones apart, not to identify a cluster by its color, so a handful of distinct
+# colors cycled is strictly more readable than giving every cluster its own
+# barely-distinguishable shade.
+CLUSTER_COLORS = [
+    '#003262',  # Berkeley Blue
+    '#FDB515',  # California Gold
+    '#3B7EA1',  # Founders Rock
+]
+
+
+def _cluster_sort_key(cluster):
+    '''
+    Order clusters naturally so that cycling colors lands adjacent clusters on
+    different colors. Handles primary clusters ('2') and secondary clusters
+    ('2_10'), sorting numerically where possible: 2_2 before 2_10, not after.
+    '''
+    key = []
+    for part in str(cluster).split('_'):
+        try:
+            key.append((0, float(part), ''))
+        except ValueError:
+            key.append((1, 0.0, part))
+    return key
+
+
 def gen_color_dictionary(names, name2cluster):
     '''
     Make the dictionary name2color
@@ -1084,27 +1126,14 @@ def gen_color_dictionary(names, name2cluster):
     Returns:
         dict: name -> color
     '''
-    #cm = _rand_cmap(len(set(name2cluster.values()))+1,type='bright')
-    vals = np.linspace(0,1,len(set(name2cluster.values()))+1)
-    np.random.shuffle(vals)
-    cm = plt.cm.colors.ListedColormap(plt.cm.jet(vals))
+    # Cycle a small palette in cluster order. This is deterministic: the previous
+    # implementation shuffled an unseeded colormap, so the same analysis produced
+    # different colors on every run.
+    clusters = sorted(set(name2cluster.values()), key=_cluster_sort_key)
+    cluster2color = {c: CLUSTER_COLORS[i % len(CLUSTER_COLORS)]
+                     for i, c in enumerate(clusters)}
 
-    # 1. generate cluster to color
-    cluster2color = {}
-    clusters = set(name2cluster.values())
-    NUM_COLORS = len(clusters)
-    for cluster in clusters:
-        try:
-            cluster2color[cluster] = cm(1.*int(cluster)/NUM_COLORS)
-        except:
-            cluster2color[cluster] = cm(1.*float(str(cluster).split('_')[1])/NUM_COLORS)
-
-    #2. name to color
-    name2color = {}
-    for name in names:
-        name2color[name] = cluster2color[name2cluster[name]]
-
-    return name2color
+    return {name: cluster2color[name2cluster[name]] for name in names}
 
 def _comp_cluster(c):
     '''

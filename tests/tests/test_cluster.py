@@ -341,6 +341,27 @@ def test_skani(self):
 
     assert (db['ani'].tolist()[0] > 0.7) & (db['ani'].tolist()[0] < 0.8)
 
+def test_skani_alignment_coverage_is_fraction_not_percent(self):
+    '''
+    Regression test: skani reports aligned fractions as percentages, but dRep
+    compares alignment_coverage against cov_thresh on a 0-1 scale (see
+    make_linkage_Ndb). If the conversion is dropped the coverage filter silently
+    stops working, and distantly related genomes sharing a small conserved
+    region get merged.
+    '''
+    bdb = drep.d_cluster.utils.load_genomes(self.genomes)
+    Ndb = drep.d_cluster.compare_utils.compare_genomes(bdb, 'skani', self.test_dir)
+
+    assert Ndb['alignment_coverage'].between(0, 1).all(), \
+        "skani alignment_coverage must be a 0-1 fraction, not a percent"
+
+    # E. casseliflavus and E. faecalis align over only ~1% of their genomes, so
+    # a demanding coverage threshold must keep them in separate clusters.
+    Cdb, _ = drep.d_cluster.cluster_utils.genome_hierarchical_clustering(
+        Ndb, S_ani=0.85, cov_thresh=0.5, comp_method='skani', cluster='X')
+    g2c = Cdb.set_index('genome')['secondary_cluster'].to_dict()
+    assert g2c['Enterococcus_casseliflavus_EC20.fasta'] != g2c['Enterococcus_faecalis_T2.fna']
+
 @pytest.mark.skip(reason="You don't need to run this")
 def test_time_compare_genomes(self):
     '''
@@ -588,29 +609,63 @@ def test_skipsecondary(self):
     db2 = wd.get_db('Ndb')
     assert db2.empty, 'Ndb is not empty'
 
-def test_low_ram_primary_clustering(self):
+def test_mash_primary_algorithm(self):
     '''
-    Test that low_ram_primary_clustering runs without crashing and uses the optimized method
+    skani is the default primary algorithm, so exercise the MASH path explicitly
+    to make sure it still works.
     '''
     genomes = self.genomes
     wd_loc  = self.wd_loc
-    s_wd_loc = self.s_wd_loc
 
-    # Create the work directory and data directory
     os.makedirs(os.path.join(wd_loc, 'data'), exist_ok=True)
 
-    # Run dRep with low_ram_primary_clustering
-    args = argumentParser.parse_args(['dereplicate', wd_loc, '--low_ram_primary_clustering', '-g'] + genomes)
+    args = argumentParser.parse_args(['dereplicate', wd_loc, '--primary_algorithm', 'MASH',
+                                      '-g'] + genomes)
     kwargs = vars(args)
     drep.d_cluster.controller.d_cluster_wrapper(wd_loc, **kwargs)
 
-    # Verify it ran by checking Cdb exists and has the right columns
     wd = WorkDirectory(wd_loc)
     Cdb = wd.get_db('Cdb')
     assert 'genome' in Cdb.columns
     assert 'primary_cluster' in Cdb.columns
     assert len(Cdb) > 0
 
-    # Check that the optimized method was actually used by looking at the primary linkage
-    primary_linkage = wd.get_cluster('primary_linkage')['linkage']
-    assert primary_linkage == "optimized_method_used", "Optimized clustering method was not used"
+    # The MASH Mdb is the dense pairwise table (no alignment fractions), so
+    # secondary must NOT try to reuse it as if it were skani edges
+    Mdb = wd.get_db('Mdb')
+    assert 'alignment_coverage' not in Mdb.columns
+
+    # E. faecalis genomes should land in one primary cluster, apart from E. coli
+    g2c = Cdb.set_index('genome')['primary_cluster'].to_dict()
+    assert g2c['Enterococcus_faecalis_T2.fna'] == g2c['Enterococcus_faecalis_TX0104.fa']
+    assert g2c['Enterococcus_faecalis_T2.fna'] != g2c['Escherichia_coli_Sakai.fna']
+def test_cluster_colors_are_deterministic_and_cycled():
+    '''
+    Cluster colors exist to tell neighbouring clusters apart, not to identify a
+    cluster. Cycle a small palette rather than giving each cluster its own shade,
+    and do it deterministically -- the old implementation shuffled an unseeded
+    colormap, so the same analysis produced different colors every run.
+    '''
+    from drep.d_analyze import gen_color_dictionary, CLUSTER_COLORS
+
+    n2c = {f'g{i}': i for i in range(1, 8)}
+    names = list(n2c)
+    d = gen_color_dictionary(names, n2c)
+
+    # only palette colors are used
+    assert set(d.values()) <= set(CLUSTER_COLORS)
+    # adjacent clusters are always distinguishable
+    for i in range(1, 7):
+        assert d[f'g{i}'] != d[f'g{i+1}'], f"clusters {i} and {i+1} share a color"
+    # same input -> same colors, every time
+    assert gen_color_dictionary(names, n2c) == d
+
+def test_cluster_colors_handle_secondary_cluster_names():
+    '''Secondary clusters are named like "2_10"; sorting must be numeric.'''
+    from drep.d_analyze import gen_color_dictionary, CLUSTER_COLORS
+
+    n2c = {'a': '2_1', 'b': '2_2', 'c': '2_10'}
+    d = gen_color_dictionary(list(n2c), n2c)
+    assert set(d.values()) <= set(CLUSTER_COLORS)
+    # 2_1, 2_2, 2_10 are consecutive, so they must all differ (palette has 3)
+    assert len({d['a'], d['b'], d['c']}) == 3

@@ -207,7 +207,7 @@ def test_dereplicate_4(self):
 
     # Run with chunking
     args = argumentParser.parse_args(['compare',wd_loc,'--S_algorithm',
-                'fastANI','--SkipSecondary', '--multiround_primary_clustering',
+                'fastANI','--SkipSecondary', '--primary_algorithm', 'MASH', '--multiround_primary_clustering',
                 '--primary_chunksize', '50', '-g'] + genomes)
     Controller().parseArguments(args)
 
@@ -295,7 +295,7 @@ def test_dereplicate_7(self):
 
     # Get greedy results
     args = argumentParser.parse_args(['compare', wd_loc2, '--S_algorithm',
-                                      'fastANI', '--multiround_primary_clustering', '--primary_chunksize', '50',
+                                      'fastANI', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--primary_chunksize', '50',
                                       '--greedy_secondary_clustering', '-sa', '0.95', '-g'] + genomes)
     Controller().parseArguments(args)
     wd = WorkDirectory(wd_loc2)
@@ -303,7 +303,7 @@ def test_dereplicate_7(self):
 
     # Run normal
     args = argumentParser.parse_args(['compare', wd_loc, '--S_algorithm',
-                                      'fastANI', '--multiround_primary_clustering', '--primary_chunksize', '50',
+                                      'fastANI', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--primary_chunksize', '50',
                                       '-sa', '0.95', '-g'] + genomes)
     Controller().parseArguments(args)
 
@@ -334,7 +334,7 @@ def test_dereplicate_8(self):
 
     # Get greedy results
     args = argumentParser.parse_args(['compare', wd_loc2, '--S_algorithm',
-                                      'fastANI', '--multiround_primary_clustering', '--primary_chunksize', '50',
+                                      'fastANI', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--primary_chunksize', '50',
                                       '--greedy_secondary_clustering', '-sa', '0.95', '-pa', '0.99', '-g'] + genomes)
     Controller().parseArguments(args)
     wd = WorkDirectory(wd_loc2)
@@ -342,7 +342,7 @@ def test_dereplicate_8(self):
 
     # Run normal
     args = argumentParser.parse_args(['compare', wd_loc, '--S_algorithm',
-                                      'fastANI', '--multiround_primary_clustering', '--primary_chunksize', '50',
+                                      'fastANI', '--primary_algorithm', 'MASH', '--multiround_primary_clustering', '--primary_chunksize', '50',
                                       '-sa', '0.95', '-pa', '0.99', '-g'] + genomes)
     Controller().parseArguments(args)
 

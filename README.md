@@ -14,6 +14,19 @@ Publication is available at
 Open source pre-print publication is available at
 [bioRxiv](https://doi.org/10.1101/108142)
 
+## ⚡ New in v4
+
+dRep v4 uses [skani](https://github.com/bluenote-1577/skani) for **both** primary and secondary genome comparisons by default, replacing v3's default of MASH (primary) + fastANI (secondary). skani is much faster than that pair, and it *streams* its comparisons instead of building an all-vs-all matrix in memory — so `dereplicate` runs far quicker and its memory footprint grows roughly linearly with genome count rather than quadratically.
+
+**Whole-pipeline `dRep dereplicate` on 10,000 genomes** — identical inputs and settings:
+
+| | v3 defaults (MASH → fastANI) | v4 defaults (skani) |
+|---|---|---|
+| Wall-clock time | 6 h 15 min | **14.5 min** (~26× faster) |
+| Peak memory (RSS) | ~13 GB | ~7 GB |
+
+*Benchmarked on an Apple M1 Pro with `-p 10`; the memory advantage widens further at larger genome counts.*
+
 ## Installation with pip
 ```
 $ pip install drep
@@ -38,13 +51,14 @@ $ dRep check_dependencies
 
 ## Dependencies
 ### Near Essential
-* [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>) - Makes primary clusters (v1.1.1 confirmed works)
-* [MUMmer](http://mummer.sourceforge.net/) - Performs default ANIm comparison method (v3.23 confirmed works)
+* [skani](https://github.com/bluenote-1577/skani) - Makes primary clusters and performs the default secondary comparison (v0.2+ confirmed works)
+* [CheckM](http://ecogenomics.github.io/CheckM/) - Determines contamination and completeness of genomes (v1.0.7 confirmed works). Only needed for `dereplicate`; skip it with `--genomeInfo` or `--ignoreGenomeQuality`
 
 ### Optional
 
-* [fastANI](https://github.com/ParBLiSS/FastANI) - A fast secondary clustering algorithm
-* [CheckM](http://ecogenomics.github.io/CheckM/)_ - Determines contamination and completeness of genomes (v1.0.7 confirmed works)
+* [Mash](https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>) - Only needed for `--primary_algorithm MASH` (v1.1.1 confirmed works)
+* [MUMmer](http://mummer.sourceforge.net/) - Only needed for the ANIm comparison methods (v3.23 confirmed works)
+* [fastANI](https://github.com/ParBLiSS/FastANI) - An alternative fast secondary clustering algorithm
 * [gANI (aka ANIcalculator)](https://ani.jgi-psf.org/html/download.php?) - Performs gANI comparison method (v1.0 confirmed works)
 * [Prodigal](http://prodigal.ornl.gov/) - Used be both checkM and gANI (v2.6.3 confirmed works)
 * [NSimScan](https://pubmed.ncbi.nlm.nih.gov/27153714/) - Only needed for goANI algorithm (open source version of gANI)

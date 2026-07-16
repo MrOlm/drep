@@ -154,15 +154,22 @@ dRep can use any method of linkage listed at the following webpage by using the 
 7. Overview of genome comparison algorithms
 ----------------------------------------------
 
-**Primary clustering** is always performed with `Mash <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>`_; an extremely fast but somewhat inaccurate algorithm.
+**Primary clustering** groups genomes that could plausibly be "the same", so that the more accurate secondary algorithm only has to run within those groups. Two programs are supported:
 
-There are several supported **secondary clustering algorithms**. These calculate the accurate Average Nucleotide Identity (ANI) between genomes that is used to cluster genomes into secondary clusters. The following algorithms are currently supported as of version 3:
+* **skani** (DEFAULT as of v4) (`Shaw 2023 <https://doi.org/10.1038/s41592-023-02018-3>`_). Run as ``skani triangle --sparse``, which only ever emits pairs above its screening threshold. It therefore never builds the full N x N table, which is what made older versions of dRep run out of memory on large genome sets. It is also more accurate than Mash near the clustering threshold.
+* **MASH** (`Ondov 2016 <https://genomebiology.biomedcentral.com/articles/10.1186/s13059-016-0997-x>`_). The pre-v4 behavior; extremely fast but somewhat inaccurate, and it computes and stores all N x N comparisons.
 
-* **ANIn** (`Richter 2009 <https://www.ncbi.nlm.nih.gov/pubmed/19855009>`_). This aligns whole genomes with nucmer and compares the aligned regions.
-* **ANImf** (DEFAULT). This is the same as ANIn, but filters the alignments such that each region of genome 1 and only align to a single region of genome 2. This takes slightly more time, but is much more accurate on genomes with repeat regions
-* **gANI** (`Varghese 2015 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4538840/>`_). This aligns genes (ORFs) called by Prodigal instead of aligning whole genomes. This algorithm is a bit faster than ANIm-based algorithms, but only aligns coding regions.
+There are several supported **secondary clustering algorithms**. These calculate the accurate Average Nucleotide Identity (ANI) between genomes that is used to cluster genomes into secondary clusters. The following algorithms are currently supported:
+
+* **skani** (DEFAULT as of v4) (`Shaw 2023 <https://doi.org/10.1038/s41592-023-02018-3>`_). Fast and accurate, including on incomplete genomes. When paired with ``--primary_algorithm skani`` (the default), secondary clustering reuses the comparisons already computed during primary clustering rather than recomputing them, which makes the secondary stage nearly free.
+* **FastANI** (`Jain 2018 <https://doi.org/10.1038/s41467-018-07641-9>`_). A really fast Mash-based algorithm that can also handle incomplete genomes. Seems to be just as accurate as alignment-based algorithms. Was the default in v3.
+* **ANImf**. This is the same as ANIn, but filters the alignments such that each region of genome 1 can only align to a single region of genome 2. This takes slightly more time, but is much more accurate on genomes with repeat regions. Was the default in earlier versions.
+* **ANIn** (`Richter 2009 <https://www.ncbi.nlm.nih.gov/pubmed/19855009>`_). This aligns whole genomes with nucmer and compares the aligned regions. ANImf is strictly better and should be preferred.
+* **gANI** (`Varghese 2015 <https://www.ncbi.nlm.nih.gov/pmc/articles/PMC4538840/>`_). This aligns genes (ORFs) called by Prodigal instead of aligning whole genomes. This algorithm is a bit faster than ANIm-based algorithms, but only aligns coding regions. Requires the ANIcalculator program.
 * **goANI**. This is my own open-source implementation of gANI, which is not open source (and for which the authors would not share the source code when asked). I wrote this algorithm so that I could calculate dN/dS between aligned genes for `this study <https://msystems.asm.org/content/5/1/e00731-19>`_ (you can too using `dnds_from_drep.py <https://github.com/MrOlm/bacterialEvolutionMetrics>`_). Requires the program `NSimScan <https://pubmed.ncbi.nlm.nih.gov/27153714/>`_.
-* **FastANI** (`Jain 2018 <https://doi.org/10.1038/s41467-018-07641-9>`_). A really fast Mash-based algorithm that can also handle incomplete genomes. Seems to be just as accurate as alignment-based algorithms. **Should probably be the default algorithm when you care about runtime.***
+
+.. note::
+  **A note on skani and alignment coverage.** Mash compares k-mers across the whole genome, so two genomes that share only a small conserved region look distant. skani instead reports the identity *within the aligned regions only*, so that same pair can report a high ANI. This is why the skani primary path requires a minimum aligned fraction (``--primary_skani_min_af``, default 15%) before a pair counts as a primary-clustering edge. Without it, a handful of genomes sharing small conserved regions chain unrelated organisms together under single linkage. Lower it only if you have very fragmented genomes and understand that risk.
 
 .. note::
   None of these algorithms are perfect, especially in repeat-prone genomes. Regions of the genome which are not homologous can align to each other and artificially decrease ANI. In fact, when a genome is compared to itself, the algorithms often reports values <100% for this reason.

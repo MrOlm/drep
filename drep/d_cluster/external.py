@@ -240,8 +240,15 @@ def load_skani(file):
     db = db[db['reference'] != db['querry']]
     adb = pd.concat([adb, db], ignore_index=True).reset_index(drop=True)
 
-    # Load the af triangle
+    # Load the af triangle. skani reports aligned fractions as percentages
+    # (0-100); every other dRep algorithm reports alignment_coverage on a 0-1
+    # scale, and that is what cov_thresh is compared against in
+    # make_linkage_Ndb. Without this conversion the coverage filter is inert for
+    # skani (e.g. a pair aligning over only 1% of the genome has
+    # alignment_coverage=1.04, which sails past a cov_thresh of 0.5), which can
+    # merge distantly related genomes that share a small conserved region.
     tdb = load_matrix_to_dataframe(file + '.af').rename(columns={'ani':'alignment_coverage'})
+    tdb['alignment_coverage'] = tdb['alignment_coverage'] / 100
 
     # Merge
     assert len(adb) == len(tdb)
@@ -269,6 +276,74 @@ def _fix_fastani(odb):
     assert len(fdb) == (len(fdb['reference'].unique()) * len(fdb['querry'].unique()))
 
     return fdb
+
+
+def run_skani_triangle_sparse(genome_list, outdir, screen, min_af=15, **kwargs):
+    """
+    Run `skani triangle --sparse` and return the path to the sparse output file.
+
+    The sparse output is an edge list of only the above-screening-threshold pairs,
+    so it never materializes the N^2 matrix on disk or in memory. It is meant to
+    be streamed (see union_find.cluster_skani_sparse_files), not loaded whole.
+
+    Args:
+        genome_list: list of genome file locations.
+        outdir: directory to write the sparse output and temp files.
+        screen: skani -s screening threshold (percent identity). Pairs below this
+            are discarded during sketching and never appear in the output. Should
+            be <= the primary ANI threshold so no real edges are missed.
+        min_af: skani --min-af, the minimum percent of a genome that must align
+            for the pair to be reported. See the note below -- do not set this to
+            0 for primary clustering.
+
+    Keyword Args:
+        processors: threads for skani (default 6).
+        skani_extra: extra args passed through to skani triangle.
+        wd, debug: for command logging.
+
+    Returns:
+        Path to the sparse skani output file.
+    """
+    p = kwargs.get('processors', 6)
+    code = drep.d_cluster.utils._randomString(stringLength=10)
+    extra_cmd = kwargs.get('skani_extra', "")
+
+    if not os.path.exists(outdir):
+        os.makedirs(outdir)
+    tmp_dir = os.path.join(outdir, 'tmp/')
+    if not os.path.exists(tmp_dir):
+        os.makedirs(tmp_dir)
+
+    glist = os.path.join(tmp_dir, 'genomeList_{0}'.format(code))
+    glist = _make_glist(genome_list, glist)
+
+    exe_loc = drep.get_exe('skani')
+    out_file = os.path.join(outdir, 'skani_sparse_{0}.tsv'.format(code))
+    # min_af matters far more than it looks, because MASH similarity and skani ANI
+    # measure different things. MASH compares k-mers across the whole genome, so
+    # two genomes sharing only a small conserved region score as distant. skani's
+    # ANI is the identity *within aligned regions only*, so that same pair reports
+    # a high ANI and (with min_af 0) becomes a primary-clustering edge. Under
+    # single linkage those few spurious bridges chain everything together: on 10k
+    # UHGG genomes, --min-af 0 collapsed 59% of the dataset into one primary
+    # cluster (largest 5857) while skani's 15% default reproduced the MASH
+    # partition almost exactly (984 clusters vs MASH's 989, largest 626 vs 626).
+    # The aligned-fraction filter is what makes skani's ANI comparable to MASH's
+    # whole-genome similarity -- it is not an obstacle to work around.
+    cmd = [exe_loc, "triangle", "--sparse", "-t", str(p), '-o', out_file,
+           '-l', glist, '-s', str(screen), '--min-af', str(min_af)]
+    if extra_cmd != "":
+        cmd += extra_cmd.split(' ')
+
+    logging.debug(' '.join(cmd) + ' ' + code)
+
+    if ('wd' in kwargs) and (kwargs.get('debug', False)):
+        logdir = kwargs.get('wd').get_dir('cmd_logs')
+    else:
+        logdir = False
+    drep.thread_cmds([cmd], shell=False, logdir=logdir, t=1)
+
+    return out_file
 
 
 def _make_glist(genomes, floc):

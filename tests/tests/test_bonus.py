@@ -230,3 +230,46 @@ def test_parse_stb_3(self):
     db = pd.read_csv(out_loc, sep='\t', names=['scaffold', 'bin'])
     assert len(db) == 124
     assert len(db['bin'].unique()) == 5
+
+
+def _load_scaffold_level_module():
+    """ScaffoldLevel_dRep.py is a script, not a package module; load it by path."""
+    import importlib.util
+    loc = os.path.join(os.path.dirname(os.path.abspath(__file__)),
+                       '../../helper_scripts/ScaffoldLevel_dRep.py')
+    spec = importlib.util.spec_from_file_location('scaffold_level_drep', loc)
+    mod = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(mod)
+    return mod
+
+
+@pytest.mark.requires_mummer
+def test_scaffold_level_nucmer_threads_flag():
+    """
+    Regression test: nucmer only grew -t/--threads in MUMmer 4. MUMmer 3 (which
+    is what `conda install mummer` still installs, as 3.23) errors out with
+    "Unknown option: t" rather than ignoring it, so passing -t unconditionally
+    made this script fail outright on MUMmer 3.
+    """
+    m = _load_scaffold_level_module()
+    exe = shutil.which('nucmer')
+    assert exe is not None, "nucmer not installed"
+
+    supported = m.nucmer_supports_threads(exe)
+
+    cmd = m.gen_mummer_cmd(exe=exe, method='mum', prefix='p', c='65', maxgap='90',
+                           p=6, noextend='False', reference='r.fa', querry='q.fa')
+
+    # -t is passed if and only if this nucmer understands it
+    assert ('-t' in cmd) == supported, \
+        f"nucmer supports -t = {supported}, but command was: {' '.join(cmd)}"
+
+    # The command must always be well formed regardless
+    assert cmd[0] == exe
+    assert cmd[-2:] == ['r.fa', 'q.fa']
+
+
+def test_scaffold_level_nucmer_threads_detection_is_safe():
+    """An exe that doesn't exist must report 'no -t support', not raise."""
+    m = _load_scaffold_level_module()
+    assert m.nucmer_supports_threads('/nonexistent/nucmer-does-not-exist') is False

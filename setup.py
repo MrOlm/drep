@@ -24,7 +24,6 @@ setup(name='drep',
           'biopython',
           'scikit-learn',
           'tqdm',
-          'networkx',
           'setuptools',
           'pytest'
       ],
