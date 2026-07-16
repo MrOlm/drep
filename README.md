@@ -14,6 +14,19 @@ Publication is available at
 Open source pre-print publication is available at
 [bioRxiv](https://doi.org/10.1101/108142)
 
+## ⚡ New in v4
+
+dRep v4 uses [skani](https://github.com/bluenote-1577/skani) for **both** primary and secondary genome comparisons by default, replacing v3's default of MASH (primary) + fastANI (secondary). skani is much faster than that pair, and it *streams* its comparisons instead of building an all-vs-all matrix in memory — so `dereplicate` runs far quicker and its memory footprint grows roughly linearly with genome count rather than quadratically (the O(N²) scaling that previously limited large runs — see [#259](https://github.com/MrOlm/drep/issues/259)).
+
+**Whole-pipeline `dRep dereplicate` on 10,000 genomes** — identical inputs and settings:
+
+| | v3 defaults (MASH → fastANI) | v4 defaults (skani) |
+|---|---|---|
+| Wall-clock time | 6 h 15 min | **14.5 min** (~26× faster) |
+| Peak memory (RSS) | ~13 GB | ~7 GB |
+
+*Benchmarked on an Apple M1 Pro with `-p 10`; the memory advantage widens further at larger genome counts.*
+
 ## Installation with pip
 ```
 $ pip install drep
