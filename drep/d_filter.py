@@ -130,14 +130,67 @@ def sanity_check(bdb, **kwargs):
 GENOMEINFO_REQUIRED_COLUMNS = ['genome', 'completeness', 'contamination']
 GENOMEINFO_DELIMITERS = [(',', 'comma'), ('\t', 'tab'), (';', 'semicolon'), ('|', 'pipe')]
 
+# Columns that dRep knows what to do with in a genomeInfo table
+GENOMEINFO_KNOWN_COLUMNS = ['genome', 'completeness', 'contamination',
+                            'strain_heterogeneity', 'length', 'N50',
+                            'location', 'centrality']
+
+# Raw CheckM2 (quality_report.tsv) and CheckM1 (--tab_table) column names
+GENOMEINFO_COLUMN_TRANSLATION = {
+    'Name': 'genome',                                # CheckM2
+    'Bin Id': 'genome',                              # CheckM1
+    'Completeness': 'completeness',                  # both
+    'Contamination': 'contamination',                # both
+    'Strain heterogeneity': 'strain_heterogeneity',  # CheckM1
+}
+
+# CheckM2 run with --general / --specific / --allmodels reports these instead
+# of a plain "Completeness" column; the first one present is used
+GENOMEINFO_COMPLETENESS_FALLBACKS = ['Completeness_General', 'Completeness_Specific']
+
+def _genomeInfo_translation(columns):
+    '''
+    Figure out how to rename raw CheckM1 / CheckM2 columns into genomeInfo columns
+
+    Raw CheckM2 output is a perfectly good genomeInfo file except that its
+    columns are named "Name", "Completeness", and "Contamination", so translate
+    it rather than making the user do it by hand (issue #305). Columns that are
+    already there under the dRep name are never overwritten
+
+    Args:
+        columns: the columns of the table that was loaded
+
+    Returns:
+        dict: {current column name: dRep column name}
+    '''
+    columns = list(columns)
+    translation = {c: n for c, n in GENOMEINFO_COLUMN_TRANSLATION.items()
+                   if (c in columns) and (n not in columns)}
+
+    if ('completeness' not in columns) and ('Completeness' not in columns):
+        for c in GENOMEINFO_COMPLETENESS_FALLBACKS:
+            if c in columns:
+                translation[c] = 'completeness'
+                break
+
+    # Never rename two columns into the same one; first in the file wins
+    deduped = {}
+    for c in columns:
+        n = translation.get(c, None)
+        if (n is not None) and (n not in deduped.values()):
+            deduped[c] = n
+
+    return deduped
+
 def load_genomeInfo(location):
     '''
-    Load a user-provided genomeInfo file, figuring out the delimiter as you go
+    Load a user-provided genomeInfo file, figuring out the format as you go
 
     pandas happily parses a .tsv with sep=',' (you just get one mangled column),
     so the delimiter can't be picked based on which read_csv call fails to raise
     an exception. Instead try each delimiter and keep the one that actually
-    yields the columns dRep needs (issue #305)
+    yields the columns dRep needs (issue #305). Raw CheckM1 / CheckM2 output is
+    then translated into genomeInfo columns
 
     Args:
         location: location of the genomeInfo file
@@ -151,18 +204,31 @@ def load_genomeInfo(location):
             db = pd.read_csv(location, sep=sep)
         except Exception:
             continue
-        found = len([c for c in GENOMEINFO_REQUIRED_COLUMNS if c in db.columns])
+        translation = _genomeInfo_translation(db.columns)
+        columns = [translation.get(c, c) for c in db.columns]
+        found = len([c for c in GENOMEINFO_REQUIRED_COLUMNS if c in columns])
         score = (found, len(db.columns))
         if (best is None) or (score > best[0]):
-            best = (score, sep_name, db)
+            best = (score, sep_name, db, translation)
 
     if best is None:
         raise Exception("Cannot parse the genomeInfo file {0}; it must be a "
                         "comma- or tab-delimited table".format(location))
 
-    (found, _), sep_name, Idb = best
+    (found, _), sep_name, Idb, translation = best
     logging.debug("Parsed genomeInfo file {0} as {1}-delimited; the columns are "
                   "{2}".format(location, sep_name, list(Idb.columns)))
+
+    # Translate raw CheckM1 / CheckM2 output
+    if len(translation) > 0:
+        logging.info("Translating the columns of the provided genomeInfo: {0}".format(
+            ', '.join(['{0} -> {1}'.format(c, n) for c, n in translation.items()])))
+        for c in GENOMEINFO_COMPLETENESS_FALLBACKS:
+            if translation.get(c, None) == 'completeness':
+                logging.warning('This CheckM2 output has no "Completeness" column, '
+                                'so "{0}" is being used as completeness'.format(c))
+        Idb = Idb.rename(columns=translation)
+        Idb = Idb[[c for c in GENOMEINFO_KNOWN_COLUMNS if c in Idb.columns]]
 
     if found < len(GENOMEINFO_REQUIRED_COLUMNS):
         logging.warning("Could not find the columns {0} in the genomeInfo file "
@@ -271,6 +337,28 @@ def _validate_genomeInfo(Idb, bdb):
                 Idb['location'] = Idb['genome']
                 Idb['genome'] = [os.path.basename(x) for x in Idb['location']]
                 break
+
+    # See if the file extension was stripped (this is what CheckM2 does)
+    have = set(Idb['genome'].astype(str))
+    missing = [g for g in bdb['genome'].unique() if g not in have]
+    if len(missing) > 0:
+        matches = {}
+        for genome in missing:
+            base = os.path.splitext(genome)[0]
+            if base in have:
+                matches.setdefault(base, []).append(genome)
+
+        # Only correct names that map back to a single genome
+        ambiguous = {b: g for b, g in matches.items() if len(g) > 1}
+        if len(ambiguous) > 0:
+            logging.warning("Provided genome info is missing the file extension on "
+                            "genomes that differ only by extension, so it can't be "
+                            "corrected: {0}".format(sorted(ambiguous.keys())))
+        translation = {b: g[0] for b, g in matches.items() if len(g) == 1}
+        if len(translation) > 0:
+            logging.warning("Provided genome info is missing the file extension on "
+                            "{0} genomes- correcting".format(len(translation)))
+            Idb['genome'] = [translation.get(g, g) for g in Idb['genome'].astype(str)]
 
     # Make sure it matchs up with bdb
     for genome in list(bdb['genome'].unique()):

@@ -6,6 +6,12 @@ and this project (attempts to) adhere to [Semantic Versioning](http://semver.org
 
 ## [Unreleased]
 
+### Added
+- `--genomeInfo` accepts raw CheckM2 (`quality_report.tsv`) and CheckM1
+  (`--tab_table`) output directly (issue #305). Their column names are
+  translated, and the file extension CheckM2 strips off genome names is added
+  back on
+
 ### Fixed
 - Detect the delimiter of a `--genomeInfo` file properly, so tab-delimited files
   work as intended (issue #305). pandas doesn't raise when reading a .tsv as a
