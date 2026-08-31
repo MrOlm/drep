@@ -28,7 +28,7 @@ def d_filter_wrapper(wd, **kwargs):
 
     Keyword Args:
         genomes: genomes to filter in .fasta format
-        genomeInfo: location of .csv file with the columns: ["genome"(basename of .fasta file of that genome), "completeness"(0-100 value for completeness of the genome), "contamination"(0-100 value of the contamination of the genome)]
+        genomeInfo: location of .csv or .tsv file with the columns: ["genome"(basename of .fasta file of that genome), "completeness"(0-100 value for completeness of the genome), "contamination"(0-100 value of the contamination of the genome)]
 
         processors: Threads to use with checkM / prodigal
         overwrite: Overwrite existing data in the work folder
@@ -127,6 +127,52 @@ def sanity_check(bdb, **kwargs):
         logging.info(f"Hey! You're running multiround_primary_clustering but not run_tertiary_clustering! You should add --run_tertiary_clustering when running with multiround_primary_clustering to avoid weird placement; see https://drep.readthedocs.io/en/latest/choosing_parameters.html#using-greedy-algorithms for more info")
 
 
+GENOMEINFO_REQUIRED_COLUMNS = ['genome', 'completeness', 'contamination']
+GENOMEINFO_DELIMITERS = [(',', 'comma'), ('\t', 'tab'), (';', 'semicolon'), ('|', 'pipe')]
+
+def load_genomeInfo(location):
+    '''
+    Load a user-provided genomeInfo file, figuring out the delimiter as you go
+
+    pandas happily parses a .tsv with sep=',' (you just get one mangled column),
+    so the delimiter can't be picked based on which read_csv call fails to raise
+    an exception. Instead try each delimiter and keep the one that actually
+    yields the columns dRep needs (issue #305)
+
+    Args:
+        location: location of the genomeInfo file
+
+    Returns:
+        DataFrame: genomeInfo
+    '''
+    best = None
+    for sep, sep_name in GENOMEINFO_DELIMITERS:
+        try:
+            db = pd.read_csv(location, sep=sep)
+        except Exception:
+            continue
+        found = len([c for c in GENOMEINFO_REQUIRED_COLUMNS if c in db.columns])
+        score = (found, len(db.columns))
+        if (best is None) or (score > best[0]):
+            best = (score, sep_name, db)
+
+    if best is None:
+        raise Exception("Cannot parse the genomeInfo file {0}; it must be a "
+                        "comma- or tab-delimited table".format(location))
+
+    (found, _), sep_name, Idb = best
+    logging.debug("Parsed genomeInfo file {0} as {1}-delimited; the columns are "
+                  "{2}".format(location, sep_name, list(Idb.columns)))
+
+    if found < len(GENOMEINFO_REQUIRED_COLUMNS):
+        logging.warning("Could not find the columns {0} in the genomeInfo file "
+                        "{1}; the best guess of its format is {2}-delimited "
+                        "with the columns {3}".format(
+                            GENOMEINFO_REQUIRED_COLUMNS, location, sep_name,
+                            list(Idb.columns)))
+
+    return Idb
+
 def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
     '''
     Through kwargs and the wd, get genomeInfo
@@ -145,10 +191,7 @@ def _get_run_genomeInfo(workDirectory, bdb, **kwargs):
 
     if kwargs.get('genomeInfo', None) != None:
         logging.debug("Loading provided genome quality information")
-        try:
-            Idb = pd.read_csv(kwargs.get('genomeInfo'))
-        except:
-            Idb = pd.read_csv(kwargs.get('genomeInfo'), sep='\t')
+        Idb = load_genomeInfo(kwargs.get('genomeInfo'))
         try:
             Tdb = _validate_genomeInfo(Idb, bdb)
         except IndexError:
@@ -212,7 +255,8 @@ def _validate_genomeInfo(Idb, bdb):
     # Make sure it has required columns
     for r in ['completeness', 'contamination', 'genome']:
         if r not in Idb.columns:
-            raise KeyError("{0} missing from GenomeInfo".format(r))
+            raise KeyError("{0} missing from GenomeInfo; the columns that are "
+                           "there are {1}".format(r, list(Idb.columns)))
 
     # Make sure correct datatypes
     for r in ['completeness', 'contamination', 'strain_heterogeneity']:

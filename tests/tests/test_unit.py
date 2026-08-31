@@ -127,3 +127,51 @@ def test_load_fastani_pandas3_compat(self):
         assert abs(fdb['ani'].iloc[0] - 0.985) < 0.001
     finally:
         os.unlink(tmp_path)
+def test_load_genomeInfo_delimiters(self):
+    '''
+    Regression test for GitHub issue #305: a tab-delimited genomeInfo file was
+    parsed as a .csv, mangling the column names, because pandas doesn't raise
+    when reading with the wrong delimiter
+    '''
+    header = ['genome', 'completeness', 'contamination']
+    rows = [
+        ['Enterococcus_casseliflavus_EC20.fasta', '98.28', '0.0'],
+        ['Escherichia_coli_Sakai.fna', '100.0', '1.5'],
+    ]
+
+    for sep, suffix in [(',', '.csv'), ('\t', '.tsv'), (';', '.csv')]:
+        table = '\n'.join([sep.join(r) for r in [header] + rows]) + '\n'
+        with tempfile.NamedTemporaryFile(mode='w', suffix=suffix, delete=False) as f:
+            f.write(table)
+            tmp_path = f.name
+
+        try:
+            Idb = drep.d_filter.load_genomeInfo(tmp_path)
+            assert set(Idb.columns) == set(header), (sep, list(Idb.columns))
+            assert len(Idb) == 2
+            assert Idb['completeness'].tolist() == [98.28, 100.0]
+            assert Idb['genome'].tolist()[0] == 'Enterococcus_casseliflavus_EC20.fasta'
+        finally:
+            os.unlink(tmp_path)
+
+def test_load_genomeInfo_missing_columns(self):
+    '''
+    A genomeInfo file without the required columns (e.g. raw CheckM2 output,
+    which calls them "Name" and "Completeness") should still load, and then be
+    rejected by _validate_genomeInfo with a message listing what was found
+    '''
+    table = "Name\tCompleteness\tContamination\ngenome_A\t98.28\t0.0\n"
+    with tempfile.NamedTemporaryFile(mode='w', suffix='.tsv', delete=False) as f:
+        f.write(table)
+        tmp_path = f.name
+
+    try:
+        Idb = drep.d_filter.load_genomeInfo(tmp_path)
+        assert list(Idb.columns) == ['Name', 'Completeness', 'Contamination']
+
+        bdb = pd.DataFrame({'genome': ['genome_A'], 'location': ['/tmp/genome_A']})
+        with pytest.raises(KeyError) as e:
+            drep.d_filter._validate_genomeInfo(Idb, bdb)
+        assert 'Completeness' in str(e.value)
+    finally:
+        os.unlink(tmp_path)

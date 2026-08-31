@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- Detect the delimiter of a `--genomeInfo` file properly, so tab-delimited files
+  work as intended (issue #305). pandas doesn't raise when reading a .tsv as a
+  .csv, so the old try/except never fell through to the tab-delimited read
+- Say which columns were actually found when a genomeInfo file is missing a
+  required column
+
 ## [4.0.0] - 2026-07-15
 
 dRep v4 makes genome clustering scale. The headline change is that primary and

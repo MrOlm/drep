@@ -37,7 +37,7 @@ def d_choose_wrapper(wd, **kwargs):
         **kwargs: Command line arguments
 
     Keyword args:
-        genomeInfo: .csv genomeInfo file
+        genomeInfo: .csv or .tsv genomeInfo file
         ignoreGenomeQuality: Don't run checkM or do any quality-based filtering (not recommended)
         checkM_method: Either lineage_wf (more accurate) or taxonomy_wf (faster)
 
