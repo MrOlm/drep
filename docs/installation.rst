@@ -39,7 +39,7 @@ To check which dependencies are installed on your system and accessible by dRep,
 **Near Essential**
 
 * `skani <https://github.com/bluenote-1577/skani>`_ - Makes primary clusters and performs the default secondary comparison (v0.2+ confirmed works)
-* `CheckM <http://ecogenomics.github.io/CheckM/>`_ - Determines contamination and completeness of genomes (v1.0.7 confirmed works). Only needed for ``dereplicate``; you can skip it with ``--genomeInfo`` or ``--ignoreGenomeQuality``
+* `CheckM <http://ecogenomics.github.io/CheckM/>`_ - Determines contamination and completeness of genomes (v1.0.7 confirmed works). Only needed for ``dereplicate``; you can skip it with ``--genomeInfo`` (raw CheckM2 or CheckM1 output can be passed directly) or ``--ignoreGenomeQuality``
 
 **Recommended**
 

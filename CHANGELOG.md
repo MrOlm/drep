@@ -4,18 +4,28 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [4.0.1] - 2026-09-03
+
+**You can now hand raw CheckM2 output straight to `--genomeInfo`.** No awk, no
+converting to .csv, no renaming columns:
+`dRep dereplicate outdir -g genomes/*.fasta --genomeInfo quality_report.tsv`
 
 ### Added
 - `--genomeInfo` accepts raw CheckM2 (`quality_report.tsv`) and CheckM1
-  (`--tab_table`) output directly (issue #305). Their column names are
-  translated, and the file extension CheckM2 strips off genome names is added
-  back on
+  (`--tab_table`) output directly (issue #305). The CheckM2 columns "Name",
+  "Completeness", and "Contamination" (and the CheckM1 "Bin Id" and "Strain
+  heterogeneity") are translated to dRep's names, the file extension CheckM2
+  strips off genome names is added back on, and CheckM2's extra columns are
+  ignored. CheckM2 run with `--general` / `--specific` / `--allmodels` has no
+  plain "Completeness" column, so "Completeness_General" is used, or
+  "Completeness_Specific" if that's the only one there
 
 ### Fixed
 - Detect the delimiter of a `--genomeInfo` file properly, so tab-delimited files
   work as intended (issue #305). pandas doesn't raise when reading a .tsv as a
-  .csv, so the old try/except never fell through to the tab-delimited read
+  .csv, so the old try/except never fell through to the tab-delimited read, and
+  a CheckM2 .tsv failed with "completeness missing from GenomeInfo" despite
+  having the column
 - Say which columns were actually found when a genomeInfo file is missing a
   required column
 

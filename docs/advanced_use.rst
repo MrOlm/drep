@@ -82,7 +82,7 @@ Refer to the above file structure to find the rest of the raw data. The data is 
 Using external genome quality information
 --------
 
-If you already have your own genome quality information and would not like dRep to run checkM to generate it again, you can provide it using the `genomeInformation` flag.
+If you already have your own genome quality information and would not like dRep to run checkM to generate it again, you can provide it using the `genomeInformation` flag. **Raw CheckM2 output works as-is** - see below.
 
 The genomeInformation file can be comma- or tab-delimited (dRep detects the delimiter itself) and must have the columns "genome", "completeness", and "contamination". Columns "completeness" and "contamination" should be 0-100, and "genome" is the filename of the genome (including the file extension, e.g. ``genome.fasta``).
 
@@ -95,7 +95,7 @@ For example::
   Enterococcus_faecalis_YI6-1.fna,98.28,0.0
   Escherichia_coli_Sakai.fna,100.0,0.0
 
-Raw CheckM2 and CheckM1 output can also be handed to dRep as-is; no conversion needed::
+Raw CheckM2 and CheckM1 output can also be handed to dRep as-is; no converting to .csv and no renaming columns::
 
   dRep dereplicate output_directory -g path/to/genomes/*.fasta --genomeInfo quality_report.tsv
 
