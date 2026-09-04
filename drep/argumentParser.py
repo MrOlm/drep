@@ -95,10 +95,11 @@ def parse_args(args):
                 quality filtering. NOT RECOMMENDED! This is useful for use with bacteriophages\
                 or eukaryotes or things where checkM scoring does not work. Will only \
                 choose genomes based on length and N50", action='store_true')
-    Iflags.add_argument('--genomeInfo', help='location of .csv file containing quality \
-                    information on the genomes. Must contain: ["genome"(filename of .fasta file \
+    Iflags.add_argument('--genomeInfo', help='location of .csv or .tsv file containing quality \
+                    information on the genomes (the delimiter is detected automatically). Must contain: ["genome"(filename of .fasta file \
                     of that genome, including extension e.g. genome.fasta), "completeness"(0-100 value for completeness of the genome), \
-                    "contamination"(0-100 value of the contamination of the genome)]')
+                    "contamination"(0-100 value of the contamination of the genome)]. Raw CheckM2 and CheckM1 \
+                    output can also be provided directly')
     Iflags.add_argument("--checkM_method", help="Either lineage_wf (more accurate) \
                         or taxonomy_wf (faster)", choices={'taxonomy_wf', 'lineage_wf'}, \
                         default='lineage_wf')

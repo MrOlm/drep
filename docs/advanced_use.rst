@@ -82,9 +82,9 @@ Refer to the above file structure to find the rest of the raw data. The data is 
 Using external genome quality information
 --------
 
-If you already have your own genome quality information and would not like dRep to run checkM to generate it again, you can provide it using the `genomeInformation` flag.
+If you already have your own genome quality information and would not like dRep to run checkM to generate it again, you can provide it using the `genomeInformation` flag. **Raw CheckM2 output works as-is** - see below.
 
-The genomeInformation file must be in .csv format and have the columns "genome", "completeness", and "contamination". Columns "completeness" and "contamination" should be 0-100, and "genome" is the filename of the genome (including the file extension, e.g. ``genome.fasta``).
+The genomeInformation file can be comma- or tab-delimited (dRep detects the delimiter itself) and must have the columns "genome", "completeness", and "contamination". Columns "completeness" and "contamination" should be 0-100, and "genome" is the filename of the genome (including the file extension, e.g. ``genome.fasta``).
 
 For example::
 
@@ -95,11 +95,11 @@ For example::
   Enterococcus_faecalis_YI6-1.fna,98.28,0.0
   Escherichia_coli_Sakai.fna,100.0,0.0
 
-To convert CheckM2 output for use with dRep::
+Raw CheckM2 and CheckM1 output can also be handed to dRep as-is; no converting to .csv and no renaming columns::
 
-  awk -F'\t' 'BEGIN {OFS=","; print "genome,completeness,contamination"} NR>1 {print $1 ".fasta", $2, $3}' quality_report.tsv > genomeInfo.csv
+  dRep dereplicate output_directory -g path/to/genomes/*.fasta --genomeInfo quality_report.tsv
 
-Note: adjust the ``.fasta`` extension to match your actual genome filenames.
+dRep recognizes the CheckM2 columns "Name", "Completeness", and "Contamination" (and the CheckM1 ``--tab_table`` columns "Bin Id", "Completeness", "Contamination", and "Strain heterogeneity"), and adds back the file extension that CheckM2 strips from genome names. If CheckM2 was run with ``--general``, ``--specific``, or ``--allmodels`` there is no plain "Completeness" column, in which case "Completeness_General" is used if it's there and "Completeness_Specific" otherwise.
 
 Caching
 --------

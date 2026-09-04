@@ -6,7 +6,7 @@ dRep has 3 commands: compare, dereplicate, and check dependencies. To see a list
   $ dRep -h
 
 
-                    ...::: dRep v4.0.0 :::...
+                    ...::: dRep v4.0.1 :::...
 
       Matt Olm. MIT License. Banfield Lab, UC Berkeley. 2017 (last updated 2026)
 
@@ -277,13 +277,15 @@ This workflow dereplicates a set of genomes. For a list of all parameters, check
                             scoring does not work. Will only choose genomes based
                             on length and N50 (default: False)
       --genomeInfo GENOMEINFO
-                            location of .csv file containing quality information
-                            on the genomes. Must contain: ["genome"(filename of
+                            location of .csv or .tsv file containing quality
+                            information on the genomes (the delimiter is detected
+                            automatically). Must contain: ["genome"(filename of
                             .fasta file of that genome, including extension e.g.
                             genome.fasta), "completeness"(0-100 value for
                             completeness of the genome), "contamination"(0-100
-                            value of the contamination of the genome)] (default:
-                            None)
+                            value of the contamination of the genome)]. Raw
+                            CheckM2 and CheckM1 output can also be provided
+                            directly (default: None)
       --checkM_method {lineage_wf,taxonomy_wf}
                             Either lineage_wf (more accurate) or taxonomy_wf
                             (faster) (default: lineage_wf)
