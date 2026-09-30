@@ -4,7 +4,7 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
-## [Unreleased]
+## [4.0.2] - 2026-09-30
 
 ### Fixed
 - Averaging reciprocal ANI values before secondary clustering is now vectorized
