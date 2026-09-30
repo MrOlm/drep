@@ -1,0 +1,99 @@
+name: Publish to PyPI
+
+# Publish whenever a merge to master passes the Tests workflow and
+# drep/VERSION holds a version that isn't on PyPI yet. Merges that don't bump
+# the version are left alone, so only release PRs actually publish.
+#
+# Uses PyPI trusted publishing, so there is no API token to store. One-time
+# setup on PyPI: drep -> Manage -> Publishing -> add a GitHub publisher with
+# owner MrOlm, repository drep, workflow publish.yml, environment pypi.
+on:
+  workflow_run:
+    workflows: ["Tests"]
+    types: [completed]
+    branches: [master]
+  workflow_dispatch:
+
+jobs:
+  check:
+    # Only a green Tests run from a push to master (i.e. a merged PR), or a
+    # manual run
+    if: >-
+      github.event_name == 'workflow_dispatch' ||
+      (github.event.workflow_run.conclusion == 'success' &&
+       github.event.workflow_run.event == 'push')
+    runs-on: ubuntu-latest
+    outputs:
+      version: ${{ steps.version.outputs.version }}
+      publish: ${{ steps.version.outputs.publish }}
+      sha: ${{ steps.version.outputs.sha }}
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ github.event.workflow_run.head_sha || github.sha }}
+
+      - name: Is this version already on PyPI?
+        id: version
+        run: |
+          version=$(tr -d '[:space:]' < drep/VERSION)
+          echo "version=$version" >> "$GITHUB_OUTPUT"
+          echo "sha=$(git rev-parse HEAD)" >> "$GITHUB_OUTPUT"
+          status=$(curl -s -o /dev/null -w '%{http_code}' "https://pypi.org/pypi/drep/$version/json")
+          if [ "$status" = "404" ]; then
+            echo "drep $version is not on PyPI yet; publishing"
+            echo "publish=true" >> "$GITHUB_OUTPUT"
+          elif [ "$status" = "200" ]; then
+            echo "drep $version is already on PyPI; nothing to do"
+            echo "publish=false" >> "$GITHUB_OUTPUT"
+          else
+            echo "Unexpected HTTP $status from PyPI"
+            exit 1
+          fi
+
+  publish:
+    needs: check
+    if: needs.check.outputs.publish == 'true'
+    runs-on: ubuntu-latest
+    environment:
+      name: pypi
+      url: https://pypi.org/project/drep/${{ needs.check.outputs.version }}/
+    permissions:
+      id-token: write   # PyPI trusted publishing
+      contents: write   # tag and GitHub release
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          ref: ${{ needs.check.outputs.sha }}
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Build
+        run: |
+          python -m pip install --upgrade build twine
+          python -m build
+          python -m twine check dist/*
+
+      - name: Publish to PyPI
+        uses: pypa/gh-action-pypi-publish@release/v1
+
+      - name: Tag and make a GitHub release
+        env:
+          GH_TOKEN: ${{ github.token }}
+          VERSION: ${{ needs.check.outputs.version }}
+          SHA: ${{ needs.check.outputs.sha }}
+        run: |
+          # Release notes are this version's section of CHANGELOG.md
+          awk -v v="$VERSION" '
+            index($0, "## [" v "]") == 1 {on=1; next}
+            on && /^## \[/ {exit}
+            on {print}
+          ' CHANGELOG.md > notes.md
+          [ -s notes.md ] || echo "dRep v$VERSION" > notes.md
+          if gh release view "v$VERSION" > /dev/null 2>&1; then
+            echo "Release v$VERSION already exists"
+          else
+            gh release create "v$VERSION" dist/* --target "$SHA" \
+              --title "dRep v$VERSION" --notes-file notes.md
+          fi
