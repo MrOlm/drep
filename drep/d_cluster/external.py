@@ -717,17 +717,31 @@ def add_avani(db):
         db: dataframe
     '''
 
-    logging.debug('making dictionary for average_ani')
-    combo2value = {}
-    for i, row in db.iterrows():
-        combo2value["{0}-vs-{1}".format(row['querry'], row['reference'])] \
-            = row['ani']
+    # Vectorized: this used to iterrows() into a string-keyed dict, which took
+    # hours and hundreds of GB once a single primary cluster held tens of
+    # thousands of genomes (issue #308). Each (reference, querry) pair is encoded
+    # as one integer so its reverse can be looked up in bulk.
+    logging.debug('averaging reciprocal ANI values')
+    ref = db['reference'].values
+    qry = db['querry'].values
+    names = pd.Index(pd.unique(np.concatenate([ref, qry])))
+    n = len(names)
+    r = names.get_indexer(ref).astype(np.int64)
+    q = names.get_indexer(qry).astype(np.int64)
 
-    logging.debug('list comprehension for average_ani')
-    db['av_ani'] = [np.mean([combo2value["{0}-vs-{1}".format(q, r)],
-                        combo2value["{0}-vs-{1}".format(r, q)]]) if r != q else 1\
-                        for q, r in zip(db['querry'].tolist(),
-                        db['reference'].tolist())]
+    # When a pair appears more than once the last value wins, as before
+    ani = pd.Series(db['ani'].values, index=r * n + q)
+    ani = ani[~ani.index.duplicated(keep='last')]
+    forward = ani.reindex(r * n + q).values
+    reverse = ani.reindex(q * n + r).values
+
+    same = r == q
+    missing = ~np.isin(q * n + r, ani.index.values) & ~same
+    if missing.any():
+        i = np.argmax(missing)
+        raise KeyError("{0}-vs-{1}".format(ref[i], qry[i]))
+
+    db['av_ani'] = np.where(same, 1, (forward + reverse) / 2)
 
     logging.debug('averageing done')
 

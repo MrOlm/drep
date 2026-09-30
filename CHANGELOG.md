@@ -4,6 +4,15 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [Unreleased]
+
+### Fixed
+- Averaging reciprocal ANI values before secondary clustering is now vectorized
+  instead of looping over every row of Ndb (issue #308). Results are identical,
+  but it's ~25-30x faster on large primary clusters (a 2,000-genome primary
+  cluster went from 133s to 6s to cluster) and no longer builds a string-keyed
+  dictionary with an entry for every comparison
+
 ## [4.0.1] - 2026-09-03
 
 **You can now hand raw CheckM2 output straight to `--genomeInfo`.** No awk, no
