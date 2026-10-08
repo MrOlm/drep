@@ -48,6 +48,7 @@ This workflow compares a set of genomes. For a list of all parameters, check the
                         [--primary_algorithm {skani,MASH}]
                         [--no_reuse_primary_comparisons]
                         [--primary_skani_min_af PRIMARY_SKANI_MIN_AF]
+                        [--primary_skani_min_af_both]
                         [-ms MASH_SKETCH] [--SkipMash] [--SkipSecondary]
                         [--skani_extra SKANI_EXTRA] [--n_PRESET {normal,tight}]
                         [-pa P_ANI] [-sa S_ANI] [-nc COV_THRESH]
@@ -117,6 +118,20 @@ This workflow compares a set of genomes. For a list of all parameters, check the
                             reproduces the MASH partition closely; lower it only
                             if you have very fragmented genomes and understand the
                             chaining risk. (default: 15)
+      --primary_skani_min_af_both
+                            Require --primary_skani_min_af in both directions of a
+                            pair, not just one, for it to form a primary-
+                            clustering edge (--primary_algorithm skani only).
+                            Recommended for plasmids and other small genomes: a
+                            small genome that is mostly a shared element (e.g. a
+                            transposon) aligns ~100% to every larger genome
+                            carrying it, and single linkage then chains unrelated
+                            genomes into one huge primary cluster. Secondary
+                            clustering only groups pairs that align in both
+                            directions, so setting --primary_skani_min_af to at
+                            most 100 x --cov_thresh does not change which genomes
+                            can end up in the same secondary cluster. (default:
+                            False)
       -ms MASH_SKETCH, --MASH_sketch MASH_SKETCH
                             MASH sketch size (default: 1000)
       --SkipMash            Skip primary clustering entirely and run secondary
@@ -224,6 +239,7 @@ This workflow dereplicates a set of genomes. For a list of all parameters, check
                             [--primary_algorithm {skani,MASH}]
                             [--no_reuse_primary_comparisons]
                             [--primary_skani_min_af PRIMARY_SKANI_MIN_AF]
+                            [--primary_skani_min_af_both]
                             [-ms MASH_SKETCH] [--SkipMash] [--SkipSecondary]
                             [--skani_extra SKANI_EXTRA]
                             [--n_PRESET {normal,tight}] [-pa P_ANI] [-sa S_ANI]
@@ -336,6 +352,20 @@ This workflow dereplicates a set of genomes. For a list of all parameters, check
                             reproduces the MASH partition closely; lower it only
                             if you have very fragmented genomes and understand the
                             chaining risk. (default: 15)
+      --primary_skani_min_af_both
+                            Require --primary_skani_min_af in both directions of a
+                            pair, not just one, for it to form a primary-
+                            clustering edge (--primary_algorithm skani only).
+                            Recommended for plasmids and other small genomes: a
+                            small genome that is mostly a shared element (e.g. a
+                            transposon) aligns ~100% to every larger genome
+                            carrying it, and single linkage then chains unrelated
+                            genomes into one huge primary cluster. Secondary
+                            clustering only groups pairs that align in both
+                            directions, so setting --primary_skani_min_af to at
+                            most 100 x --cov_thresh does not change which genomes
+                            can end up in the same secondary cluster. (default:
+                            False)
       -ms MASH_SKETCH, --MASH_sketch MASH_SKETCH
                             MASH sketch size (default: 1000)
       --SkipMash            Skip primary clustering entirely and run secondary

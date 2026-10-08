@@ -147,6 +147,18 @@ def parse_args(args):
                                  "partition closely; lower it only if you have very fragmented genomes "
                                  "and understand the chaining risk.",
                             default=15, type=float)
+    Clustflags.add_argument("--primary_skani_min_af_both",
+                            help="Require --primary_skani_min_af in both directions of a pair, "
+                                 "not just one, for it to form a primary-clustering edge "
+                                 "(--primary_algorithm skani only). Recommended for plasmids and "
+                                 "other small genomes: a small genome that is mostly a shared "
+                                 "element (e.g. a transposon) aligns ~100%% to every larger genome "
+                                 "carrying it, and single linkage then chains unrelated genomes "
+                                 "into one huge primary cluster. Secondary clustering only groups "
+                                 "pairs that align in both directions, so setting "
+                                 "--primary_skani_min_af to at most 100 x --cov_thresh does not "
+                                 "change which genomes can end up in the same secondary cluster.",
+                            action='store_true', default=False)
     Clustflags.add_argument("-ms", "--MASH_sketch", help="MASH sketch size", default=1000)
     Clustflags.add_argument("--SkipMash", help="Skip primary clustering entirely and run secondary\
                             clustering on all genomes at once. (Named for when primary clustering was\

@@ -144,6 +144,42 @@ def test_skani_sparse_min_af_filters_low_alignment_edges():
         assert s1['edges_kept'] == 1
 
 
+def test_cov_both_stops_small_genomes_chaining_clusters():
+    """
+    A small plasmid that is mostly a shared transposon aligns ~100% (in its own
+    direction) to every large plasmid carrying it, so with the aligned fraction
+    required in either direction it chains unrelated plasmids together (issue
+    #311). Requiring it in both directions keeps them apart.
+    """
+    def pair(a, b, ani, af_a, af_b):
+        return [(a, b, ani, af_a), (b, a, ani, af_b)]
+
+    rows = (pair('A1', 'A2', 0.995, 0.95, 0.96)     # same plasmid family
+            + pair('B1', 'B2', 0.995, 0.94, 0.95)   # another family
+            + pair('s', 'A1', 0.99, 0.95, 0.08)     # small plasmid = transposon
+            + pair('s', 'B1', 0.99, 0.95, 0.10))
+    edges = pd.DataFrame(rows, columns=['genome1', 'genome2', 'ani', 'alignment_coverage'])
+    allg = ['A1', 'A2', 'B1', 'B2', 's']
+
+    # Either direction (the default): s bridges the two families
+    C0, _ = uf.cluster_edges(edges, 0.90, allg, cov_threshold=0.5)
+    assert C0['primary_cluster'].nunique() == 1
+
+    # Both directions: two families plus s on its own
+    C1, s1 = uf.cluster_edges(edges, 0.90, allg, cov_threshold=0.5, cov_both=True)
+    g2c = C1.set_index('genome')['primary_cluster'].to_dict()
+    assert g2c['A1'] == g2c['A2']
+    assert g2c['B1'] == g2c['B2']
+    assert len({g2c['A1'], g2c['B1'], g2c['s']}) == 3
+    assert s1['edges_kept'] == 4
+
+    # A pair with only one direction present can't pass a both-directions check
+    one_way = edges[~((edges['genome1'] == 'A2') & (edges['genome2'] == 'A1'))]
+    C2, _ = uf.cluster_edges(one_way, 0.90, allg, cov_threshold=0.5, cov_both=True)
+    g2c = C2.set_index('genome')['primary_cluster'].to_dict()
+    assert g2c['A1'] != g2c['A2']
+
+
 def test_build_ndb_from_edges_fills_matrix():
     """
     Secondary clustering needs a complete matrix per primary cluster, so pairs

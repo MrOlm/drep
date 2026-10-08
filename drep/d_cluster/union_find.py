@@ -386,7 +386,25 @@ def load_skani_sparse_edges(sparse_files):
     return edges[edges['genome1'] != edges['genome2']].reset_index(drop=True)
 
 
-def cluster_edges(edges, ani_threshold, all_genomes, cov_threshold=0.0):
+def _reverse_coverage(edges):
+    """
+    For each row of an edge table, the alignment_coverage of the same pair in
+    the other direction (genome2's aligned fraction), or NaN if that row is
+    missing.
+    """
+    g1 = edges['genome1'].values
+    g2 = edges['genome2'].values
+    names = pd.Index(pd.unique(np.concatenate([g1, g2])))
+    n = len(names)
+    a = names.get_indexer(g1).astype(np.int64)
+    b = names.get_indexer(g2).astype(np.int64)
+
+    cov = pd.Series(edges['alignment_coverage'].values, index=a * n + b)
+    cov = cov[~cov.index.duplicated(keep='last')]
+    return cov.reindex(b * n + a).values
+
+
+def cluster_edges(edges, ani_threshold, all_genomes, cov_threshold=0.0, cov_both=False):
     """
     Union-find clustering of an in-memory edge table (see load_skani_sparse_edges).
 
@@ -397,6 +415,13 @@ def cluster_edges(edges, ani_threshold, all_genomes, cov_threshold=0.0):
         cov_threshold: minimum alignment_coverage (0-1) for a pair to be an edge.
             See run_skani_triangle_sparse for why this matters -- without it,
             genomes sharing a small conserved region chain together.
+        cov_both: require cov_threshold in both directions rather than either.
+            With either, a small genome that is mostly one shared element (e.g.
+            a plasmid that is mostly a transposon) aligns ~100% to every larger
+            genome carrying that element and chains them all together (issue
+            #311). Secondary clustering only joins pairs that align in both
+            directions anyway, so this splits primary clusters without changing
+            which genomes secondary clustering can put together.
 
     Returns:
         (Cdb, stats)
@@ -407,7 +432,11 @@ def cluster_edges(edges, ani_threshold, all_genomes, cov_threshold=0.0):
 
     keep = edges['ani'].values >= ani_threshold
     if cov_threshold > 0:
-        keep &= edges['alignment_coverage'].values >= cov_threshold
+        cov = edges['alignment_coverage'].values
+        if cov_both:
+            # A missing other direction gives NaN, which fails the comparison
+            cov = np.minimum(cov, _reverse_coverage(edges))
+        keep &= cov >= cov_threshold
 
     g1 = edges['genome1'].values[keep]
     g2 = edges['genome2'].values[keep]
