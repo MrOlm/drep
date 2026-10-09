@@ -4,6 +4,29 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](http://keepachangelog.com/)
 and this project (attempts to) adhere to [Semantic Versioning](http://semver.org/).
 
+## [4.0.3] - 2026-10-08
+
+**Plasmid datasets no longer collapse into one giant primary cluster.** Add
+`--primary_skani_min_af_both` when dereplicating plasmids.
+
+### Added
+- `--primary_skani_min_af_both` requires `--primary_skani_min_af` in both
+  directions of a pair, rather than either, for it to form a primary-clustering
+  edge (issue #311). A small plasmid that is mostly a shared transposon or
+  resistance cassette aligns ~100% to every larger plasmid carrying it, so with
+  the default either-direction check a few of them chain thousands of unrelated
+  plasmids into one primary cluster, and secondary clustering then has to build
+  every pairwise comparison in that cluster. Secondary clustering only groups
+  pairs that align in both directions anyway, so this splits primary clusters
+  without changing which genomes can end up in the same secondary cluster. On
+  simulated plasmids sharing a transposon it turned 1 primary cluster into 9,
+  with identical final clusters and winners and 9x fewer Ndb rows
+
+### Changed
+- Releases are now published to PyPI (with a matching GitHub release)
+  automatically when a version bump is merged; 4.0.2 was the first. 4.0.1 was
+  never uploaded to PyPI, but its changes are all in 4.0.2
+
 ## [4.0.2] - 2026-09-30
 
 ### Fixed

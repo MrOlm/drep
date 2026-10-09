@@ -194,6 +194,8 @@ def primary_cluster_skani_sparse(Bdb, data_folder, **kwargs):
     # region become edges and single linkage chains them into one huge cluster.
     # See run_skani_triangle_sparse for the measurements behind the default.
     min_af = kwargs.get('primary_skani_min_af', 15)
+    # Require min_af in both directions rather than either (issue #311)
+    min_af_both = kwargs.get('primary_skani_min_af_both', False)
 
     # Secondary applies its own coverage filter at cov_thresh, so the single pass
     # has to emit anything secondary might still care about. Ask skani for the
@@ -206,14 +208,15 @@ def primary_cluster_skani_sparse(Bdb, data_folder, **kwargs):
 
     logging.info(f"  Running sparse skani primary clustering on {len(genome_list):,} genomes "
                  f"(ANI threshold {ani_threshold:.1f}%, screen {screen:.1f}%, "
-                 f"min-af {min_af}%, emitting min-af {emit_min_af:.1f}%)")
+                 f"min-af {min_af}%{' in both directions' if min_af_both else ''}, "
+                 f"emitting min-af {emit_min_af:.1f}%)")
     sparse_file = drep.d_cluster.external.run_skani_triangle_sparse(
         genome_list, skani_folder, screen, min_af=emit_min_af, **kwargs)
 
     all_genomes = list(Bdb['genome'].unique())
     edges = drep.d_cluster.union_find.load_skani_sparse_edges(sparse_file)
     Cdb, stats = drep.d_cluster.union_find.cluster_edges(
-        edges, P_ani, all_genomes, cov_threshold=min_af / 100.0)
+        edges, P_ani, all_genomes, cov_threshold=min_af / 100.0, cov_both=min_af_both)
 
     logging.info(f"  Sparse skani primary clustering: {stats['edges_kept']:,} edges above "
                  f"threshold, {stats['primary_clusters']:,} primary clusters "
